@@ -146,6 +146,14 @@ Route::prefix('ai')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/demand-forecast-locations', [AdvancedSearchDiscoveryController::class, 'getDemandForecastForLocations']);
 });
 
+// Personalization API routes
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/personalization/feed', [App\Http\Controllers\Api\PersonalizationController::class, 'getPersonalizedFeed']);
+    Route::post('/personalization/behavior', [App\Http\Controllers\Api\PersonalizationController::class, 'trackBehavior']);
+    Route::get('/personalization/preferences', [App\Http\Controllers\Api\PersonalizationController::class, 'getUserPreferences']);
+    Route::put('/personalization/preferences', [App\Http\Controllers\Api\PersonalizationController::class, 'updateUserPreferences']);
+});
+
 // Recommendation routes (both public and protected)
 Route::get('/recommendations/trending', [RecommendationController::class, 'getTrendingAds']);
 Route::get('/ads/{id}/similar', [RecommendationController::class, 'getSimilarAds']);

@@ -169,7 +169,19 @@
 
                 <div class="d-flex">
                     @auth
-                        <a href="/dashboard" class="btn btn-outline-secondary me-2">Dashboard</a>
+                        <div class="dropdown me-2">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user"></i> {{ Auth::user()->name ?? 'Account' }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                                <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="/user/feed"><i class="fas fa-home me-2"></i>Personal Feed</a></li>
+                                <li><a class="dropdown-item" href="/settings/personalization"><i class="fas fa-cog me-2"></i>Personalization Settings</a></li>
+                                <li><a class="dropdown-item" href="/settings/notifications"><i class="fas fa-bell me-2"></i>Notification Preferences</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </div>
                         <a href="/create-ad" class="btn btn-success">Post Ad</a>
                     @else
                         <a href="/login" class="btn btn-outline-primary me-2">Login</a>

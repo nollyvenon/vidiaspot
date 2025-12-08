@@ -6,18 +6,41 @@ use Illuminate\Http\Request;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Services\TrendingSearchService;
+use App\Services\RecommendationService;
+use App\Services\NotificationPreferenceService;
+use Illuminate\Support\Facades\Auth;
 
 class LandingController extends Controller
 {
     protected $trendingSearchService;
+    protected $recommendationService;
+    protected $notificationService;
 
-    public function __construct(TrendingSearchService $trendingSearchService)
-    {
+    public function __construct(
+        TrendingSearchService $trendingSearchService,
+        RecommendationService $recommendationService,
+        NotificationPreferenceService $notificationService
+    ) {
         $this->trendingSearchService = $trendingSearchService;
+        $this->recommendationService = $recommendationService;
+        $this->notificationService = $notificationService;
     }
 
     public function index()
     {
+        $user = Auth::user();
+        $moodState = null;
+
+        // Get personalized content for logged-in users
+        if ($user) {
+            $moodState = $this->notificationService->getMoodState($user);
+
+            // Get personalized recommendations if user is logged in
+            $personalizedAds = $this->recommendationService->getMoodBasedRecommendations($user, $moodState, 8);
+        } else {
+            $personalizedAds = collect();
+        }
+
         // Get featured ads (limited for performance)
         $featuredAds = Ad::where('is_featured', true)
             ->where('status', 'active')
@@ -94,6 +117,14 @@ class LandingController extends Controller
         // Get how it works steps for display
         $howItWorksSteps = \App\Models\HowItWorksStep::active()->ordered()->get();
 
-        return view('landing.index', compact('featuredAds', 'latestAds', 'popularCategories', 'trendingByCategory', 'howItWorksSteps'));
+        return view('landing.index', compact(
+            'featuredAds',
+            'latestAds',
+            'popularCategories',
+            'trendingByCategory',
+            'howItWorksSteps',
+            'personalizedAds',
+            'moodState'
+        ));
     }
 }

@@ -55,6 +55,49 @@
 
     <!-- Main Content -->
     <main class="container my-5">
+        <!-- Personalized Experience Section for Logged-in Users -->
+        @auth
+        <section class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    @if($moodState && $moodState !== 'normal')
+                        {{ ucfirst($moodState) }} Mode Recommendations
+                    @else
+                        Personalized For You
+                    @endif
+                </h2>
+                <a href="/user/feed" class="text-primary">View All <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            @if($personalizedAds && $personalizedAds->count() > 0)
+            <div class="row g-4">
+                @foreach($personalizedAds as $ad)
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="card ad-card position-relative">
+                        <img src="{{ $ad->images->first()->url ?? 'https://via.placeholder.com/300x200' }}" class="card-img-top" alt="{{ $ad->title }}" onerror="this.src='https://via.placeholder.com/300x200';">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ $ad->title }}</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-success">₦ {{ number_format($ad->price) }}</span>
+                                <small class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ $ad->location }}</small>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted">
+                                <small><i class="far fa-clock"></i> {{ $ad->created_at->diffForHumans() }}</small>
+                                <small><i class="fas fa-heart"></i> {{ $ad->like_count ?? 0 }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @else
+            <div class="alert alert-info">
+                <p class="mb-0">No personalized recommendations yet. Start browsing categories to get recommendations tailored to your interests.</p>
+            </div>
+            @endif
+        </section>
+        @endauth
+
         <!-- Popular Categories -->
         <section class="mb-5">
             <h2 class="mb-4">Popular Categories</h2>
@@ -265,4 +308,70 @@
             </div>
         </section>
     </main>
+@endsection
+
+@section('scripts')
+<script>
+    // Track user behavior for personalization
+    document.addEventListener('DOMContentLoaded', function() {
+        // Track ad clicks
+        const adCards = document.querySelectorAll('.ad-card');
+        adCards.forEach(card => {
+            card.addEventListener('click', function() {
+                if (card.querySelector('img')) {
+                    const adId = card.dataset.adId;
+                    if (adId) {
+                        // Send behavior tracking to server
+                        fetch('/user/behavior', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                behavior_type: 'click',
+                                target_type: 'ad',
+                                target_id: adId,
+                                metadata: {
+                                    timestamp: new Date().toISOString(),
+                                    page: 'landing'
+                                }
+                            })
+                        })
+                        .catch(error => console.error('Error tracking behavior:', error));
+                    }
+                }
+            });
+        });
+
+        // Track search behavior
+        const searchForm = document.querySelector('form[action="/search"]');
+        if (searchForm) {
+            searchForm.addEventListener('submit', function() {
+                const searchTerm = searchForm.querySelector('input[name="q"]').value;
+                if (searchTerm) {
+                    fetch('/user/behavior', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            behavior_type: 'search',
+                            target_type: 'search',
+                            target_id: 0,
+                            metadata: {
+                                query: searchTerm,
+                                timestamp: new Date().toISOString()
+                            }
+                        })
+                    })
+                    .catch(error => console.error('Error tracking search:', error));
+                }
+            });
+        }
+    });
+</script>
 @endsection

@@ -15,6 +15,16 @@ Route::get('/search', [SearchController::class, 'search']);
 
 require __DIR__.'/auth.php';
 
+// User profile and preferences routes (protected)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user/feed', [App\Http\Controllers\UserController::class, 'getPersonalizedFeed'])->name('user.feed');
+    Route::put('/user/preferences', [App\Http\Controllers\UserController::class, 'updatePreferences'])->name('user.preferences.update');
+    Route::post('/user/behavior', [App\Http\Controllers\UserController::class, 'trackBehavior'])->name('user.behavior.track');
+    Route::put('/user/notifications', [App\Http\Controllers\UserController::class, 'updateNotificationPreferences'])->name('user.notifications.update');
+    Route::get('/settings/personalization', [App\Http\Controllers\UserController::class, 'showPersonalizationSettings'])->name('settings.personalization');
+    Route::get('/settings/notifications', [App\Http\Controllers\UserController::class, 'showNotificationSettings'])->name('settings.notifications');
+});
+
 // Admin routes (protected)
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::resource('how-it-works', \App\Http\Controllers\Admin\HowItWorksController::class)->names([
