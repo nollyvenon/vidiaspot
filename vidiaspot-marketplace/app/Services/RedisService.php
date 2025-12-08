@@ -9,6 +9,7 @@ class RedisService
 {
     /**
      * Cache a value with expiration
+     * Uses SQLite cache layer to reduce reads from primary MySQL database
      *
      * @param string $key
      * @param mixed $value

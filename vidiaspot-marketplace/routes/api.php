@@ -100,6 +100,18 @@ Route::prefix('ai')->middleware(['auth:sanctum'])->group(function () {
 
     // Seasonal trends
     Route::get('/seasonal-trends/{category_id}', [AIController::class, 'getSeasonalTrends']);
+
+    // NEW: AI-Powered Image and Computer Vision Features
+    // Product description generation from images
+    Route::post('/generate-description', [AIServicesController::class, 'generateDescription']);
+
+    // Image enhancement and background removal
+    Route::post('/enhance-image', [AIServicesController::class, 'enhanceImage']);
+    Route::post('/remove-background', [AIServicesController::class, 'removeBackground']);
+
+    // Computer vision categorization
+    Route::post('/categorize-item', [AIServicesController::class, 'categorizeItem']);
+    Route::post('/batch-categorize', [AIServicesController::class, 'batchCategorize']);
 });
 
 // Recommendation routes (both public and protected)
@@ -225,4 +237,8 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     // Admin content pages management routes
     Route::apiResource('content-pages', \App\Http\Controllers\Api\Admin\ContentPagesController::class);
     Route::patch('/content-pages/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\ContentPagesController::class, 'toggleStatus']);
+
+    // Admin category import routes
+    Route::post('/categories/import/jiji', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importFromJiji']);
+    Route::get('/categories/import/status', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importStatus']);
 });
