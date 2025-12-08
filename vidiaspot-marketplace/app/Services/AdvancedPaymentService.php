@@ -138,15 +138,26 @@ class AdvancedPaymentService
     /**
      * Creates an insurance policy for an ad or general purchase
      */
-    public function createInsurancePolicy($policyData)
+    public function createInsurancePolicy($policyData, $country = null, $state = null, $city = null)
     {
+        // Check if insurance policy feature is available
+        $featureService = new \App\Services\FeatureAvailabilityService();
+        if (!$featureService->isInsurancePolicyAvailable($country, $state, $city)) {
+            throw new \Exception('Insurance policy feature is not available in your region');
+        }
+
         $policyNumber = $this->generatePolicyNumber();
+
+        // Find provider by name to get provider ID
+        $provider = \App\Models\InsuranceProvider::where('name', $policyData['provider'])->first();
+        $providerId = $provider ? $provider->id : null;
 
         $policy = InsurancePolicy::create([
             'user_id' => $policyData['user_id'],
             'ad_id' => $policyData['ad_id'] ?? null,
             'policy_number' => $policyNumber,
             'provider' => $policyData['provider'],
+            'provider_id' => $providerId,
             'coverage_type' => $policyData['coverage_type'],
             'policy_title' => $policyData['policy_title'],
             'description' => $policyData['description'],
@@ -164,6 +175,24 @@ class AdvancedPaymentService
             'documents' => $policyData['documents'] ?? [],
             'terms_and_conditions' => $policyData['terms_and_conditions'] ?? '',
             'custom_fields' => $policyData['custom_fields'] ?? [],
+            'insurance_category' => $policyData['insurance_category'] ?? null,
+            'insured_value' => $policyData['insured_value'] ?? null,
+            'deductible_amount' => $policyData['deductible_amount'] ?? null,
+            'payment_frequency' => $policyData['payment_frequency'] ?? null,
+            'agent_id' => $policyData['agent_id'] ?? null,
+            'commission_rate' => $policyData['commission_rate'] ?? null,
+            'commission_amount' => $policyData['commission_amount'] ?? null,
+            'renewal_reminder_sent' => false,
+            'next_renewal_date' => $policyData['next_renewal_date'] ?? null,
+            'policy_type' => $policyData['policy_type'] ?? null,
+            'coverage_area' => $policyData['coverage_area'] ?? null,
+            'network_hospitals' => $policyData['network_hospitals'] ?? null,
+            'zero_depreciation' => $policyData['zero_depreciation'] ?? false,
+            'ncb_protector' => $policyData['ncb_protector'] ?? false,
+            'policy_documents' => $policyData['policy_documents'] ?? [],
+            'claim_status' => null,
+            'claim_amount' => null,
+            'claim_date' => null,
         ]);
 
         return $policy;
@@ -230,6 +259,9 @@ class AdvancedPaymentService
         $policy->update([
             'status' => 'claimed',
             'claimed_at' => now(),
+            'claim_status' => 'pending',
+            'claim_amount' => $claimData['claim_amount'] ?? null,
+            'claim_date' => now(),
         ]);
 
         // Add claim to policy details (in a real app, this would be a separate Claims model)
@@ -238,7 +270,7 @@ class AdvancedPaymentService
             'id' => 'claim_' . time() . '_' . rand(1000, 9999),
             'submitted_at' => now(),
             'details' => $claimData,
-            'status' => 'reviewing',
+            'status' => 'pending',
         ];
 
         $policy->update([
@@ -249,12 +281,243 @@ class AdvancedPaymentService
     }
 
     /**
+     * Calculate insurance premium using the calculator service
+     */
+    public function calculateInsurancePremium($calculationData, $country = null, $state = null, $city = null)
+    {
+        // Check if insurance policy feature is available
+        $featureService = new \App\Services\FeatureAvailabilityService();
+        if (!$featureService->isInsurancePolicyAvailable($country, $state, $city)) {
+            throw new \Exception('Insurance policy feature is not available in your region');
+        }
+
+        $calculator = new \App\Services\InsuranceCalculatorService();
+
+        switch ($calculationData['type']) {
+            case 'life':
+                return $calculator->calculateLifeInsurancePremium(
+                    $calculationData['age'],
+                    $calculationData['sum_assured'],
+                    $calculationData['term'],
+                    $calculationData['smoking_status'] ?? 'no',
+                    $calculationData['gender'] ?? 'male',
+                    $calculationData['health_status'] ?? 'good'
+                );
+            case 'health':
+                return $calculator->calculateHealthInsurancePremium(
+                    $calculationData['age'],
+                    $calculationData['sum_insured'],
+                    $calculationData['member_count'] ?? 1,
+                    $calculationData['room_category'] ?? 'general',
+                    $calculationData['pre_existing_condition'] ?? false,
+                    $calculationData['location'] ?? 'metro'
+                );
+            case 'motor':
+                return $calculator->calculateMotorInsurancePremium(
+                    $calculationData['vehicle_type'] ?? 'car',
+                    $calculationData['vehicle_value'],
+                    $calculationData['manufacture_year'],
+                    $calculationData['idv_percentage'] ?? 95,
+                    $calculationData['ncb'] ?? 0,
+                    $calculationData['zero_depreciation'] ?? false,
+                    $calculationData['engine_cc'] ?? 1200
+                );
+            default:
+                throw new \Exception('Invalid insurance type for calculation');
+        }
+    }
+
+    /**
+     * Calculate EMI for insurance premium payments
+     */
+    public function calculateInsuranceEMI($principal, $interestRate, $tenure, $frequency = 'monthly')
+    {
+        $calculator = new \App\Services\InsuranceCalculatorService();
+        return $calculator->calculateEMI($principal, $interestRate, $tenure, $frequency);
+    }
+
+    /**
+     * Compare insurance policies from different providers
+     */
+    public function compareInsurancePolicies($requirements, $category, $country = null, $state = null, $city = null)
+    {
+        // Check if insurance aggregator feature is available
+        $featureService = new \App\Services\FeatureAvailabilityService();
+        if (!$featureService->isInsuranceAggregatorAvailable($country, $state, $city)) {
+            throw new \Exception('Insurance comparison feature is not available in your region');
+        }
+
+        // Filter providers based on location and availability
+        $availableProviders = $featureService->getAvailableInsuranceProviders($category, $country, $state, $city);
+
+        if ($availableProviders->isEmpty()) {
+            throw new \Exception('No insurance providers available in your region');
+        }
+
+        $calculator = new \App\Services\InsuranceCalculatorService();
+        $providers = $calculator->compareInsurancePolicies($requirements, $category);
+
+        // Filter providers based on available providers in the user's region
+        $filteredProviders = [];
+        foreach ($providers as $provider) {
+            $providerName = $provider['name'];
+            $matchingProvider = $availableProviders->first(function($p) use ($providerName) {
+                return strpos(strtolower($p->name), strtolower($providerName)) !== false;
+            });
+
+            if ($matchingProvider) {
+                $filteredProviders[] = $provider;
+            }
+        }
+
+        return $filteredProviders;
+    }
+
+    /**
+     * Get all insurance providers
+     */
+    public function getInsuranceProviders($category = null, $area = null, $country = null, $state = null, $city = null)
+    {
+        // Check if insurance policy feature is available
+        $featureService = new \App\Services\FeatureAvailabilityService();
+        if (!$featureService->isInsurancePolicyAvailable($country, $state, $city)) {
+            return collect(); // Return empty collection if feature is not available
+        }
+
+        return $featureService->getAvailableInsuranceProviders($category, $country, $state, $city);
+    }
+
+    /**
+     * Send renewal reminders to policyholders
+     */
+    public function sendRenewalReminders($daysBeforeRenewal = 15)
+    {
+        $renewalDate = now()->addDays($daysBeforeRenewal);
+        $policies = InsurancePolicy::where('next_renewal_date', $renewalDate)
+                                  ->where('renewal_reminder_sent', false)
+                                  ->where('status', 'active')
+                                  ->get();
+
+        foreach ($policies as $policy) {
+            // In a real app, this would send an email/SMS notification
+            $policy->update(['renewal_reminder_sent' => true]);
+
+            // Log reminder sent or queue notification
+            // Here we could integrate with notification services
+        }
+
+        return $policies->count() . ' renewal reminders sent';
+    }
+
+    /**
+     * Get policy documents for a user
+     */
+    public function getPolicyDocuments($userId)
+    {
+        return InsurancePolicy::where('user_id', $userId)
+                             ->whereNotNull('policy_documents')
+                             ->get(['policy_number', 'policy_title', 'policy_documents', 'created_at']);
+    }
+
+    /**
+     * Upload policy document
+     */
+    public function uploadPolicyDocument($policyId, $documentPath, $documentType = 'policy')
+    {
+        $policy = InsurancePolicy::findOrFail($policyId);
+
+        $documents = $policy->policy_documents ?? [];
+        $documents[] = [
+            'type' => $documentType,
+            'path' => $documentPath,
+            'uploaded_at' => now(),
+            'status' => 'uploaded'
+        ];
+
+        $policy->update(['policy_documents' => $documents]);
+
+        return $policy;
+    }
+
+    /**
+     * Track commission for agents
+     */
+    public function trackAgentCommission($agentId, $policyId, $amount)
+    {
+        $policy = InsurancePolicy::findOrFail($policyId);
+
+        $policy->update([
+            'agent_id' => $agentId,
+            'commission_amount' => $amount,
+            'commission_rate' => ($amount / $policy->premium_amount) * 100
+        ]);
+
+        // Could also store in a separate commission tracking table
+        return $policy;
+    }
+
+    /**
+     * Get user's insurance dashboard data
+     */
+    public function getUserInsuranceDashboard($userId)
+    {
+        $activePolicies = InsurancePolicy::where('user_id', $userId)
+                                        ->where('status', 'active')
+                                        ->count();
+
+        $expiringPolicies = InsurancePolicy::where('user_id', $userId)
+                                           ->where('status', 'active')
+                                           ->where('effective_until', '<=', now()->addDays(30))
+                                           ->count();
+
+        $totalCoverage = InsurancePolicy::where('user_id', $userId)
+                                        ->sum('coverage_amount');
+
+        $totalPremium = InsurancePolicy::where('user_id', $userId)
+                                       ->sum('premium_amount');
+
+        $totalClaims = InsurancePolicy::where('user_id', $userId)
+                                      ->whereNotNull('claim_status')
+                                      ->count();
+
+        return [
+            'total_policies' => $activePolicies,
+            'expiring_policies' => $expiringPolicies,
+            'total_coverage' => $totalCoverage,
+            'total_premium_paid' => $totalPremium,
+            'total_claims_made' => $totalClaims,
+        ];
+    }
+
+    /**
+     * Create term insurance policy with riders
+     */
+    public function createTermInsurancePolicy($policyData, $country = null, $state = null, $city = null)
+    {
+        $calculator = new \App\Services\InsuranceCalculatorService();
+        $premiumCalc = $calculator->calculateTermInsuranceWithRiders(
+            $policyData['age'] ?? 30,
+            $policyData['sum_assured'] ?? 5000000,
+            $policyData['term'] ?? 20,
+            $policyData['riders'] ?? []
+        );
+
+        $policyData['premium_amount'] = $premiumCalc['total_premium'];
+        $policyData['custom_fields'] = array_merge($policyData['custom_fields'] ?? [], [
+            'riders' => $policyData['riders'] ?? [],
+            'premium_breakdown' => $premiumCalc
+        ]);
+
+        return $this->createInsurancePolicy($policyData, $country, $state, $city);
+    }
+
+    /**
      * Process insurance for high-value ads
      */
-    public function processAdInsurance($adId, $userId, $insuranceData)
+    public function processAdInsurance($adId, $userId, $insuranceData, $country = null, $state = null, $city = null)
     {
         $ad = Ad::findOrFail($adId);
-        
+
         $policyData = [
             'user_id' => $userId,
             'ad_id' => $adId,
@@ -276,7 +539,7 @@ class AdvancedPaymentService
             'terms_and_conditions' => $insuranceData['terms'] ?? '',
         ];
 
-        return $this->createInsurancePolicy($policyData);
+        return $this->createInsurancePolicy($policyData, $country, $state, $city);
     }
 
     /**

@@ -361,9 +361,9 @@ class VendorStoreController extends Controller
     public function submitInsuranceClaim(Request $request, $policyId)
     {
         $user = Auth::user();
-        
+
         $policy = InsurancePolicy::findOrFail($policyId);
-        
+
         if ($policy->user_id !== $user->id) {
             abort(403, 'Unauthorized');
         }
@@ -374,12 +374,14 @@ class VendorStoreController extends Controller
             'damage_photos.*' => 'image|max:5120', // Max 5MB per photo
             'circumstances' => 'required|string',
             'any_witnesses' => 'nullable|string',
+            'claim_amount' => 'required|numeric|min:0',
         ]);
 
         $claimData = $request->only([
             'claim_description',
             'circumstances',
             'any_witnesses',
+            'claim_amount',
         ]);
 
         if ($request->hasFile('damage_photos')) {
@@ -395,6 +397,197 @@ class VendorStoreController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Claim submitted successfully',
+            'policy' => $policy,
+        ]);
+    }
+
+    /**
+     * Calculate insurance premium
+     */
+    public function calculateInsurancePremium(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|in:life,health,motor,travel,home',
+            'age' => 'required_if:type,life,health,motor|integer|min:18|max:70',
+            'sum_assured' => 'required_if:type,life|numeric|min:100000',
+            'sum_insured' => 'required_if:type,health|numeric|min:10000',
+            'vehicle_value' => 'required_if:type,motor|numeric|min:50000',
+            'manufacture_year' => 'required_if:type,motor|integer|min:1990|max:' . date('Y'),
+            'country' => 'nullable|string',
+            'state' => 'nullable|string',
+            'city' => 'nullable|string',
+        ]);
+
+        $calculationData = $request->all();
+        $result = $this->advancedPaymentService->calculateInsurancePremium(
+            $calculationData,
+            $request->country,
+            $request->state,
+            $request->city
+        );
+
+        return response()->json([
+            'success' => true,
+            'calculation' => $result,
+        ]);
+    }
+
+    /**
+     * Calculate EMI for insurance payments
+     */
+    public function calculateInsuranceEMI(Request $request)
+    {
+        $request->validate([
+            'principal' => 'required|numeric|min:0',
+            'interest_rate' => 'required|numeric|min:0|max:100',
+            'tenure' => 'required|integer|min:1',
+            'frequency' => 'in:monthly,quarterly,half-yearly'
+        ]);
+
+        $result = $this->advancedPaymentService->calculateInsuranceEMI(
+            $request->principal,
+            $request->interest_rate,
+            $request->tenure,
+            $request->frequency
+        );
+
+        return response()->json([
+            'success' => true,
+            'emi' => $result,
+        ]);
+    }
+
+    /**
+     * Compare insurance policies
+     */
+    public function compareInsurancePolicies(Request $request)
+    {
+        $request->validate([
+            'category' => 'required|in:life,health,motor,travel,home',
+            'requirements' => 'required|array',
+            'country' => 'nullable|string',
+            'state' => 'nullable|string',
+            'city' => 'nullable|string',
+        ]);
+
+        $requirements = $request->requirements;
+        $category = $request->category;
+
+        $providers = $this->advancedPaymentService->compareInsurancePolicies(
+            $requirements,
+            $category,
+            $request->country,
+            $request->state,
+            $request->city
+        );
+
+        return response()->json([
+            'success' => true,
+            'providers' => $providers,
+        ]);
+    }
+
+    /**
+     * Get insurance providers
+     */
+    public function getInsuranceProviders(Request $request)
+    {
+        $category = $request->get('category');
+        $area = $request->get('area');
+        $country = $request->get('country');
+        $state = $request->get('state');
+        $city = $request->get('city');
+
+        $providers = $this->advancedPaymentService->getInsuranceProviders($category, $area, $country, $state, $city);
+
+        return response()->json([
+            'success' => true,
+            'providers' => $providers,
+        ]);
+    }
+
+    /**
+     * Get user's insurance dashboard
+     */
+    public function getUserInsuranceDashboard()
+    {
+        $user = Auth::user();
+        $dashboard = $this->advancedPaymentService->getUserInsuranceDashboard($user->id);
+
+        return response()->json([
+            'success' => true,
+            'dashboard' => $dashboard,
+        ]);
+    }
+
+    /**
+     * Get policy documents for user
+     */
+    public function getPolicyDocuments()
+    {
+        $user = Auth::user();
+        $documents = $this->advancedPaymentService->getPolicyDocuments($user->id);
+
+        return response()->json([
+            'success' => true,
+            'documents' => $documents,
+        ]);
+    }
+
+    /**
+     * Create term insurance policy with riders
+     */
+    public function createTermInsurancePolicy(Request $request)
+    {
+        $user = Auth::user();
+        $request->validate([
+            'age' => 'required|integer|min:18|max:65',
+            'sum_assured' => 'required|numeric|min:100000',
+            'term' => 'required|integer|min:5|max:40',
+            'riders' => 'array',
+            'riders.accidental_death_benefit' => 'boolean',
+            'riders.critical_illness' => 'boolean',
+            'riders.waiver_of_premium' => 'boolean',
+            // Add other standard policy validations
+            'provider' => 'required|string|max:255',
+            'coverage_type' => 'required|in:life,health,motor,travel,home,term',
+            'policy_title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'premium_amount' => 'required|numeric|min:0',
+            'coverage_amount' => 'required|numeric|min:0',
+            'effective_from' => 'required|date',
+            'effective_until' => 'required|date|after:effective_from',
+            'risk_level' => 'required|in:low,medium,high',
+        ]);
+
+        $policyData = $request->only([
+            'age',
+            'sum_assured',
+            'term',
+            'riders',
+            'provider',
+            'coverage_type',
+            'policy_title',
+            'description',
+            'effective_from',
+            'effective_until',
+            'risk_level',
+            'coverage_details',
+            'exclusions',
+            'claim_requirements',
+            'beneficiaries',
+            'documents',
+            'terms_and_conditions',
+            'custom_fields',
+        ]);
+
+        $policyData['user_id'] = $user->id;
+
+        $policy = $this->advancedPaymentService->createTermInsurancePolicy($policyData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Term insurance policy created successfully',
             'policy' => $policy,
         ]);
     }

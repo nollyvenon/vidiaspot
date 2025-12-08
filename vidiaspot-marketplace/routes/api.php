@@ -278,6 +278,16 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('content-pages', \App\Http\Controllers\Api\Admin\ContentPagesController::class);
     Route::patch('/content-pages/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\ContentPagesController::class, 'toggleStatus']);
 
+    // Feature flags management routes (Admin)
+    Route::apiResource('feature-flags', \App\Http\Controllers\Api\Admin\FeatureFlagsController::class);
+    Route::patch('/feature-flags/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\FeatureFlagsController::class, 'toggleStatus']);
+    Route::put('/feature-flags/{id}/region', [\App\Http\Controllers\Api\Admin\FeatureFlagsController::class, 'updateRegion']);
+    Route::post('/feature-flags/check-availability', [\App\Http\Controllers\Api\Admin\FeatureFlagsController::class, 'checkAvailability']);
+
+    // Insurance providers management routes (Admin)
+    Route::apiResource('insurance-providers', \App\Http\Controllers\Api\Admin\InsuranceProvidersController::class);
+    Route::patch('/insurance-providers/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\InsuranceProvidersController::class, 'toggleStatus']);
+
     // Store template management routes (Admin)
     Route::apiResource('store-templates', \App\Http\Controllers\Api\Admin\StoreTemplatesController::class);
     Route::patch('/store-templates/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\StoreTemplatesController::class, 'toggleStatus']);
@@ -291,6 +301,15 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/insurance-policies', [\App\Http\Controllers\VendorStoreController::class, 'getUserInsurancePolicies']);
     Route::post('/ads/{adId}/insurance', [\App\Http\Controllers\VendorStoreController::class, 'processAdInsurance']);
     Route::post('/insurance-policies/{policyId}/claim', [\App\Http\Controllers\VendorStoreController::class, 'submitInsuranceClaim']);
+
+    // Enhanced insurance features
+    Route::post('/insurance/calculate-premium', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsurancePremium']);
+    Route::post('/insurance/calculate-emi', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsuranceEMI']);
+    Route::post('/insurance/compare', [\App\Http\Controllers\VendorStoreController::class, 'compareInsurancePolicies']);
+    Route::get('/insurance/providers', [\App\Http\Controllers\VendorStoreController::class, 'getInsuranceProviders']);
+    Route::get('/insurance/dashboard', [\App\Http\Controllers\VendorStoreController::class, 'getUserInsuranceDashboard']);
+    Route::get('/insurance/documents', [\App\Http\Controllers\VendorStoreController::class, 'getPolicyDocuments']);
+    Route::post('/insurance/term', [\App\Http\Controllers\VendorStoreController::class, 'createTermInsurancePolicy']);
 
     // Admin category import routes
     Route::post('/categories/import/jiji', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importFromJiji']);
