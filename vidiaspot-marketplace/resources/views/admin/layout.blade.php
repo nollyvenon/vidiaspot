@@ -253,6 +253,11 @@
                             <i class="mr-2">📝</i> Blogs
                         </a>
                     </li>
+                    <li class="{{ request()->routeIs('admin.how-it-works.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.how-it-works.index') }}">
+                            <i class="mr-2">⚙️</i> How It Works
+                        </a>
+                    </li>
                     <li class="{{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                         <a href="{{ route('admin.settings.index') }}">
                             <i class="mr-2">⚙️</i> Settings
