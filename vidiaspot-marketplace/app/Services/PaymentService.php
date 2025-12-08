@@ -449,7 +449,7 @@ class PaymentService
      */
     public function getFeatureStatus($featureKey)
     {
-        return PaymentSetting::getFeatureStatus($featureKey);
+        return \App\Models\PaymentSetting::getFeatureStatus($featureKey);
     }
 
     /**
@@ -457,7 +457,7 @@ class PaymentService
      */
     public function isFeatureAvailableInCountry($featureKey, $countryCode)
     {
-        return PaymentSetting::isAvailableInCountry($featureKey, $countryCode);
+        return \App\Models\PaymentSetting::isAvailableInCountry($featureKey, $countryCode);
     }
 
     /**
@@ -465,6 +465,6 @@ class PaymentService
      */
     public function getEnabledFeaturesForCountry($countryCode)
     {
-        return PaymentSetting::getEnabledFeaturesForCountry($countryCode);
+        return \App\Models\PaymentSetting::getEnabledFeaturesForCountry($countryCode);
     }
 }

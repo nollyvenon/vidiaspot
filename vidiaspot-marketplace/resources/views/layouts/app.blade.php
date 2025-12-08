@@ -165,6 +165,9 @@
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('contact') ? 'active' : '' }}" href="/contact">Contact</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('api-docs') ? 'active' : '' }}" href="/api-docs">API Docs</a>
+                    </li>
                 </ul>
 
                 <div class="d-flex">
