@@ -46,4 +46,12 @@ class VendorStore extends Model
     {
         return $this->hasMany(Ad::class, 'user_id'); // Vendors own ads through their user account
     }
+
+    /**
+     * Get the orders associated with this vendor store
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
 }

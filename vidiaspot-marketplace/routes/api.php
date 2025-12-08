@@ -302,6 +302,16 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/ads/{adId}/insurance', [\App\Http\Controllers\VendorStoreController::class, 'processAdInsurance']);
     Route::post('/insurance-policies/{policyId}/claim', [\App\Http\Controllers\VendorStoreController::class, 'submitInsuranceClaim']);
 
+    // Shopping cart routes
+    Route::post('/cart/add', [\App\Http\Controllers\ShoppingCartController::class, 'addToCart']);
+    Route::get('/cart', [\App\Http\Controllers\ShoppingCartController::class, 'getCart']);
+    Route::put('/cart/{adId}', [\App\Http\Controllers\ShoppingCartController::class, 'updateCartItem']);
+    Route::delete('/cart/{adId}', [\App\Http\Controllers\ShoppingCartController::class, 'removeFromCart']);
+    Route::delete('/cart', [\App\Http\Controllers\ShoppingCartController::class, 'clearCart']);
+    Route::post('/cart/checkout', [\App\Http\Controllers\ShoppingCartController::class, 'createOrder']);
+    Route::get('/orders', [\App\Http\Controllers\ShoppingCartController::class, 'getOrderHistory']);
+    Route::get('/orders/{orderNumber}', [\App\Http\Controllers\ShoppingCartController::class, 'getOrder']);
+
     // Enhanced insurance features
     Route::post('/insurance/calculate-premium', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsurancePremium']);
     Route::post('/insurance/calculate-emi', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsuranceEMI']);

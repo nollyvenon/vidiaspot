@@ -543,6 +543,42 @@ class AdvancedPaymentService
     }
 
     /**
+     * Process e-commerce transaction for ad purchase
+     */
+    public function processAdPurchase($adId, $userId, $customerData, $paymentData)
+    {
+        $ad = Ad::findOrFail($adId);
+        $vendor = $ad->user; // The user who posted the ad
+
+        // Create a payment transaction
+        $paymentTransaction = \App\Models\PaymentTransaction::create([
+            'user_id' => $userId,
+            'vendor_id' => $vendor->id,
+            'ad_id' => $adId,
+            'amount' => $ad->price,
+            'currency' => $ad->currency_code ?? 'NGN',
+            'payment_method' => $paymentData['payment_method'] ?? 'other',
+            'transaction_id' => $paymentData['transaction_id'] ?? null,
+            'status' => 'completed',
+            'payment_gateway' => $paymentData['payment_gateway'] ?? null,
+            'payment_response' => $paymentData['payment_response'] ?? null,
+            'metadata' => [
+                'customer_data' => $customerData,
+                'item_description' => $ad->title,
+            ],
+        ]);
+
+        // Update ad status to mark as sold (optional)
+        $ad->update(['status' => 'sold']);
+
+        return [
+            'success' => true,
+            'transaction' => $paymentTransaction,
+            'message' => 'Ad purchased successfully'
+        ];
+    }
+
+    /**
      * Get predefined custom field templates for different categories
      */
     public function getCustomFieldTemplates($category = null)
