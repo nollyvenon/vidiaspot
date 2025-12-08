@@ -367,6 +367,20 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/orders', [\App\Http\Controllers\ShoppingCartController::class, 'getOrderHistory']);
     Route::get('/orders/{orderNumber}', [\App\Http\Controllers\ShoppingCartController::class, 'getOrder']);
 
+    // Advanced listing features
+    Route::post('/advanced-listings/upload-360-photos', [\App\Http\Controllers\AdvancedListingController::class, 'upload360Photos']);
+    Route::post('/advanced-listings/upload-video', [\App\Http\Controllers\AdvancedListingController::class, 'uploadVideo']);
+    Route::post('/advanced-listings/create-vr-tour', [\App\Http\Controllers\AdvancedListingController::class, 'createVRTour']);
+    Route::post('/advanced-listings/create-interactive-demo', [\App\Http\Controllers\AdvancedListingController::class, 'createInteractiveDemo']);
+    Route::get('/advanced-listings/{adId}/inventory', [\App\Http\Controllers\AdvancedListingController::class, 'getLiveInventory']);
+    Route::post('/advanced-listings/{adId}/inventory', [\App\Http\Controllers\AdvancedListingController::class, 'updateInventory']);
+    Route::post('/advanced-listings/setup-renew-optimization', [\App\Http\Controllers\AdvancedListingController::class, 'setupAutoRenewOptimization']);
+    Route::post('/advanced-listings/run-optimization/{optimizerId}', [\App\Http\Controllers\AdvancedListingController::class, 'runOptimization']);
+    Route::post('/advanced-listings/create-ab-test', [\App\Http\Controllers\AdvancedListingController::class, 'createABTest']);
+    Route::get('/advanced-listings/ab-test-results/{testId}', [\App\Http\Controllers\AdvancedListingController::class, 'getABTestResults']);
+    Route::post('/advanced-listings/book-photography-service', [\App\Http\Controllers\AdvancedListingController::class, 'bookPhotographyService']);
+    Route::get('/advanced-listings/features/{adId}', [\App\Http\Controllers\AdvancedListingController::class, 'getAdvancedListingFeatures']);
+
     // Enhanced insurance features
     Route::post('/insurance/calculate-premium', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsurancePremium']);
     Route::post('/insurance/calculate-emi', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsuranceEMI']);

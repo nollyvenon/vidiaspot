@@ -2,13 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use App\Models\VerificationRecord;
 use App\Models\TrustScore;
 use App\Models\Report;
 use App\Models\BuyerProtection;
-use App\Models\User;
-use Illuminate\Support\Facades\Storage;
+use App\Models\InsuranceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class TrustSafetyService
 {
@@ -19,45 +20,53 @@ class TrustSafetyService
     {
         $user = User::findOrFail($userId);
 
-        // Create verification record
         $verification = VerificationRecord::create([
             'user_id' => $userId,
             'verification_type' => $type,
             'verification_subtype' => $subtype ?? $type,
-            'verification_metadata' => ['initiated' => now()->toISOString()],
+            'verification_metadata' => [
+                'initiated_by' => $userId,
+                'initiated_at' => now()->toISOString(),
+                'initiated_from' => request()->ip(),
+                'device_info' => request()->userAgent(),
+            ],
             'status' => 'pending',
             'result' => 'pending',
-            'verification_session_id' => 'VRS_' . Str::random(16),
+            'verification_session_id' => 'VRS_' . strtoupper(Str::random(12)),
+            'ip_address' => request()->ip(),
+            'device_info' => ['user_agent' => request()->userAgent()],
         ]);
 
-        // Trigger biometric capture process
-        $this->triggerBiometricCapture($verification->id);
-
+        // Trigger biometric capture in frontend
         return $verification;
     }
 
     /**
-     * Process biometric verification (simulated)
+     * Process biometric verification data
      */
     public function processBiometricVerification($verificationId, $biometricData)
     {
         $verification = VerificationRecord::findOrFail($verificationId);
-        
-        // Simulate biometric processing (in real app, this would connect to biometric processing service)
-        $confidence = mt_rand(70, 99); // Generate random confidence score
-        
-        // Update verification record
+
+        // In a real implementation, this would connect to a biometric verification service
+        // For this simulation, we'll generate a confidence score based on the data
+        $confidence = mt_rand(70, 99);
+
         $verification->update([
             'verification_data' => encrypt(json_encode($biometricData)),
             'confidence_score' => $confidence,
-            'result' => $confidence > 80 ? 'success' : 'failed',
-            'status' => $confidence > 80 ? 'active' : 'inactive',
+            'result' => $confidence >= 80 ? 'success' : 'failed',
+            'status' => $confidence >= 80 ? 'active' : 'inactive',
             'verified_at' => now(),
-            'expires_at' => now()->addMonths(6), // Expires after 6 months
+            'expires_at' => now()->addMonths(6), // Valid for 6 months
+            'verification_metadata' => array_merge(
+                $verification->verification_metadata ?? [],
+                ['confidence_score' => $confidence, 'processed_at' => now()]
+            ),
             'hash_verification' => hash('sha256', json_encode($biometricData)),
         ]);
 
-        // Update user's verification level if successful
+        // Update user's verification status if successful
         if ($verification->result === 'success') {
             $this->updateUserVerificationLevel($verification->user_id);
         }
@@ -77,17 +86,16 @@ class TrustSafetyService
             'verification_type' => 'video',
             'verification_subtype' => $purpose,
             'verification_metadata' => [
-                'initiated_for' => $transactionId,
-                'purpose' => $purpose,
-                'initiated' => now()->toISOString()
+                'initiated_for_transaction' => $transactionId,
+                'verification_purpose' => $purpose,
+                'initiated_at' => now()->toISOString(),
+                'initiated_from' => request()->ip(),
             ],
             'status' => 'pending',
             'result' => 'pending',
-            'verification_session_id' => 'VID_' . Str::random(16),
+            'verification_session_id' => 'VID_' . strtoupper(Str::random(12)),
+            'ip_address' => request()->ip(),
         ]);
-
-        // In a real app, we'd trigger video recording process
-        // For now, we'll simulate it being processed
 
         return $verification;
     }
@@ -99,15 +107,19 @@ class TrustSafetyService
     {
         $verification = VerificationRecord::findOrFail($verificationId);
 
-        // In a real app, this would use face recognition and identity verification APIs
-        $confidence = mt_rand(75, 100); // Face recognition confidence
-        
+        // In a real implementation, this would use face recognition and identity verification services
+        $confidence = mt_rand(75, 100); // Simulated confidence score
+
         $verification->update([
             'file_path' => $videoPath,
-            'verification_metadata' => array_merge($verification->verification_metadata ?? [], $metadata),
+            'verification_metadata' => array_merge(
+                $verification->verification_metadata ?? [],
+                $metadata,
+                ['confidence_score' => $confidence, 'processed_at' => now()]
+            ),
             'confidence_score' => $confidence,
-            'result' => $confidence > 85 ? 'success' : 'failed',
-            'status' => $confidence > 85 ? 'active' : 'inactive',
+            'result' => $confidence >= 85 ? 'success' : 'failed',
+            'status' => $confidence >= 85 ? 'active' : 'inactive',
             'verified_at' => now(),
             'expires_at' => now()->addMonths(3), // Video verification valid for 3 months
         ]);
@@ -122,7 +134,7 @@ class TrustSafetyService
     /**
      * Create a report for community monitoring
      */
-    public function createReport($reporterUserId, $entityType, $entityId, $reportType, $description, $evidenceAttachements = [])
+    public function createReport($reporterUserId, $entityType, $entityId, $reportType, $description, $evidenceAttachments = [])
     {
         $report = Report::create([
             'reporter_user_id' => $reporterUserId,
@@ -130,37 +142,41 @@ class TrustSafetyService
             'reported_entity_id' => $entityId,
             'report_type' => $reportType,
             'description' => $description,
-            'evidence_attachments' => $evidenceAttachements,
+            'evidence_attachments' => $evidenceAttachments,
             'status' => 'pending',
-            'severity_level' => 'medium', // Will be adjusted by AI
+            'severity_level' => 'medium', // Will be adjusted by AI analysis
+            'ai_analysis_results' => [
+                'initial_severity' => 'medium',
+                'flags' => [],
+                'automated_decision' => null
+            ],
         ]);
 
-        // Run AI analysis on the report
-        $aiAnalysis = $this->analyzeReportWithAI($report);
-        
-        // Update the report with AI analysis results
+        // Simulate AI analysis which would happen in real implementation
+        $analysis = $this->analyzeReportWithAI($report);
+
         $report->update([
-            'ai_analysis_results' => $aiAnalysis,
-            'severity_level' => $aiAnalysis['predicted_severity'] ?? 'medium',
-            'manual_review_required' => $aiAnalysis['requires_manual_review'] ?? true,
+            'ai_analysis_results' => $analysis,
+            'severity_level' => $analysis['predicted_severity'] ?? 'medium',
+            'manual_review_required' => $analysis['requires_manual_review'] ?? true,
         ]);
 
-        // Update trust scores based on report
+        // Update trust scores based on the report
         $this->updateRelatedTrustScores($report);
 
         return $report;
     }
 
     /**
-     * AI analysis of reports
+     * AI analysis of reports (simulated)
      */
     public function analyzeReportWithAI($report)
     {
-        // Simulated AI analysis - in real app, this would connect to ML service
-        $keywords = ['scam', 'fraud', 'fake', 'phishing', 'spam'];
+        // In real implementation, this would connect to AI/ML models
+        $keywords = ['scam', 'fraud', 'fake', 'phishing', 'counterfeit', 'imposter', 'fake'];
         $severity = 'medium';
-        $requiresReview = true;
         
+        // Check for keywords that might indicate high severity
         foreach ($keywords as $keyword) {
             if (stripos($report->description, $keyword) !== false) {
                 $severity = 'high';
@@ -168,22 +184,24 @@ class TrustSafetyService
             }
         }
 
-        // Check for repeated reports on same entity
-        $repeatCount = Report::where('reported_entity_type', $report->reported_entity_type)
-                           ->where('reported_entity_id', $report->reported_entity_id)
-                           ->count();
+        // Check if there are multiple reports on same entity recently
+        $recentReports = Report::where('reported_entity_type', $report->reported_entity_type)
+                            ->where('reported_entity_id', $report->reported_entity_id)
+                            ->where('created_at', '>', now()->subWeek())
+                            ->count();
 
-        if ($repeatCount >= 3) {
+        if ($recentReports >= 3) {
             $severity = 'high';
         }
 
         return [
             'predicted_severity' => $severity,
-            'requires_manual_review' => $requiresReview,
-            'confidence_score' => mt_rand(80, 95),
+            'requires_manual_review' => $severity === 'high',
+            'confidence_score' => mt_rand(70, 95),
             'predicted_category' => $report->report_type,
-            'automated_action' => null,
+            'automated_decision' => null, // Would be 'dismiss', 'verify', 'escalate', etc. in real impl
             'is_likely_spam' => false,
+            'detected_patterns' => [],
         ];
     }
 
@@ -192,43 +210,42 @@ class TrustSafetyService
      */
     public function getSellerPerformanceDashboard($userId)
     {
-        $trustScore = TrustScore::firstOrCreate([
-            'user_id' => $userId
-        ], [
+        $user = User::findOrFail($userId);
+        $trustScore = TrustScore::firstOrCreate(['user_id' => $userId], [
             'trust_score' => 50.00,
             'verification_level' => 'basic',
             'background_check_status' => 'pending',
         ]);
 
-        $user = User::find($userId);
-
+        // In a real implementation, we would gather actual metrics from transactions
         return [
             'user_info' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'registration_date' => $user->created_at,
+                'account_age_months' => now()->diffInMonths($user->created_at),
             ],
             'trust_metrics' => [
                 'overall_trust_score' => $trustScore->trust_score,
                 'verification_level' => $trustScore->verification_level,
-                'background_check_passed' => $trustScore->passedBackgroundCheck(),
-                'account_age_months' => $trustScore->account_age_months,
-                'total_transactions' => $trustScore->total_transactions,
+                'background_check_passed' => $trustScore->background_check_status === 'verified',
+                'account_age_months' => $trustScore->account_age_months ?? now()->diffInMonths($user->created_at),
+                'total_transactions' => $trustScore->total_transactions ?? 0,
                 'dispute_rate' => $trustScore->total_transactions > 0 ? 
-                                 ($trustScore->dispute_count / $trustScore->total_transactions) * 100 : 0,
-                'positive_interaction_rate' => ($trustScore->positive_interactions / 
-                                               max(1, $trustScore->positive_interactions + $trustScore->negative_interactions)) * 100,
+                                 min(100, ($trustScore->dispute_count / $trustScore->total_transactions) * 100) : 0,
+                'positive_interaction_rate' => $trustScore->positive_interactions + $trustScore->negative_interactions > 0 ?
+                                              ($trustScore->positive_interactions / ($trustScore->positive_interactions + $trustScore->negative_interactions)) * 100 : 0,
             ],
             'performance_indicators' => $trustScore->performance_indicators,
             'safety_indicators' => [
-                'suspicious_activities' => $trustScore->suspicious_activity_count,
-                'complaints_received' => $trustScore->complaint_count,
-                'fraud_indicators' => $trustScore->fraud_indicators,
+                'suspicious_activities' => $trustScore->suspicious_activity_count ?? 0,
+                'complaints_received' => $trustScore->complaint_count ?? 0,
+                'fraud_indicators' => $trustScore->fraud_indicators ?? [],
             ],
             'protection_eligibility' => [
-                'buyer_protection' => $trustScore->isEligibleForBuyerProtection(),
-                'transaction_insurance' => $trustScore->isEligibleForInsurance(),
+                'buyer_protection' => $trustScore->protection_eligibility ?? true,
+                'transaction_insurance' => $trustScore->insurance_eligibility ?? true,
             ],
         ];
     }
@@ -241,37 +258,39 @@ class TrustSafetyService
         $user = User::findOrFail($userId);
         $trustScore = $this->getTrustScore($userId);
 
-        // Check eligibility based on trust score
-        if (!$trustScore->isEligibleForBuyerProtection()) {
+        // Check if user is eligible for protection based on trust score
+        if (!$trustScore->protection_eligibility) {
             throw new \Exception('User not eligible for buyer protection');
         }
 
-        // Determine coverage amount and premium based on transaction
-        $transactionAmount = $this->getTransactionAmount($transactionId, $transactionType);
-        $coverageAmount = $transactionAmount * 1.1; // 110% of transaction value
-        $premiumAmount = $transactionAmount * 0.02; // 2% premium
+        // Calculate premium based on transaction value and risk
+        $transactionValue = $this->getTransactionValue($transactionId, $transactionType);
+        $coverageAmount = $transactionValue * 1.1; // 110% of transaction value
+        $premiumAmount = $transactionValue * 0.02; // 2% premium
 
         $protection = BuyerProtection::create([
             'user_id' => $userId,
             'transaction_id' => $transactionId,
             'transaction_type' => $transactionType,
             'transaction_reference' => $transactionReference,
-            'provider_id' => $providerId, // Could be default platform provider
-            'policy_number' => 'BP_' . date('Y') . '_' . strtoupper(Str::random(8)),
+            'provider_id' => $providerId,
+            'policy_number' => 'VBP_' . date('Y') . '_' . strtoupper(Str::random(8)), // VidiAspot Buyer Protection policy number
             'coverage_amount' => $coverageAmount,
             'premium_amount' => $premiumAmount,
             'status' => 'active',
-            'protection_type' => 'full_refund', // Default protection type
+            'protection_type' => 'full_refund',
             'coverage_terms' => [
-                'return_period' => '30 days',
+                'coverage_period' => '30_days',
                 'refund_percentage' => '100%',
-                'covered_issues' => ['damaged_goods', 'non_delivery', 'wrong_item', 'scam'],
+                'covered_issues' => ['damaged_goods', 'non_delivery', 'wrong_item', 'scam', 'non_receipt'],
                 'exclusions' => ['change_of_mind', 'abuse'],
             ],
             'exclusions' => ['change_of_mind', 'abuse'],
+            'claim_status' => 'no_claim',
             'purchase_date' => now(),
             'expiry_date' => now()->addYears(1),
             'renewal_date' => now()->addYears(1),
+            'custom_fields' => [],
         ]);
 
         return $protection;
@@ -288,8 +307,8 @@ class TrustSafetyService
             throw new \Exception('Claim already filed for this protection');
         }
 
-        if (!$protection->isEligibleForClaim()) {
-            throw new \Exception('Protection not eligible for claim');
+        if (!$protection->isValid()) {
+            throw new \Exception('Protection is no longer valid');
         }
 
         $protection->update([
@@ -298,8 +317,8 @@ class TrustSafetyService
             'claim_details' => [
                 'reason' => $reason,
                 'evidence' => $evidence,
-                'submitted_date' => now(),
-                'status' => 'pending review',
+                'submitted_at' => now(),
+                'status' => 'pending_review',
             ],
             'claim_date' => now(),
         ]);
@@ -315,18 +334,19 @@ class TrustSafetyService
         $user = User::findOrFail($userId);
         $trustScore = TrustScore::firstOrCreate(['user_id' => $userId]);
 
-        // In a real app, this would connect to background check service
+        // In a real implementation, this would connect to a background check service
         // For simulation, we'll randomly determine the result
-        $result = mt_rand(1, 100) > 10; // 90% chance of passing for demo
+        $passed = mt_rand(1, 100) > 10; // 90% pass rate for demo
 
         $trustScore->update([
-            'background_check_status' => $result ? 'verified' : 'flagged',
+            'background_check_status' => $passed ? 'verified' : 'flagged',
             'background_check_details' => [
                 'check_type' => $checkType,
-                'completed_at' => now(),
-                'result' => $result ? 'cleared' : 'flagged',
-                'details' => $result ? 'No issues found' : 'Potential issues detected',
-                'provider_used' => 'Simulated Background Check Service',
+                'performed_at' => now(),
+                'result' => $passed ? 'passed' : 'flagged',
+                'notes' => $passed ? 'No adverse findings' : 'Potential issues detected',
+                'provider_used' => 'Demo Background Check Service',
+                'raw_result' => $passed ? 'All clear' : 'Issues found',
             ],
         ]);
 
@@ -338,19 +358,17 @@ class TrustSafetyService
      */
     public function getTrustScore($userId)
     {
-        $trustScore = TrustScore::firstOrCreate(['user_id' => $userId], [
+        return TrustScore::firstOrCreate(['user_id' => $userId], [
             'trust_score' => 50.00,
             'verification_level' => 'basic',
             'background_check_status' => 'pending',
         ]);
-
-        return $trustScore;
     }
 
     /**
      * Update trust score based on activities
      */
-    public function updateTrustScore($userId, $scoreChange, $metric = null, $description = '')
+    public function updateTrustScore($userId, $pointsChange, $activityType = null, $description = '')
     {
         $trustScore = TrustScore::firstOrCreate(['user_id' => $userId], [
             'trust_score' => 50.00,
@@ -358,14 +376,13 @@ class TrustSafetyService
             'background_check_status' => 'pending',
         ]);
 
-        // Calculate new trust score
-        $newScore = max(0, min(100, $trustScore->trust_score + $scoreChange));
+        // Update trust score with bounds checking
+        $newScore = max(0, min(100, $trustScore->trust_score + $pointsChange));
 
-        // Update trust metrics
+        // Update metrics based on activity type
         $metrics = $trustScore->trust_metrics ?? [];
-        if ($metric) {
-            $metrics[$metric] = $metrics[$metric] ?? 0;
-            $metrics[$metric] += $scoreChange;
+        if ($activityType) {
+            $metrics[$activityType] = ($metrics[$activityType] ?? 0) + $pointsChange;
         }
 
         $trustScore->update([
@@ -381,37 +398,49 @@ class TrustSafetyService
     }
 
     /**
-     * Check user verification status
+     * Get user's verification status
      */
     public function getUserVerificationStatus($userId)
     {
         $verifications = VerificationRecord::where('user_id', $userId)
-                                          ->where('status', 'active')
-                                          ->get();
+                                         ->where('status', 'active')
+                                         ->get();
 
         $status = [
             'is_verified' => false,
             'verification_types' => [],
             'highest_verification' => 'basic',
             'verification_expiry' => null,
+            'verification_details' => [],
         ];
 
         foreach ($verifications as $verification) {
             $status['verification_types'][] = $verification->verification_type;
-            if ($verification->expires_at && (!$status['verification_expiry'] || $verification->expires_at < $status['verification_expiry'])) {
-                $status['verification_expiry'] = $verification->expires_at;
-            }
-        }
+            
+            $status['verification_details'][] = [
+                'type' => $verification->verification_type,
+                'subtype' => $verification->verification_subtype,
+                'confidence' => $verification->confidence_score,
+                'verified_at' => $verification->verified_at,
+                'expires_at' => $verification->expires_at,
+                'status' => $verification->status,
+            ];
 
-        if (!empty($status['verification_types'])) {
+            // Determine if any verification is active
             $status['is_verified'] = true;
-            // Determine highest verification level
-            if (in_array('biometric', $status['verification_types'])) {
+
+            // Update highest level based on verification type
+            if ($verification->verification_type === 'biometric' && $status['highest_verification'] !== 'biometric') {
                 $status['highest_verification'] = 'biometric';
-            } elseif (in_array('video', $status['verification_types'])) {
+            } elseif ($verification->verification_type === 'video' && !in_array($status['highest_verification'], ['biometric'])) {
                 $status['highest_verification'] = 'video';
-            } elseif (in_array('document', $status['verification_types'])) {
+            } elseif ($verification->verification_type === 'document' && $status['highest_verification'] === 'basic') {
                 $status['highest_verification'] = 'document';
+            }
+
+            // Update earliest expiry date
+            if ($verification->expires_at && (!$status['verification_expiry'] || $verification->expires_at->isBefore($status['verification_expiry']))) {
+                $status['verification_expiry'] = $verification->expires_at;
             }
         }
 
@@ -419,50 +448,151 @@ class TrustSafetyService
     }
 
     /**
-     * Process a completed transaction to update trust scores
+     * Get insurance providers by category and area
      */
-    public function processTransactionForTrust($transactionId, $transactionType, $buyerId, $sellerId, $amount)
+    public function getInsuranceProviders($category = null, $area = null)
     {
-        // Update buyer's trust score
-        $this->updateTrustScore($buyerId, 1, 'transactions_completed', "Completed transaction #{$transactionId}");
+        $query = InsuranceProvider::where('is_active', true);
 
-        // Update seller's trust score
-        $this->updateTrustScore($sellerId, 2, 'sales_completed', "Sold item in transaction #{$transactionId}");
+        if ($category) {
+            $query = $query->whereJsonContains('categories', $category);
+        }
 
-        // Update transaction counts
-        $this->updateTransactionCounts($buyerId, $sellerId);
+        if ($area) {
+            $query = $query->whereJsonContains('coverage_areas', $area);
+        }
+
+        return $query->orderBy('rating', 'desc')
+                    ->orderBy('claim_settlement_ratio', 'desc')
+                    ->get();
     }
 
     /**
-     * Private methods
+     * Calculate EMI for insurance premium payments
      */
-
-    private function triggerBiometricCapture($verificationId)
+    public function calculateEMI($principal, $interestRate, $tenure, $frequency = 'monthly')
     {
-        // In a real app, this would initiate the device's biometric scanner
-        // For simulation purposes, we're just logging
-        \Log::info("Biometric capture triggered for verification ID: {$verificationId}");
+        $monthlyRate = $interestRate / 1200; // Monthly interest rate (annual rate / 12 / 100)
+        
+        switch ($frequency) {
+            case 'monthly':
+                $n = $tenure; // Number of months
+                break;
+            case 'quarterly':
+                $n = $tenure * 4; // Number of quarters
+                $monthlyRate = $interestRate / 400; // Quarterly rate
+                break;
+            case 'half-yearly':
+                $n = $tenure * 2; // Number of half-years
+                $monthlyRate = $interestRate / 200; // Half-yearly rate
+                break;
+            default:
+                $n = $tenure;
+        }
+        
+        // EMI calculation formula
+        if ($monthlyRate > 0) {
+            $emi = $principal * $monthlyRate * pow(1 + $monthlyRate, $n) / (pow(1 + $monthlyRate, $n) - 1);
+        } else {
+            $emi = $principal / $n; // Simple division if no interest
+        }
+        
+        return [
+            'emi_amount' => round($emi, 2),
+            'total_amount' => round($emi * $n, 2),
+            'total_interest' => round(($emi * $n) - $principal, 2),
+            'frequency' => $frequency,
+            'tenure_periods' => $n,
+            'interest_rate' => $interestRate
+        ];
     }
+
+    /**
+     * Compare insurance policies from different providers
+     */
+    public function compareInsurancePolicies($requirements, $category)
+    {
+        $providers = $this->getInsuranceProviders($category);
+
+        $comparisons = [];
+
+        foreach ($providers as $provider) {
+            // Simulate comparison based on requirements
+            $score = mt_rand(70, 98); // Simulated fitness score
+            
+            $comparisons[] = [
+                'provider_id' => $provider->id,
+                'provider_name' => $provider->name,
+                'policy_name' => $provider->name . ' ' . ucfirst($category) . ' Insurance',
+                'coverage_amount' => $requirements['coverage_amount'] ?? 'varies',
+                'premium_amount' => $this->estimatePremium($provider, $requirements, $category),
+                'features' => $provider->features ?? [],
+                'claim_settlement_ratio' => $provider->claim_settlement_ratio ?? 'N/A',
+                'rating' => $provider->rating ?? 0,
+                'fit_score' => $score,
+                'network_coverage' => $provider->coverage_areas ?? [],
+            ];
+        }
+
+        // Sort by fit score
+        usort($comparisons, function($a, $b) {
+            return $b['fit_score'] <=> $a['fit_score'];
+        });
+
+        return $comparisons;
+    }
+
+    /**
+     * Get user's insurance dashboard data
+     */
+    public function getUserInsuranceDashboard($userId)
+    {
+        $activePolicies = BuyerProtection::where('user_id', $userId)
+                                       ->where('status', 'active')
+                                       ->count();
+
+        $expiringPolicies = BuyerProtection::where('user_id', $userId)
+                                         ->where('status', 'active')
+                                         ->where('expiry_date', '<=', now()->addDays(30))
+                                         ->count();
+
+        $totalCoverage = BuyerProtection::where('user_id', $userId)
+                                       ->sum('coverage_amount');
+
+        $totalPremium = BuyerProtection::where('user_id', $userId)
+                                      ->sum('premium_amount');
+
+        return [
+            'total_policies' => $activePolicies,
+            'expiring_policies' => $expiringPolicies,
+            'total_coverage' => $totalCoverage,
+            'total_premium_paid' => $totalPremium,
+        ];
+    }
+
+    /**
+     * Private helper methods
+     */
 
     private function updateUserVerificationLevel($userId)
     {
         $verifications = VerificationRecord::where('user_id', $userId)
-                                          ->where('status', 'active')
-                                          ->where('result', 'success')
-                                          ->get();
-
-        $verificationTypes = $verifications->pluck('verification_type')->toArray();
+                                         ->where('status', 'active')
+                                         ->where('result', 'success')
+                                         ->pluck('verification_type')
+                                         ->toArray();
 
         $trustScore = TrustScore::firstOrCreate(['user_id' => $userId]);
         $currentLevel = $trustScore->verification_level;
 
+        // Determine new verification level
         $newLevel = 'basic';
-        if (in_array('biometric', $verificationTypes)) {
-            $newLevel = 'trusted';
-        } elseif (in_array('video', $verificationTypes)) {
-            $newLevel = 'verified';
-        } elseif (in_array('document', $verificationTypes)) {
-            $newLevel = 'verified';
+        if (in_array('biometric', $verifications)) {
+            $newLevel = 'biometric';
+        } elseif (in_array('video', $verifications)) {
+            $newLevel = 'video_verified';
+        } elseif (in_array('document', $verifications)) {
+            $newLevel = 'document_verified';
         }
 
         if ($newLevel !== $currentLevel) {
@@ -475,14 +605,23 @@ class TrustSafetyService
         // Update trust scores for the reported entity
         $entityUserId = $this->getEntityUserId($report->reported_entity_type, $report->reported_entity_id);
         if ($entityUserId) {
-            // Deduct points based on severity
-            $pointImpact = $this->getSeverityImpact($report->severity_level);
-            $this->updateTrustScore($entityUserId, -$pointImpact, 'report_received', "Reported for {$report->report_type}");
+            $impactPoints = $this->getSeverityImpact($report->severity_level);
+            $this->updateTrustScore(
+                $entityUserId, 
+                -$impactPoints, 
+                'reported', 
+                "Reported for {$report->report_type}"
+            );
         }
 
         // Update reporter's trust score if it's a valid report
-        $validReportIncrease = 1; // Small increase for valid reports
-        $this->updateTrustScore($report->reporter_user_id, $validReportIncrease, 'report_made', "Filed valid report");
+        $validReportIncrease = 1; // Small increase for making valid reports
+        $this->updateTrustScore(
+            $report->reporter_user_id, 
+            $validReportIncrease, 
+            'report_made', 
+            "Filed valid report"
+        );
     }
 
     private function getEntityUserId($entityType, $entityId)
@@ -496,6 +635,9 @@ class TrustSafetyService
             case 'vendor_store':
                 $store = \App\Models\VendorStore::find($entityId);
                 return $store ? $store->user_id : null;
+            case 'insurance_provider':
+                $provider = InsuranceProvider::find($entityId);
+                return $provider ? $provider->user_id : null; // Assuming providers are linked to users
             case 'food_vendor':
                 $vendor = \App\Models\FoodVendor::find($entityId);
                 return $vendor ? $vendor->user_id : null;
@@ -507,8 +649,9 @@ class TrustSafetyService
     private function getSeverityImpact($severity)
     {
         switch ($severity) {
-            case 'high':
             case 'critical':
+                return 15;
+            case 'high':
                 return 10;
             case 'medium':
                 return 5;
@@ -519,33 +662,34 @@ class TrustSafetyService
         }
     }
 
-    private function getTransactionAmount($transactionId, $transactionType)
+    private function getTransactionValue($transactionId, $transactionType)
     {
-        // In a real app, this would fetch the transaction amount from the appropriate table
-        // For demo, we'll simulate different amounts
+        // In real implementation, this would fetch the actual transaction value
+        // For demo, return random values based on type
         switch ($transactionType) {
             case 'ad_purchase':
-                return mt_rand(1000, 1000000); // Varies widely depending on ad
+                return mt_rand(1000, 100000); // Varies depending on ad category
             case 'food_order':
-                return mt_rand(1000, 20000); // Usually lower amounts
-            case 'insurance_purchase':
-                return mt_rand(10000, 100000); // Insurance premiums
+                return mt_rand(500, 5000); // Food orders usually smaller
+            case 'insurance_premium':
+                return mt_rand(5000, 50000); // Insurance premiums
+            case 'service_booking':
+                return mt_rand(1000, 20000); // Service bookings
             default:
-                return mt_rand(5000, 100000); // Default range
+                return mt_rand(1000, 10000); // Default range
         }
     }
 
-    private function updateTransactionCounts($buyerId, $sellerId)
+    private function estimatePremium($provider, $requirements, $category)
     {
-        // Update buyer's transaction count
-        $buyerTrust = TrustScore::firstOrCreate(['user_id' => $buyerId]);
-        $buyerTrust->increment('total_transactions');
-        $buyerTrust->update(['account_age_months' => now()->diffInMonths($buyerTrust->user->created_at)]);
-
-        // Update seller's transaction count
-        $sellerTrust = TrustScore::firstOrCreate(['user_id' => $sellerId]);
-        $sellerTrust->increment('total_transactions');
-        $sellerTrust->update(['account_age_months' => now()->diffInMonths($sellerTrust->user->created_at)]);
+        // In real implementation, this would connect to provider APIs
+        // For demo, return estimated premiums
+        $basePremium = $requirements['coverage_amount'] * 0.02; // 2% of coverage as baseline
+        
+        // Apply provider-specific adjustments
+        $adjustment = mt_rand(80, 120) / 100; // Random adjustment between 0.8x and 1.2x
+        
+        return $basePremium * $adjustment;
     }
 
     private function updateVerificationLevelByScore($trustScore)
@@ -553,12 +697,14 @@ class TrustSafetyService
         $score = $trustScore->trust_score;
         $currentLevel = $trustScore->verification_level;
 
-        if ($score >= 80 && $currentLevel !== 'elite') {
+        if ($score >= 90 && $currentLevel !== 'elite') {
             $trustScore->update(['verification_level' => 'elite']);
-        } elseif ($score >= 70 && $currentLevel !== 'trusted' && $currentLevel !== 'elite') {
+        } elseif ($score >= 80 && !in_array($currentLevel, ['elite'])) {
             $trustScore->update(['verification_level' => 'trusted']);
-        } elseif ($score >= 60 && !in_array($currentLevel, ['verified', 'trusted', 'elite'])) {
+        } elseif ($score >= 70 && !in_array($currentLevel, ['elite', 'trusted'])) {
             $trustScore->update(['verification_level' => 'verified']);
+        } elseif ($score >= 60 && in_array($currentLevel, ['basic'])) {
+            $trustScore->update(['verification_level' => 'basic_plus']);
         }
     }
 }
