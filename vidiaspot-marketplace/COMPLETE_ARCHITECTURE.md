@@ -122,6 +122,17 @@ Data Update
 ### Admin Import
 - `POST /api/admin/categories/import/jiji` - Import categories from jiji.ng
 - `GET /api/admin/categories/import/status` - Import status
+- `POST /api/admin/products/import/latest` - Import latest products from jiji.ng
+- `GET /api/admin/products/import/settings` - Get product import settings
+- `PUT /api/admin/products/import/settings` - Update product import settings
+
+### Settings Management
+- Product import settings stored in database
+- Configurable time period (default: last 3 days)
+- Admin panel configuration capability
+- Import interval management
+- Category and location filters
+- Price range filtering
 
 ## Performance Benefits
 
@@ -143,6 +154,11 @@ Data Update
 ### Import Categories
 ```bash
 php artisan import:categories --url=https://jiji.ng
+```
+
+### Import Latest Products
+```bash
+php artisan import:latest-products --days=3 --force
 ```
 
 ## Security Considerations

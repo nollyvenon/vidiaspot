@@ -77,31 +77,33 @@ class ImportCategoriesFromJiji implements ShouldQueue
         if (empty($name)) {
             return;
         }
-        
+
         // Check if category already exists
         $existingCategory = Category::where('name', $name)
             ->orWhere('slug', \Str::slug($name))
             ->first();
-            
+
         if ($existingCategory) {
             Log::info("Category already exists: {$name}");
-            return;
+            return $existingCategory; // Return existing category
         }
-        
+
         // Create the new category
         $category = new Category();
         $category->name = $name;
         $category->slug = \Str::slug($name);
         $category->description = "Category imported from jiji.ng"; // Could fetch more details
-        $category->parent_id = null; // Assuming top-level categories for now
+        $category->parent_id = null; // Top-level category
         $category->status = 'active';
         $category->order = 0; // Default order
         $category->save();
-        
+
         Log::info("Imported category: {$name}");
-        
+
         // Optionally, fetch subcategories from the category page
         $this->importSubcategories($category, $url);
+
+        return $category;
     }
     
     protected function importSubcategories(Category $parentCategory, $categoryUrl)
@@ -152,26 +154,41 @@ class ImportCategoriesFromJiji implements ShouldQueue
         if (empty($name)) {
             return;
         }
-        
-        // Check if subcategory already exists
+
+        // Check if subcategory already exists within this parent
         $existingCategory = Category::where('name', $name)
             ->where('parent_id', $parentCategory->id)
             ->first();
-            
+
         if ($existingCategory) {
-            return;
+            Log::info("Subcategory already exists: {$name} under {$parentCategory->name}");
+            return $existingCategory;
         }
-        
+
+        // Check if this subcategory exists as a main category (to avoid duplication)
+        $existingMainCategory = Category::where('name', $name)
+            ->whereNull('parent_id')
+            ->first();
+
+        if ($existingMainCategory) {
+            Log::info("Subcategory {$name} already exists as main category, linking instead");
+            $existingMainCategory->parent_id = $parentCategory->id;
+            $existingMainCategory->save();
+            return $existingMainCategory;
+        }
+
         // Create the subcategory
         $subcategory = new Category();
         $subcategory->name = $name;
         $subcategory->slug = \Str::slug($name);
-        $subcategory->description = "Subcategory imported from jiji.ng";
+        $subcategory->description = "Subcategory imported from jiji.ng under {$parentCategory->name}";
         $subcategory->parent_id = $parentCategory->id;
         $subcategory->status = 'active';
         $subcategory->order = 0;
         $subcategory->save();
-        
+
         Log::info("Imported subcategory: {$name} under {$parentCategory->name}");
+
+        return $subcategory;
     }
 }

@@ -112,6 +112,38 @@ Route::prefix('ai')->middleware(['auth:sanctum'])->group(function () {
     // Computer vision categorization
     Route::post('/categorize-item', [AIServicesController::class, 'categorizeItem']);
     Route::post('/batch-categorize', [AIServicesController::class, 'batchCategorize']);
+
+    // NEW: Advanced Search & Discovery Features
+    // Voice search with natural language processing
+    Route::post('/voice-search', [AdvancedSearchDiscoveryController::class, 'voiceSearch']);
+
+    // Visual search using image recognition
+    Route::post('/visual-search', [AdvancedSearchDiscoveryController::class, 'visualSearch']);
+
+    // Augmented Reality (AR) view for products
+    Route::get('/ar-view/{adId}', [AdvancedSearchDiscoveryController::class, 'getARViewData']);
+    Route::post('/ar-session/{adId}', [AdvancedSearchDiscoveryController::class, 'getARSessionData']);
+
+    // Social search - find listings from friends' networks
+    Route::post('/social-search', [AdvancedSearchDiscoveryController::class, 'socialSearch']);
+    Route::get('/friend-recommendations', [AdvancedSearchDiscoveryController::class, 'getFriendRecommendations']);
+    Route::get('/social-activity-feed', [AdvancedSearchDiscoveryController::class, 'getSocialActivityFeed']);
+
+    // Trending and seasonal item recommendations
+    Route::get('/trending-items', [AdvancedSearchDiscoveryController::class, 'getTrendingItems']);
+    Route::get('/seasonal-recommendations', [AdvancedSearchDiscoveryController::class, 'getSeasonalRecommendations']);
+    Route::get('/personalized-seasonal-recommendations', [AdvancedSearchDiscoveryController::class, 'getPersonalizedSeasonalRecommendations']);
+    Route::get('/trend-forecast', [AdvancedSearchDiscoveryController::class, 'getTrendForecast']);
+
+    // Price drop alerts for saved items
+    Route::post('/price-alert', [AdvancedSearchDiscoveryController::class, 'createPriceAlert']);
+    Route::get('/user-price-alerts/{userId}', [AdvancedSearchDiscoveryController::class, 'getUserPriceAlerts']);
+
+    // Geographic heat maps for high-demand areas
+    Route::get('/geographic-heat-map', [AdvancedSearchDiscoveryController::class, 'getGeographicHeatMap']);
+    Route::get('/trending-locations/{categoryId}', [AdvancedSearchDiscoveryController::class, 'getTrendingLocationsForCategory']);
+    Route::get('/seasonal-location-patterns', [AdvancedSearchDiscoveryController::class, 'getSeasonalLocationPatterns']);
+    Route::get('/demand-forecast-locations', [AdvancedSearchDiscoveryController::class, 'getDemandForecastForLocations']);
 });
 
 // Recommendation routes (both public and protected)
@@ -241,4 +273,9 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     // Admin category import routes
     Route::post('/categories/import/jiji', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importFromJiji']);
     Route::get('/categories/import/status', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importStatus']);
+
+    // Admin product import routes
+    Route::post('/products/import/latest', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importLatestProducts']);
+    Route::get('/products/import/settings', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'getImportSettings']);
+    Route::put('/products/import/settings', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'updateImportSettings']);
 });
