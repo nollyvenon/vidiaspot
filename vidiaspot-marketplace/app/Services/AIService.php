@@ -453,6 +453,57 @@ class AIService
             'currency_stability' => rand(80, 100), // Percentage
         ];
     }
+
+    private function getMarketPrices($categoryId, $locationId = null, $condition = 'any') {
+        // Get market prices for similar ads
+        $query = Ad::where('category_id', $categoryId)
+                  ->where('status', 'active')
+                  ->where('price', '>', 0);
+
+        if ($locationId) {
+            $query->where('location_id', $locationId);
+        }
+
+        if ($condition !== 'any') {
+            $query->where('condition', $condition);
+        }
+
+        $ads = $query->get();
+
+        if ($ads->isEmpty()) {
+            return [
+                'average' => 0,
+                'min' => 0,
+                'max' => 0,
+                'confidence' => 0,
+                'comparisons' => [],
+            ];
+        }
+
+        $prices = $ads->pluck('price')->toArray();
+        $avg = array_sum($prices) / count($prices);
+        $min = min($prices);
+        $max = max($prices);
+
+        // Calculate confidence based on number of comparisons
+        $confidence = min(100, (count($prices) / 5) * 100); // Max 100% confidence with 5+ comparisons
+
+        return [
+            'average' => $avg,
+            'min' => $min,
+            'max' => $max,
+            'confidence' => $confidence,
+            'comparisons' => $ads->take(5)->map(function($ad) {
+                return [
+                    'id' => $ad->id,
+                    'title' => $ad->title,
+                    'price' => $ad->price,
+                    'views_count' => $ad->views_count ?? 0,
+                    'inquiries_count' => $ad->inquiries_count ?? 0,
+                ];
+            })->toArray(),
+        ];
+    }
     
     private function getCompetitiveAnalysis($categoryId, $locationId) {
         // Get competitive analysis for the category in the location
@@ -535,47 +586,56 @@ class AIService
     private function calculateOptimalPrice($ad, $marketPrices) {
         // Calculate optimal price based on market data and ad-specific factors
         if (empty($marketPrices) || $marketPrices['average'] == 0) {
-            return $ad->price; // Use current price if no market data
+            return $ad->price ?? 0; // Use current price if no market data
         }
-        
+
         $basePrice = $marketPrices['average'];
         $optimalPrice = $basePrice;
-        
+
         // Adjust based on ad condition
         if (isset($ad->condition)) {
-            if (strtolower($ad->condition) === 'new') {
+            $condition = strtolower($ad->condition);
+            if ($condition === 'new') {
                 $optimalPrice *= 1.15; // New items can command higher prices
-            } else if (strtolower($ad->condition) === 'excellent') {
+            } elseif ($condition === 'excellent' || $condition === 'like_new') {
                 $optimalPrice *= 1.05;
-            } else if (strtolower($ad->condition) === 'good') {
+            } elseif ($condition === 'good') {
                 $optimalPrice *= 0.95;
-            } else if (strtolower($ad->condition) === 'fair') {
+            } elseif ($condition === 'fair' || $condition === 'acceptable') {
                 $optimalPrice *= 0.85;
+            } elseif ($condition === 'poor' || $condition === 'damaged') {
+                $optimalPrice *= 0.70;
             }
         }
-        
+
         // Adjust based on ad quality factors
-        if ($ad->images && count($ad->images) > 3) {
+        $imageCount = is_array($ad->images) ? count($ad->images) : (isset($ad->images) ? 1 : 0);
+        if ($imageCount > 3) {
             $optimalPrice *= 1.05; // More images increase value
+        } elseif ($imageCount > 0) {
+            $optimalPrice *= 1.02; // At least one image helps
         }
-        
-        if (strlen($ad->description) > 200) {
+
+        $descriptionLength = strlen($ad->description ?? '');
+        if ($descriptionLength > 200) {
             $optimalPrice *= 1.03; // Detailed descriptions help
+        } elseif ($descriptionLength > 100) {
+            $optimalPrice *= 1.01; // Decent descriptions help slightly
         }
-        
+
         // Ensure reasonable bounds
-        $maxPrice = $marketPrices['max'] * 1.2;
-        $minPrice = $marketPrices['min'] * 0.8;
-        
+        $maxPrice = ($marketPrices['max'] ?? $basePrice) * 1.5;
+        $minPrice = ($marketPrices['min'] ?? $basePrice) * 0.5;
+
         $optimalPrice = max($minPrice, min($maxPrice, $optimalPrice));
-        
+
         return $optimalPrice;
     }
     
     private function determinePricingStrategy($ad, $recommendedPrice, $marketAverage) {
         // Determine the best pricing strategy based on market position
-        $priceDiffPercentage = (($recommendedPrice - $marketAverage) / $marketAverage) * 100;
-        
+        $priceDiffPercentage = $marketAverage > 0 ? (($recommendedPrice - $marketAverage) / $marketAverage) * 100 : 0;
+
         if (abs($priceDiffPercentage) <= 5) {
             return 'competitive'; // Near market average
         } elseif ($priceDiffPercentage > 10) {
