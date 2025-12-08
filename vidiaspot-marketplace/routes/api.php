@@ -302,6 +302,22 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/ads/{adId}/insurance', [\App\Http\Controllers\VendorStoreController::class, 'processAdInsurance']);
     Route::post('/insurance-policies/{policyId}/claim', [\App\Http\Controllers\VendorStoreController::class, 'submitInsuranceClaim']);
 
+    // Food vendor routes
+    Route::get('/food-vendors', [\App\Http\Controllers\FoodVendorController::class, 'index']);
+    Route::get('/food-vendors/{vendorId}', [\App\Http\Controllers\FoodVendorController::class, 'show']);
+    Route::get('/food-vendors/search', [\App\Http\Controllers\FoodVendorController::class, 'search']);
+    Route::get('/food-vendors/cuisine/{cuisineType}', [\App\Http\Controllers\FoodVendorController::class, 'byCuisine']);
+    Route::get('/food-vendors/{vendorId}/menu', [\App\Http\Controllers\FoodVendorController::class, 'getMenu']);
+    Route::get('/food-vendors/{vendorId}/menu/category/{category}', [\App\Http\Controllers\FoodVendorController::class, 'getMenuByCategory']);
+    Route::get('/food-vendors/{vendorId}/menu/popular', [\App\Http\Controllers\FoodVendorController::class, 'getPopularMenuItems']);
+    Route::get('/food-vendors/{vendorId}/menu/new', [\App\Http\Controllers\FoodVendorController::class, 'getNewMenuItems']);
+    Route::get('/food-vendors/{vendorId}/menu/dietary/{dietaryOption}', [\App\Http\Controllers\FoodVendorController::class, 'getMenuByDietary']);
+    Route::post('/food-orders', [\App\Http\Controllers\FoodVendorController::class, 'placeOrder']);
+    Route::get('/food-orders', [\App\Http\Controllers\FoodVendorController::class, 'getOrderHistory']);
+    Route::get('/food-orders/{orderNumber}', [\App\Http\Controllers\FoodVendorController::class, 'getOrder']);
+    Route::get('/food-vendors/{vendorId}/stats', [\App\Http\Controllers\FoodVendorController::class, 'getVendorStats']);
+    Route::put('/food-orders/{orderNumber}/status', [\App\Http\Controllers\FoodVendorController::class, 'updateOrderStatus']);
+
     // Shopping cart routes
     Route::post('/cart/add', [\App\Http\Controllers\ShoppingCartController::class, 'addToCart']);
     Route::get('/cart', [\App\Http\Controllers\ShoppingCartController::class, 'getCart']);

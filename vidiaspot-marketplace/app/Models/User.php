@@ -102,6 +102,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the food vendor associated with this user.
+     */
+    public function foodVendor(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(FoodVendor::class);
+    }
+
+    /**
      * Get the social accounts associated with this user.
      */
     public function socialAccounts(): \Illuminate\Database\Eloquent\Relations\HasMany
