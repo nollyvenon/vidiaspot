@@ -322,6 +322,25 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/live-shopping-events', [\App\Http\Controllers\SocialCommerceController::class, 'getLiveShoppingEvents']);
     Route::get('/ugc-campaigns', [\App\Http\Controllers\SocialCommerceController::class, 'getUserGeneratedContentCampaigns']);
 
+    // Trust & Safety routes
+    Route::post('/verifications/biometric/initiate', [\App\Http\Controllers\TrustSafetyController::class, 'initiateBiometricVerification']);
+    Route::post('/verifications/biometric/{verificationId}/process', [\App\Http\Controllers\TrustSafetyController::class, 'processBiometricVerification']);
+    Route::post('/verifications/video/initiate', [\App\Http\Controllers\TrustSafetyController::class, 'initiateVideoVerification']);
+    Route::post('/verifications/video/{verificationId}/process', [\App\Http\Controllers\TrustSafetyController::class, 'processVideoVerification']);
+    Route::post('/reports', [\App\Http\Controllers\TrustSafetyController::class, 'createReport']);
+    Route::get('/reports', [\App\Http\Controllers\TrustSafetyController::class, 'getUserReports']);
+    Route::get('/trust-scores/{userId?}', [\App\Http\Controllers\TrustSafetyController::class, 'getUserTrustScore']);
+    Route::get('/verification-status/{userId?}', [\App\Http\Controllers\TrustSafetyController::class, 'getUserVerificationStatus']);
+    Route::get('/seller-dashboard/{userId?}', [\App\Http\Controllers\TrustSafetyController::class, 'getSellerPerformanceDashboard']);
+    Route::post('/buyer-protection/purchase', [\App\Http\Controllers\TrustSafetyController::class, 'purchaseBuyerProtection']);
+    Route::post('/buyer-protection/{protectionId}/claim', [\App\Http\Controllers\TrustSafetyController::class, 'fileProtectionClaim']);
+    Route::get('/buyer-protection', [\App\Http\Controllers\TrustSafetyController::class, 'getUserProtections']);
+    Route::post('/background-check', [\App\Http\Controllers\TrustSafetyController::class, 'performBackgroundCheck']);
+
+    // Admin Trust & Safety routes
+    Route::get('/admin/reports', [\App\Http\Controllers\TrustSafetyController::class, 'getReportsForModeration']);
+    Route::put('/admin/reports/{reportId}', [\App\Http\Controllers\TrustSafetyController::class, 'updateReportStatus']);
+
     // Food vendor routes
     Route::get('/food-vendors', [\App\Http\Controllers\FoodVendorController::class, 'index']);
     Route::get('/food-vendors/{vendorId}', [\App\Http\Controllers\FoodVendorController::class, 'show']);
