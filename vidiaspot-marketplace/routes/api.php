@@ -278,6 +278,15 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('content-pages', \App\Http\Controllers\Api\Admin\ContentPagesController::class);
     Route::patch('/content-pages/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\ContentPagesController::class, 'toggleStatus']);
 
+    // Vendor store management routes
+    Route::post('/vendor-store/custom-field-templates', [\App\Http\Controllers\VendorStoreController::class, 'getCustomFieldTemplates']);
+    Route::post('/ads/{adId}/custom-fields', [\App\Http\Controllers\VendorStoreController::class, 'addCustomAdFields']);
+    Route::get('/ads/{adId}/custom-fields', [\App\Http\Controllers\VendorStoreController::class, 'getCustomAdFields']);
+    Route::post('/insurance-policies', [\App\Http\Controllers\VendorStoreController::class, 'createInsurancePolicy']);
+    Route::get('/insurance-policies', [\App\Http\Controllers\VendorStoreController::class, 'getUserInsurancePolicies']);
+    Route::post('/ads/{adId}/insurance', [\App\Http\Controllers\VendorStoreController::class, 'processAdInsurance']);
+    Route::post('/insurance-policies/{policyId}/claim', [\App\Http\Controllers\VendorStoreController::class, 'submitInsuranceClaim']);
+
     // Admin category import routes
     Route::post('/categories/import/jiji', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importFromJiji']);
     Route::get('/categories/import/status', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importStatus']);

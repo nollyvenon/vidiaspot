@@ -198,6 +198,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the vendor store associated with this user.
+     */
+    public function vendorStore(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(VendorStore::class);
+    }
+
+    /**
      * Get the featured ads created by this user.
      */
     public function featuredAds(): \Illuminate\Database\Eloquent\Relations\HasMany

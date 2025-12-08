@@ -90,4 +90,16 @@ class Ad extends Model
             return $this->formatted_price;
         }
     }
+
+    // Relationship: Ad has many custom fields
+    public function customFields()
+    {
+        return $this->hasMany(CustomAdField::class);
+    }
+
+    // Relationship: Ad may have one insurance policy
+    public function insurancePolicy()
+    {
+        return $this->hasOne(InsurancePolicy::class);
+    }
 }

@@ -103,6 +103,15 @@ Route::get('/api-docs', function () {
     return view('api.documentation');
 })->name('api.documentation');
 
+// Vendor store routes (protected)
+Route::middleware(['auth'])->prefix('store')->group(function () {
+    Route::get('/setup', [App\Http\Controllers\VendorStoreController::class, 'create'])->name('vendor.store.setup');
+    Route::post('/setup', [App\Http\Controllers\VendorStoreController::class, 'store'])->name('vendor.store.store');
+    Route::get('/edit', [App\Http\Controllers\VendorStoreController::class, 'edit'])->name('vendor.store.edit');
+    Route::put('/{id}', [App\Http\Controllers\VendorStoreController::class, 'update'])->name('vendor.store.update');
+    Route::get('/{slug}', [App\Http\Controllers\VendorStoreController::class, 'show'])->name('vendor.store.show');
+});
+
 // User personalization and settings routes (protected)
 Route::middleware(['auth'])->prefix('settings')->group(function () {
     Route::get('/personalization', function () {
