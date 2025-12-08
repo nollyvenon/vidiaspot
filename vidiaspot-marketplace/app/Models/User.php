@@ -33,6 +33,14 @@ class User extends Authenticatable
         'avatar',
         'is_verified',
         'language_code',
+        'subscription_id',
+        'subscription_start_date',
+        'subscription_end_date',
+        'subscription_status',
+        'ad_limit',
+        'featured_ads_limit',
+        'has_priority_support',
+        'subscription_features',
     ];
 
     protected $attributes = [
@@ -60,6 +68,12 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_verified' => 'boolean',
+            'subscription_start_date' => 'datetime',
+            'subscription_end_date' => 'datetime',
+            'has_priority_support' => 'boolean',
+            'ad_limit' => 'integer',
+            'featured_ads_limit' => 'integer',
+            'subscription_features' => 'array',
         ];
     }
 
@@ -160,19 +174,19 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the payments made by this user.
+     * Get the payment transactions made by this user.
      */
-    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function paymentTransactions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasMany(PaymentTransaction::class);
     }
 
     /**
-     * Get the subscriptions associated with this user.
+     * Get the subscription associated with this user.
      */
-    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function subscription(): BelongsTo
     {
-        return $this->hasMany(Subscription::class);
+        return $this->belongsTo(Subscription::class);
     }
 
     /**

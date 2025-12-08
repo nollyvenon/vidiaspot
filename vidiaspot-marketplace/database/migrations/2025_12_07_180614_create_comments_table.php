@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->morphs('commentable'); // Polymorphic relationship to any model
+            $table->morphs('commentable'); // Polymorphic relationship to any model (this already creates the index)
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->text('content');
             $table->unsignedBigInteger('parent_id')->nullable(); // For replies
@@ -23,8 +23,7 @@ return new class extends Migration
             $table->json('metadata')->nullable(); // Additional metadata
             $table->timestamps();
 
-            // Indexes for performance
-            $table->index(['commentable_type', 'commentable_id']);
+            // Indexes for performance (don't duplicate the morphs index)
             $table->index('user_id');
             $table->index('parent_id');
             $table->index('created_at');

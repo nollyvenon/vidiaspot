@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Auth\SocialAuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\RecommendationController;
+use App\Http\Controllers\Api\PaymentController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -30,6 +31,49 @@ Route::prefix('auth')->group(function () {
     Route::get('/{provider}', [SocialAuthController::class, 'redirectToProvider']);
     Route::get('/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback']);
     Route::get('/providers', [SocialAuthController::class, 'getProviders']);
+});
+
+// Payment routes
+Route::prefix('payment')->group(function () {
+    // Initialize payment
+    Route::post('/initialize', [PaymentController::class, 'initializePayment']);
+
+    // Verify payment
+    Route::post('/verify', [PaymentController::class, 'verifyPayment']);
+
+    // Get transaction details
+    Route::get('/transaction', [PaymentController::class, 'getTransaction']);
+
+    // Webhook endpoints (no auth needed as these are called by payment providers)
+    Route::post('/webhook/paystack', [PaymentController::class, 'handlePaystackWebhook'])->withoutMiddleware(['auth:sanctum']);
+    Route::post('/webhook/flutterwave', [PaymentController::class, 'handleFlutterwaveWebhook'])->withoutMiddleware(['auth:sanctum']);
+});
+
+// Subscription routes
+Route::prefix('subscription')->middleware(['auth:sanctum'])->group(function () {
+    // Get available subscription plans
+    Route::get('/', [SubscriptionController::class, 'index']);
+
+    // Subscribe to a plan
+    Route::post('/subscribe', [SubscriptionController::class, 'subscribe']);
+
+    // Get current subscription
+    Route::get('/current', [SubscriptionController::class, 'getCurrentSubscription']);
+
+    // Check subscription status
+    Route::get('/status', [SubscriptionController::class, 'checkStatus']);
+
+    // Get subscription benefits
+    Route::get('/benefits', [SubscriptionController::class, 'getBenefits']);
+
+    // Cancel subscription
+    Route::delete('/cancel', [SubscriptionController::class, 'cancel']);
+
+    // Renew subscription
+    Route::post('/renew', [SubscriptionController::class, 'renew']);
+
+    // Process successful payment callback
+    Route::post('/process-payment', [SubscriptionController::class, 'processSuccessfulPayment'])->withoutMiddleware(['auth:sanctum']);
 });
 
 // Recommendation routes (both public and protected)

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('status_logs', function (Blueprint $table) {
             $table->id();
-            $table->morphs('statusable'); // Polymorphic relationship to any model
+            $table->morphs('statusable'); // Polymorphic relationship to any model (this already creates the index)
             $table->string('status'); // New status value
             $table->string('previous_status')->nullable(); // Previous status value
             $table->text('reason')->nullable(); // Reason for status change
@@ -21,8 +21,7 @@ return new class extends Migration
             $table->json('metadata')->nullable(); // Additional information about the change
             $table->timestamps();
 
-            // Indexes for performance
-            $table->index(['statusable_type', 'statusable_id']);
+            // Indexes for performance (don't duplicate the morphs index)
             $table->index('status');
             $table->index('created_at');
         });

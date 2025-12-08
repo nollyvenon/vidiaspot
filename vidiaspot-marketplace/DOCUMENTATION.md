@@ -1,129 +1,159 @@
-# VidiaSpot Marketplace - Documentation
+# Vidiaspot Marketplace - Comprehensive Documentation
 
 ## Table of Contents
-1. [Features Overview](#features-overview)
-2. [Setup Guide](#setup-guide)
-3. [Developer Guide](#developer-guide)
-4. [API Developer Guide](#api-developer-guide)
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Technology Stack](#technology-stack)
+4. [Database Configuration](#database-configuration)
+5. [Ad Placement System](#ad-placement-system)
+6. [Payment Gateway Integration](#payment-gateway-integration)
+7. [Setup Guide](#setup-guide)
+8. [API Documentation](#api-documentation)
+9. [Developer Guide](#developer-guide)
+10. [Admin Features](#admin-features)
+11. [Cross-Check: Requested vs Implemented Features](#cross-check)
 
----
+## Overview
 
-## Features Overview
+Vidiaspot Marketplace is a comprehensive classified ads platform designed for the Nigerian market with support for multiple languages, currencies, and payment gateways. The platform features advanced AI capabilities, multi-platform access, and sophisticated search functionality.
 
-VidiaSpot Marketplace is a comprehensive full-stack marketplace application built with Laravel, React, and Flutter. It provides a complete solution for buying and selling goods locally with advanced features including AI integration, payment processing, and cross-platform support.
+## Features
 
 ### Core Features
+- **Multi-language Support**: Real-time translation between major languages including English, French, Portuguese, Arabic, Spanish, German, Chinese, and Nigerian languages (Yoruba, Igbo, Hausa)
+- **Multi-currency Integration**: Support for all major currencies (USD, EUR, GBP, NGN, ZAR, etc.) with real-time exchange rates
+- **AI-Powered Features**: Smart product recommendations, fraud detection, image recognition, price suggestions, chatbot support
+- **User Features**: Multi-platform access (Web, iOS, Android), social media login, push notifications, location-based listings, user verification, ratings and reviews
+- **Advanced Search**: Visual search, voice search, augmented reality preview, geographic heat maps
+- **Payment Processing**: Integrated Paystack and Flutterwave payment gateways
+- **Ad Placement System**: Different ad types can be uploaded by admins into different sections (top, side, bottom, between content)
 
-#### 1. Ad/Listing Management
-- **Create Listings**: Users can create detailed ad listings with multiple images, pricing, location, and description
-- **Manage Listings**: Edit, update, and delete personal listings
-- **Search & Filter**: Advanced search functionality with filters for category, location, price, and condition
-- **Image Management**: Upload up to 10 images per listing with primary image selection
-- **Listing Status**: Set listings as active, inactive, sold, or pending
+### Advanced Features
+- **Elasticsearch Integration**: Advanced search functionality with faceted search
+- **Recommendation Engine**: Collaborative filtering for personalized recommendations
+- **User Verification System**: Multi-tier verification with trust indicators
+- **Offline Capabilities**: PWA with offline functionality
+- **Real-time Communication**: In-app messaging with translation
 
-#### 2. Categories & Organization
-- **Hierarchical Categories**: Organized product categories for better listing organization
-- **Category Management**: Admin can manage, enable/disable categories
-- **Category Tree View**: Display of nested category structure
+## Technology Stack
 
-#### 3. User Management
-- **User Registration & Authentication**: Secure user registration and authentication system
-- **Social Login**: Integration with Google, Facebook, and Twitter for easy sign-up
-- **User Profiles**: Complete user profile management
-- **Role Management**: Different access levels (admin, vendor, regular user)
+### Backend
+- **Framework**: Laravel 12+
+- **Language**: PHP 8.2+
+- **Database**: MySQL 8.0 primary / SQLite for local development
+- **Caching**: Redis for caching and session management
+- **Search**: Elasticsearch for advanced search functionality
+- **Message Queue**: RabbitMQ or AWS SQS for queue management
 
-#### 4. Location Management
-- **Multi-level Location System**: Countries, states, and cities management
-- **Location-based Listings**: Filter ads by specific locations
-- **Admin Location Management**: Dynamic management of location data
+### Frontend
+- **Web Interface**: Vue.js 3 or React 18 with Vite
+- **Mobile Apps**: Flutter for cross-platform (iOS & Android)
+- **Styling**: Tailwind CSS for responsive design
+- **Architecture**: Progressive Web App (PWA)
 
-#### 5. Messaging & Communication
-- **User-to-User Messaging**: Direct communication between buyers and sellers
-- **Real-time Chat**: Real-time messaging system for immediate communication
-- **Chat History**: Maintain conversation history between users
-- **Unread Message Count**: Track unread messages
+### AI/ML Services
+- **Microservices**: Python with FastAPI or Flask
+- **ML Frameworks**: TensorFlow or PyTorch
+- **APIs**: OpenAI API or Hugging Face for NLP, Google Vision API for image recognition
 
-#### 6. Payment Processing
-- **Multi-Gateway Support**: Integration with Paystack, Flutterwave, Stripe, and PayPal
-- **Payment Management**: Admin can manage payment settings and view transaction history
-- **Subscription Management**: Premium subscriptions for enhanced features
-- **Transaction Reporting**: Detailed transaction reports and analytics
+### Infrastructure
+- **Containerization**: Docker with Laravel Sail
+- **Web Server**: NGINX
+- **Cloud**: AWS or Google Cloud Platform
+- **CDN**: Cloudflare for global content delivery
+- **Storage**: Amazon S3 or MinIO for file storage
 
-#### 7. AI-Powered Features
-- **AI Recommendations**: Intelligent recommendation system for relevant listings
-- **Chatbot Integration**: Automated chatbot for customer support
-- **Image Recognition**: AI-powered image recognition capabilities
-- **Pricing Insights**: AI-driven pricing suggestions for sellers
-- **Fraud Detection**: Automated fraud detection and moderation
-- **Voice Search**: Voice-enabled search functionality
-- **Translation Services**: Real-time content translation using AI
+## Database Configuration
 
-#### 8. Content Management
-- **Blogs & Articles**: Content management for blogs and informational articles
-- **Static Pages**: Management of about, contact, services, privacy, and terms pages
-- **FAQ Management**: FAQ section with admin management
-- **Testimonials**: Testimonials management with featured status
+The Vidiaspot Marketplace uses SQLite as the primary database with caching mechanisms to optimize performance. For production environments, MySQL can be configured as the primary database with SQLite used as a local cache layer to reduce read operations:
 
-#### 9. Premium Features
-- **Featured Ads**: Boost listings with featured ad placement
-- **Premium Ads**: Enhanced ad visibility options
-- **Ad Placements**: Various ad placement options for vendors
-- **Subscription Plans**: Tiered subscription models
+### Primary Database (SQLite - Default)
+- Default configuration uses SQLite for easy local setup
+- Single database file: `database/database.sqlite`
+- Zero configuration required for development
+- All application data (users, ads, payments, etc.) stored here
 
-#### 10. Vendor Management
-- **Vendor Verification**: Vendor verification system
-- **Vendor Profiles**: Enhanced vendor profiles and management
-- **Vendor Approval**: Admin approval workflow for vendors
-- **Featured Vendors**: Featured vendor status
+### Production Option (MySQL with SQLite Cache)
+- Primary database for all application data (users, ads, payments, etc.)
+- Production configuration with read replica support for scaling
+- SQLite as local cache layer to reduce read operations from main database
+- Connection pooling enabled for optimal performance
 
-#### 11. Admin Dashboard
-- **Comprehensive Admin Panel**: Full-featured admin panel with multiple management sections
-- **Analytics & Reporting**: Detailed analytics and reporting system
-- **Content Moderation**: Content and user moderation tools
-- **User Management**: Admin tools for user account management
-- **System Configuration**: Site-wide configuration management
+### Local Cache Layer (File-based with SQLite)
+- Cache service uses file system or database for caching frequently accessed data
+- Dramatically reduces read operations from primary database
+- Stores cached ad placements, categories, and commonly accessed data
+- Improves performance and reduces database load
 
-#### 12. Multi-Currency Support
-- **Multiple Currencies**: Support for multiple currencies with automatic conversion
-- **Exchange Rates**: Real-time exchange rate integration
-- **Currency Formatting**: Proper currency formatting and display
+### Configuration Options:
+- **Default Connection**: Configurable via `DB_CONNECTION` environment variable (defaults to `sqlite`)
+- **Read Replicas**: Support for separate read/write hosts when using MySQL
+- **Connection Pooling**: Enabled via persistent connections for MySQL
+- **Cache System**: File-based or database-based caching
+- **Foreign Key Constraints**: Configurable for SQLite
 
-#### 13. Mobile Application
-- **Cross-Platform Mobile App**: Flutter-based mobile application supporting iOS and Android
-- **Native Mobile Experience**: Full mobile-optimized experience
-- **Native Features**: Access to device camera, storage, and other native features
+## Ad Placement System
 
-#### 14. Search & Discovery
-- **Advanced Search**: Full-text search across listings
-- **Recommendation Engine**: Personalized recommendations based on user behavior
-- **Similar Ads**: "Similar ads" suggestions
-- **Trending Ads**: Trending listings section
+### Admin-Controlled Ad Placement
+- **Multiple Positions**: Ads can be placed in various positions:
+  - Top banner
+  - Sidebar
+  - Bottom banner
+  - Between content sections
+  - Inline within content
+  - Popup/interstitial
+- **Ad Types**: Different ad formats supported:
+  - Image ads
+  - Video ads
+  - Text ads
+  - Rich media ads
+- **Targeting Options**: 
+  - Geographic targeting
+  - Category-based placement
+  - User behavior targeting
+  - Time-based scheduling
 
-#### 15. Notifications
-- **Push Notifications**: Real-time push notifications
-- **In-App Notifications**: System for in-app notifications
-- **Activity Tracking**: User activity and notification management
+### Admin Features
+- **Ad Management Dashboard**: Create, edit, and delete ad placements
+- **Performance Analytics**: Track ad performance metrics
+- **Scheduling**: Set start/end dates for campaigns
+- **Budget Management**: Set spending limits per campaign
+- **A/B Testing**: Test different ad variations
 
-#### 16. SEO & Marketing
-- **Content Pages**: SEO-optimized static content pages
-- **Social Sharing**: Social media integration and sharing
-- **Marketing Tools**: Admin tools for marketing and promotions
+## Payment Gateway Integration
 
----
+### Supported Gateways
+- **Paystack**: Primary Nigerian payment gateway
+- **Flutterwave**: Alternative Nigerian payment gateway
+
+### Payment Features
+- **Multiple Payment Types**:
+  - Ad posting fees
+  - Featured ad upgrades
+  - Premium subscriptions
+  - In-app purchases
+- **Transaction Tracking**: Complete transaction history
+- **Webhook Integration**: Real-time payment notifications
+- **Security**: Encrypted payment processing
+- **Multi-currency**: Support for NGN and other currencies
+
+### API Endpoints
+- `POST /api/payment/initialize` - Initialize payment
+- `POST /api/payment/verify` - Verify payment
+- `GET /api/payment/transaction` - Get transaction details
+- `POST /api/payment/webhook/paystack` - Paystack webhook
+- `POST /api/payment/webhook/flutterwave` - Flutterwave webhook
 
 ## Setup Guide
 
 ### Prerequisites
-
-- PHP 8.2 or higher
+- PHP 8.2+
 - Composer
-- Node.js and npm (or yarn)
-- MySQL or MariaDB
-- Redis (for caching and queues)
-- MeiliSearch (for search functionality)
-- Git
+- Node.js and npm
+- Docker and Docker Compose
+- SQLite or MySQL
 
-### Environment Setup
+### Local Setup
 
 1. **Clone the repository**:
    ```bash
@@ -138,608 +168,352 @@ VidiaSpot Marketplace is a comprehensive full-stack marketplace application buil
 
 3. **Install frontend dependencies**:
    ```bash
-   cd frontend
    npm install
-   cd ..
    ```
 
-4. **Install mobile app dependencies**:
+4. **Set up environment**:
    ```bash
-   cd mobile
-   flutter pub get
-   cd ..
+   cp .env.example .env
+   php artisan key:generate
    ```
 
-5. **Environment configuration**:
-   - Copy `.env.example` to `.env`:
+5. **Configure database** (SQLite for local development):
+   - The default .env uses SQLite, which requires no additional setup
+   - Create the database file:
      ```bash
-     cp .env.example .env
-     ```
-   - Generate application key:
-     ```bash
-     php artisan key:generate
+     touch database/database.sqlite
      ```
 
-6. **Configure environment variables**:
-   Edit the `.env` file to set up:
-   - Database connection settings
-   - Payment gateway credentials
-   - Social login credentials
-   - AI service API keys
-   - Storage settings
-
-### Database Setup
-
-1. **Create database**:
+6. **Run migrations**:
    ```bash
-   # Create database in MySQL/MariaDB
-   CREATE DATABASE vidiaspot_marketplace;
+   php artisan migrate
    ```
 
-2. **Run migrations**:
+7. **Build frontend assets**:
    ```bash
-   php artisan migrate --seed
+   npm run dev  # For development
+   # or
+   npm run build  # For production
    ```
 
-### Service Configuration
-
-1. **Set up Redis**:
-   - Ensure Redis server is running
-   - Configure in `.env`:
-     ```
-     REDIS_HOST=127.0.0.1
-     REDIS_PASSWORD=null
-     REDIS_PORT=6379
-     ```
-
-2. **Set up MeiliSearch**:
-   - Ensure MeiliSearch server is running on port 7700
-   - Configure in `.env`:
-     ```
-     MEILISEARCH_HOST=http://127.0.0.1:7700
-     ```
-
-3. **Set up Queue System**:
-   - Configure queue driver in `.env` (database, redis, or other)
-   - Run queue worker:
-     ```bash
-     php artisan queue:work
-     ```
-
-### Frontend Setup
-
-1. **Build frontend assets**:
-   ```bash
-   cd frontend
-   npm run build
-   ```
-
-2. **Serve frontend during development**:
-   ```bash
-   npm run dev
-   ```
-
-### Mobile App Setup
-
-1. **Run mobile app**:
-   ```bash
-   cd mobile
-   flutter run
-   ```
-
-### Running the Application
-
-1. **Start the Laravel development server**:
+8. **Start the development server**:
    ```bash
    php artisan serve
    ```
 
-2. **Alternatively, use the development script**:
+### Production Setup with MySQL
+
+1. **Configure environment**:
    ```bash
-   composer run dev
+   cp .env.example .env
    ```
 
-3. **Access the application**:
-   - API: http://localhost:8000
-   - Frontend: http://localhost:3000 (during development)
-
-### Post-Installation Steps
-
-1. **Set up scheduled tasks**:
-   - Configure cron job for Laravel's scheduler:
-     ```
-     * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
-     ```
-
-2. **Configure storage links**:
-   ```bash
-   php artisan storage:link
+2. **Update database configuration**:
+   ```
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=your_database_name
+   DB_USERNAME=your_username
+   DB_PASSWORD=your_password
    ```
 
----
+3. **For read replicas** (optional):
+   ```
+   DB_HOST_WRITE=primary-host
+   DB_HOST_READ=replica-host
+   DB_PORT_WRITE=3306
+   DB_PORT_READ=3306
+   DB_USERNAME_WRITE=primary-user
+   DB_USERNAME_READ=replica-user
+   DB_PASSWORD_WRITE=primary-password
+   DB_PASSWORD_READ=replica-password
+   ```
 
-## Developer Guide
+4. **Run migrations**:
+   ```bash
+   php artisan migrate
+   ```
 
-### Project Structure
+### Environment Variables
 
-The VidiaSpot Marketplace project follows the standard Laravel directory structure with additional frontend and mobile components:
-
+#### Payment Gateway Keys
 ```
-├── app/                    # Application logic
-│   ├── Http/              # HTTP controllers, middleware, requests
-│   │   ├── Controllers/
-│   │   ├── Middleware/
-│   │   └── Requests/
-│   ├── Models/            # Eloquent models
-│   ├── Services/          # Business logic services
-│   └── Providers/         # Service providers
-├── config/                # Configuration files
-├── database/              # Migrations, seeds, factories
-├── frontend/              # React frontend application
-├── mobile/                # Flutter mobile application
-├── routes/                # Route definitions
-├── resources/             # Views, assets, language files
-├── storage/               # Storage directory
-├── tests/                 # Test files
-└── vendor/                # Composer dependencies
+PAYSTACK_SECRET_KEY=your_paystack_secret_key
+PAYSTACK_PUBLIC_KEY=your_paystack_public_key
+FLUTTERWAVE_SECRET_KEY=your_flutterwave_secret_key
+FLUTTERWAVE_PUBLIC_KEY=your_flutterwave_public_key
+FLUTTERWAVE_ENCRYPTION_KEY=your_flutterwave_encryption_key
+FLUTTERWAVE_SECRET_HASH=your_flutterwave_secret_hash
 ```
 
-### Coding Standards
+#### Database Configuration
+```
+DB_CONNECTION=sqlite    # For local development
+# DB_CONNECTION=mysql  # For production
 
-1. **PHP Code**:
-   - Follow PSR-12 coding standards
-   - Use Laravel's built-in coding conventions
-   - Maintain consistent naming conventions
-   - Write descriptive docblocks for all public methods
+# For MySQL production:
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-2. **JavaScript/React Code**:
-   - Follow Airbnb JavaScript style guide
-   - Use functional components with hooks when possible
-   - Maintain consistent component structure
-   - Use TypeScript for type safety (where applicable)
-
-3. **Database**:
-   - Use proper migration files for schema changes
-   - Follow Laravel's naming conventions for tables and columns
-   - Utilize Eloquent relationships properly
-   - Include proper indexes for performance
-
-### API Design
-
-1. **RESTful Endpoints**:
-   - Follow RESTful conventions for endpoint design
-   - Use consistent URL structure
-   - Implement proper HTTP status codes
-   - Return consistent JSON response format
-
-2. **Authentication**:
-   - Use Laravel Sanctum for API authentication
-   - Include authentication middleware for protected routes
-   - Implement CSRF protection where necessary
-
-3. **Validation**:
-   - Use Form Request classes for validation
-   - Validate all user inputs
-   - Return appropriate error responses
-
-### Testing
-
-1. **Unit Tests**:
-   - Write unit tests for all business logic
-   - Use PHPUnit for PHP testing
-   - Maintain high test coverage for critical functionality
-
-2. **Feature Tests**:
-   - Test API endpoints
-   - Verify authentication and authorization
-   - Test all major user workflows
-
-3. **Running Tests**:
-   ```bash
-   composer test
-   # or
-   php artisan test
-   ```
-
-### Security Practices
-
-1. **Input Validation**:
-   - Always validate and sanitize user input
-   - Use Laravel's validation features
-   - Implement proper file upload validation
-
-2. **SQL Injection Prevention**:
-   - Use Eloquent ORM or query builder
-   - Avoid raw SQL queries when possible
-   - Use parameterized queries when necessary
-
-3. **XSS Prevention**:
-   - Use Blade's automatic escaping
-   - Sanitize output when displaying user-generated content
-
-### Performance Optimization
-
-1. **Caching**:
-   - Use Redis for caching frequently accessed data
-   - Implement model caching where appropriate
-   - Use HTTP caching headers
-
-2. **Database Optimization**:
-   - Add proper database indexes
-   - Use eager loading to prevent N+1 queries
-   - Optimize complex queries
-
-3. **Queue System**:
-   - Use queues for time-intensive tasks
-   - Implement proper queue monitoring
-   - Handle failed jobs appropriately
-
-### Deployment
-
-1. **Environment Configuration**:
-   - Use environment-specific configuration
-   - Never commit sensitive credentials to version control
-   - Use environment variables for sensitive data
-
-2. **Asset Optimization**:
-   - Minify and combine CSS/JS files in production
-   - Use Laravel's asset versioning
-   - Optimize images
-
-3. **Database Migrations**:
-   - Always backup database before migrations
-   - Test migrations in staging environment first
-   - Use proper deployment procedures
-
----
-
-## API Developer Guide
+## API Documentation
 
 ### Authentication
+All protected API endpoints require a valid API token in the Authorization header:
+```
+Authorization: Bearer {token}
+```
 
-The API uses Laravel Sanctum for authentication. All protected endpoints require a valid API token in the Authorization header.
-
-#### Getting an API Token
-
-1. **Login to get token**:
-   ```
-   POST /api/login
-   Content-Type: application/json
-
-   {
-     "email": "user@example.com",
-     "password": "password"
-   }
-   ```
-
-2. **Response**:
-   ```json
-   {
-     "token": "your-api-token",
-     "user": {
-       "id": 1,
-       "name": "John Doe",
-       "email": "user@example.com"
-     }
-   }
-   ```
-
-3. **Use the token in subsequent requests**:
-   ```
-   Authorization: Bearer your-api-token
-   ```
-
-### API Endpoints
-
-#### Public Endpoints (No Authentication Required)
-
-##### Ads
-- **GET /api/ads**: Get all ads with filtering options
-  - Query parameters:
-    - `category_id`: Filter by category
-    - `location`: Filter by location
-    - `min_price`/`max_price`: Filter by price range
-    - `condition`: Filter by condition (new, like_new, good, fair, poor)
-    - `search`: Search in title and description
-    - `order_by`: Sort field (default: created_at)
-    - `order_direction`: Sort direction (asc/desc, default: desc)
-    - `per_page`: Results per page (default: 15)
-
-- **GET /api/ads/{id}**: Get a specific ad
-  - Includes ad details, user information, and images
-  - Increments view count when accessed
-
-##### Categories
-- **GET /api/categories**: Get all available categories
-- **GET /api/categories/{id}**: Get a specific category
-
-##### Content Pages
-- **GET /api/pages**: Get all content pages
-- **GET /api/pages/{slug}**: Get a specific content page
-- **GET /api/about**: Get about page
-- **GET /api/contact**: Get contact page
-- **GET /api/services**: Get services page
-- **GET /api/privacy**: Get privacy policy
-- **GET /api/terms**: Get terms of service
-
-##### Recommendations
-- **GET /api/recommendations/trending**: Get trending ads
-- **GET /api/ads/{id}/similar**: Get similar ads to the specified ad
-
-##### Social Authentication
-- **GET /api/auth/{provider}**: Redirect to social provider for authentication
-- **GET /api/auth/{provider}/callback**: Handle social provider callback
-- **GET /api/auth/providers**: Get list of available social providers
-
-#### Protected Endpoints (Authentication Required)
-
-##### User Ads
-- **POST /api/ads**: Create a new ad
-  - Required fields:
-    - `title` (string, max 255)
-    - `description` (string)
-    - `price` (numeric, min 0)
-    - `category_id` (exists in categories table)
-    - `condition` (in: new, like_new, good, fair, poor)
-    - `location` (string, max 255)
-  - Optional fields:
-    - `currency_code` (default: NGN)
-    - `negotiable` (boolean)
-    - `contact_phone` (string, max 20)
-    - `images` (array of up to 10 images)
-
-- **PUT /api/ads/{id}**: Update an existing ad
-  - Same validation rules as POST but all fields optional
-
-- **DELETE /api/ads/{id}**: Delete an ad
-
-- **GET /api/my-ads**: Get ads created by the authenticated user
-
-- **POST /api/ads/{id}/images**: Add images to an existing ad
-
-##### Messages
-- **GET /api/messages**: Get messages
-- **POST /api/messages**: Send a new message
-- **GET /api/messages/conversations**: Get conversation list
-- **PUT /api/messages/{id}/mark-as-read**: Mark message as read
-
-##### Categories (User)
-- **GET /api/categories/tree**: Get hierarchical category tree
-
-##### Recommendations (Personalized)
-- **GET /api/recommendations**: Get personalized recommendations for the authenticated user
-
-#### Admin Endpoints (Admin Role Required)
-
-All admin endpoints are prefixed with `/api/admin/`
-
-##### Dashboard & Analytics
-- **GET /api/admin/dashboard**: Admin dashboard data
-- **GET /api/admin/analytics**: Analytics and statistics
-
-##### Ads Management
-- **GET /api/admin/ads**: List all ads (with pagination)
-- **GET /api/admin/ads/{id}**: Get specific ad details
-- **POST /api/admin/ads**: Create ad (as admin)
-- **PUT /api/admin/ads/{id}**: Update ad (as admin)
-- **DELETE /api/admin/ads/{id}**: Delete ad (as admin)
-- **PUT /api/admin/ads/{id}/status**: Update ad status
-- **GET /api/admin/ads/pending**: Get pending ads for review
-
-##### Users Management
-- **GET /api/admin/users**: List users
-- **GET /api/admin/users/{id}**: Get user details
-- **PUT /api/admin/users/{id}**: Update user
-- **DELETE /api/admin/users/{id}**: Delete user
-- **PATCH /api/admin/users/{id}/role**: Assign user role
-- **GET /api/admin/users/stats**: User statistics
-
-##### Categories Management
-- **GET /api/admin/categories**: List categories
-- **POST /api/admin/categories**: Create category
-- **GET /api/admin/categories/{id}**: Get category details
-- **PUT /api/admin/categories/{id}**: Update category
-- **DELETE /api/admin/categories/{id}**: Delete category
-- **PATCH /api/admin/categories/{id}/toggle-status**: Toggle category status
-
-##### Payments Management
-- **GET /api/admin/payments**: List payments
-- **GET /api/admin/payments/{id}**: Get payment details
-- **PUT /api/admin/payments/{id}/status**: Update payment status
-- **GET /api/admin/payments/stats**: Payment statistics
-
-##### Subscriptions Management
-- **GET /api/admin/subscriptions**: List subscriptions
-- **POST /api/admin/subscriptions**: Create subscription
-- **GET /api/admin/subscriptions/{id}**: Get subscription details
-- **PUT /api/admin/subscriptions/{id}**: Update subscription
-- **DELETE /api/admin/subscriptions/{id}**: Delete subscription
-- **PATCH /api/admin/subscriptions/{id}/toggle-status**: Toggle subscription status
-- **GET /api/admin/subscriptions/stats**: Subscription statistics
-
-##### Vendors Management
-- **GET /api/admin/vendors**: List vendors
-- **POST /api/admin/vendors**: Create vendor
-- **GET /api/admin/vendors/{id}**: Get vendor details
-- **PUT /api/admin/vendors/{id}**: Update vendor
-- **DELETE /api/admin/vendors/{id}**: Delete vendor
-- **PATCH /api/admin/vendors/{id}/approve**: Approve vendor
-- **PATCH /api/admin/vendors/{id}/reject**: Reject vendor
-- **PATCH /api/admin/vendors/{id}/suspend**: Suspend vendor
-- **PATCH /api/admin/vendors/{id}/toggle-verification**: Toggle vendor verification
-- **PATCH /api/admin/vendors/{id}/toggle-featured**: Toggle featured status
-- **GET /api/admin/vendors/stats**: Vendor statistics
-
-##### Locations Management
-- **GET /api/admin/locations/countries**: Get countries
-- **POST /api/admin/locations/countries**: Create country
-- **PUT /api/admin/locations/countries/{id}**: Update country
-- **PATCH /api/admin/locations/countries/{id}/toggle-status**: Toggle country status
-- **GET /api/admin/locations/states/{countryId}**: Get states for country
-- **POST /api/admin/locations/states/{countryId}**: Create state
-- **PUT /api/admin/locations/states/{id}**: Update state
-- **PATCH /api/admin/locations/states/{id}/toggle-status**: Toggle state status
-- **GET /api/admin/locations/cities/{stateId}**: Get cities for state
-- **POST /api/admin/locations/cities/{stateId}**: Create city
-- **PUT /api/admin/locations/cities/{id}**: Update city
-- **PATCH /api/admin/locations/cities/{id}/toggle-status**: Toggle city status
-- **GET /api/admin/locations/stats**: Location statistics
-
-##### Featured Ads Management
-- **GET /api/admin/featured-ads**: List featured ads
-- **POST /api/admin/featured-ads**: Create featured ad
-- **GET /api/admin/featured-ads/{id}**: Get featured ad details
-- **PUT /api/admin/featured-ads/{id}**: Update featured ad
-- **DELETE /api/admin/featured-ads/{id}**: Delete featured ad
-- **PATCH /api/admin/featured-ads/{id}/cancel**: Cancel featured ad
-- **PATCH /api/admin/featured-ads/{id}/extend**: Extend featured ad duration
-- **GET /api/admin/featured-ads/stats**: Featured ads statistics
-
-##### Blogs Management
-- **GET /api/admin/blogs**: List blogs
-- **POST /api/admin/blogs**: Create blog
-- **GET /api/admin/blogs/{id}**: Get blog details
-- **PUT /api/admin/blogs/{id}**: Update blog
-- **DELETE /api/admin/blogs/{id}**: Delete blog
-- **PATCH /api/admin/blogs/{id}/publish**: Publish blog
-- **PATCH /api/admin/blogs/{id}/unpublish**: Unpublish blog
-- **PATCH /api/admin/blogs/{id}/toggle-featured**: Toggle featured status
-- **GET /api/admin/blogs/stats**: Blog statistics
-
-##### Payment Gateways Management
-- **GET /api/admin/payments/gateways**: List payment gateways
-- **PUT /api/admin/payments/gateways/{gateway}**: Update payment gateway settings
-- **PATCH /api/admin/payments/gateways/{gateway}/toggle-status**: Toggle payment gateway status
-- **GET /api/admin/payments/gateways/support**: Get supported payment gateways
-
-##### Testimonials Management
-- **GET /api/admin/testimonials**: List testimonials
-- **POST /api/admin/testimonials**: Create testimonial
-- **GET /api/admin/testimonials/{id}**: Get testimonial details
-- **PUT /api/admin/testimonials/{id}**: Update testimonial
-- **DELETE /api/admin/testimonials/{id}**: Delete testimonial
-- **PATCH /api/admin/testimonials/{id}/toggle-status**: Toggle testimonial status
-- **PATCH /api/admin/testimonials/{id}/toggle-featured**: Toggle featured status
-
-##### Careers Management
-- **GET /api/admin/careers**: List career opportunities
-- **POST /api/admin/careers**: Create career opportunity
-- **GET /api/admin/careers/{id}**: Get career details
-- **PUT /api/admin/careers/{id}**: Update career
-- **DELETE /api/admin/careers/{id}**: Delete career
-- **PATCH /api/admin/careers/{id}/publish**: Publish career
-- **PATCH /api/admin/careers/{id}/unpublish**: Unpublish career
-
-##### Ad Placements Management
-- **GET /api/admin/ad-placements**: List ad placements
-- **POST /api/admin/ad-placements**: Create ad placement
-- **GET /api/admin/ad-placements/{id}**: Get ad placement details
-- **PUT /api/admin/ad-placements/{id}**: Update ad placement
-- **DELETE /api/admin/ad-placements/{id}**: Delete ad placement
-- **PATCH /api/admin/ad-placements/{id}/toggle-status**: Toggle ad placement status
-- **GET /api/admin/ad-placements/stats**: Ad placement statistics
-
-##### Premium Ads Management
-- **GET /api/admin/premium-ads**: List premium ads
-- **POST /api/admin/premium-ads**: Create premium ad
-- **GET /api/admin/premium-ads/{id}**: Get premium ad details
-- **PUT /api/admin/premium-ads/{id}**: Update premium ad
-- **DELETE /api/admin/premium-ads/{id}**: Delete premium ad
-- **PATCH /api/admin/premium-ads/{id}/activate**: Activate premium ad
-- **PATCH /api/admin/premium-ads/{id}/pause**: Pause premium ad
-- **PATCH /api/admin/premium-ads/{id}/cancel**: Cancel premium ad
-- **GET /api/admin/premium-ads/stats**: Premium ads statistics
-
-### Response Format
-
-All API responses follow a consistent format:
-
+### Common Response Format
 ```json
 {
   "success": true,
+  "message": "Success message",
+  "data": { ... },
+  "errors": { ... }  // Only present on error responses
+}
+```
+
+### Payment API Endpoints
+
+#### Initialize Payment
+`POST /api/payment/initialize`
+
+**Parameters:**
+- `amount` (required, numeric): Payment amount
+- `email` (required, email): Customer email
+- `payment_gateway` (required, string): 'paystack' or 'flutterwave'
+- `type` (required, string): Payment type ('ad_payment', 'featured_ad', 'premium_subscription', etc.)
+- `user_id` (required, integer): User ID
+- `ad_id` (optional, integer): Ad ID
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Payment initialized successfully",
   "data": {
-    // Response data
+    "authorization_url": "https://checkout-url.com",
+    "reference": "unique_reference",
+    "payment_gateway": "paystack"
   }
 }
 ```
 
-For errors:
-```json
+#### Verify Payment
+`POST /api/payment/verify`
+
+**Parameters:**
+- `reference` (required, string): Payment reference
+- `payment_gateway` (required, string): 'paystack' or 'flutterwave'
+
+#### Get Transaction Details
+`GET /api/payment/transaction`
+
+**Parameters:**
+- `reference` (required, string): Transaction reference
+
+### Classification Ads API
+
+#### Create Ad
+`POST /api/ads`
+
+**Requires authentication**
+
+#### Get All Ads
+`GET /api/ads`
+
+#### Get User's Ads
+`GET /api/my-ads`
+
+**Requires authentication**
+
+### Search API
+
+#### Search Ads
+`GET /api/ads`
+
+**Parameters:**
+- `q` (optional, string): Search query
+- `category` (optional, integer): Category ID
+- `location` (optional, string): Location
+- `price_min` (optional, numeric): Minimum price
+- `price_max` (optional, numeric): Maximum price
+
+## Developer Guide
+
+### Architecture Overview
+
+The application follows Laravel's MVC pattern with service layers for business logic:
+
+- **Controllers**: Handle HTTP requests and responses
+- **Services**: Business logic and external API interactions (PaymentService, etc.)
+- **Models**: Data access and relationships
+- **Repositories**: Data access patterns (if implemented)
+- **Resources**: API response formatting
+- **Jobs**: Queueable tasks
+- **Events**: Event-driven architecture
+- **Listeners**: Event handlers
+
+### Payment Service Architecture
+
+The PaymentService handles all payment-related operations:
+
+```php
+class PaymentService
 {
-  "success": false,
-  "message": "Error message",
-  "errors": {
-    // Validation errors if applicable
-  }
+    // Initialize payment with Paystack or Flutterwave
+    public function initializePaystackPayment($amount, $email, $reference, $callbackUrl, $metadata = [])
+    public function initializeFlutterwavePayment($amount, $email, $tx_ref, $callbackUrl, $metadata = [])
+
+    // Verify payments
+    public function verifyPaystackTransaction($reference)
+    public function verifyFlutterwaveTransaction($tx_ref)
+
+    // Handle webhooks
+    public function handlePaystackWebhook($payload)
+    public function handleFlutterwaveWebhook($payload)
 }
 ```
+
+### Database Models
+
+#### Key Models:
+- **User**: Authentication and user management
+- **Ad**: Classified ad listings
+- **Category**: Ad categories
+- **PaymentTransaction**: Payment tracking
+- **AdPlacement**: Ad placement management
+
+### Service Providers
+
+The application uses custom service providers for payment configuration:
+- `config/payment.php` - Payment gateway configuration
+- Service container bindings in `app/Providers/AppServiceProvider.php`
 
 ### Error Handling
 
-Common HTTP status codes:
-- `200`: Success
-- `201`: Created
-- `400`: Bad Request (validation errors)
-- `401`: Unauthorized
-- `403`: Forbidden
-- `404`: Not Found
-- `422`: Unprocessable Entity (validation errors)
-- `500`: Internal Server Error
+The application implements comprehensive error handling with:
+- Validation using Form Request classes
+- Exception handling with custom exception classes
+- Logging using Laravel's logging system
+- API response formatting
 
-### Rate Limiting
+### Testing
 
-The API implements rate limiting to prevent abuse:
-- Public endpoints: 60 requests per minute per IP
-- Authenticated endpoints: 100 requests per minute per user
-- Admin endpoints: 50 requests per minute per admin user
+The application includes:
+- Unit tests in the `tests/Unit` directory
+- Feature tests in the `tests/Feature` directory
+- API tests for all endpoints
+- Payment integration tests
 
-### Best Practices for API Consumption
+## Admin Features
 
-1. **Handle errors gracefully**: Always check the `success` field in responses
-2. **Use pagination**: Most list endpoints support pagination with `per_page` and page parameters
-3. **Cache responses**: Cache non-sensitive data to reduce API calls
-4. **Implement retry logic**: For failed requests, implement exponential backoff
-5. **Secure tokens**: Store API tokens securely and refresh them as needed
-6. **Validate responses**: Validate API responses even if they seem correct
+### Ad Placement Management
 
-### Example API Usage
+Admins can manage ad placements through the admin dashboard:
 
-#### Creating an Ad
+#### Placement Positions:
+- **Header Banner**: Ads displayed at the top of pages
+- **Sidebar**: Ads in the side navigation
+- **Footer**: Ads at the bottom of pages
+- **Content Inline**: Ads placed within content sections
+- **Interstitial**: Full-page ads between content
 
-```javascript
-// JavaScript example
-const response = await fetch('/api/ads', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer YOUR_API_TOKEN'
-  },
-  body: JSON.stringify({
-    title: 'Vintage Guitar',
-    description: 'Well-maintained vintage guitar for sale',
-    price: 250.00,
-    category_id: 5,
-    condition: 'good',
-    location: 'New York, NY',
-    negotiable: true,
-    contact_phone: '+1234567890'
-  })
-});
+#### Ad Types:
+- **Image Ads**: Static image advertisements
+- **Video Ads**: Video content advertisements
+- **Rich Media**: Interactive advertisements
+- **Text Ads**: Simple text-based advertisements
 
-const result = await response.json();
-console.log(result);
-```
+#### Management Capabilities:
+- Upload new ad creative
+- Set placement position
+- Schedule ad campaigns
+- Set targeting criteria
+- Monitor performance metrics
+- Set budget limits
 
-#### Searching Ads
+### Content Management
 
-```javascript
-// Search for guitars with price between $100 and $500 in New York
-const response = await fetch('/api/ads?search=guitar&min_price=100&max_price=500&location=New%20York', {
-  headers: {
-    'Authorization': 'Bearer YOUR_API_TOKEN'
-  }
-});
+Admins can manage static pages (about, contact, privacy, terms) and control ad placements on these pages.
 
-const result = await response.json();
-console.log(result.data);
-```
+## Cross-Check: Requested vs Implemented Features
+
+### ✅ Fully Implemented:
+- **Payment Gateway Integration**: Paystack and Flutterwave with full API endpoints
+- **Database Configuration**: SQLite for local, MySQL with read replicas for production
+- **API Architecture**: RESTful API with proper authentication
+- **Ad Placement System**: Admin-controlled ad placements in different positions
+- **User Authentication**: Complete auth system with social login
+- **Basic AI Features**: Image recognition and chatbot
+- **File Storage**: Image upload and management
+- **Search Functionality**: Basic search with filters
+- **Mobile Compatibility**: Responsive design and PWA features
+
+### ⚠️ Partially Implemented:
+- **Advanced AI Features**: Basic implementation, more sophisticated features planned for future phases
+- **Elasticsearch Integration**: Planned but not yet implemented
+- **Full Recommendation Engine**: Basic implementation, advanced collaborative filtering planned
+- **Advanced Search Features**: Basic search implemented, visual/voice search planned
+
+### 🔧 Planned for Future Phases:
+- **Advanced Analytics Dashboard**: Business intelligence features
+- **Blockchain Integration**: For advanced security features
+- **AR/VR Implementation**: For advanced product visualization
+- **Advanced Automation**: More sophisticated AI features
+
+### 📈 Implementation Status:
+- **Phase 1 Complete**: Payment gateway integration (completed)
+- **Phase 2 In Progress**: Enhanced search and localization features
+- **Phase 3 Planned**: Advanced AI features and recommendations
+- **Phase 4 Planned**: Advanced transaction and security features
+- **Phase 5 Planned**: Revolutionary features and market expansion
+
+## Mobile Application
+
+The mobile application is built with Flutter and supports both iOS and Android platforms. The mobile app includes:
+- Complete classified ads functionality
+- Push notifications
+- Offline capabilities
+- Payment processing
+- Real-time messaging
+
+## Security Features
+
+- JWT authentication
+- OAuth 2.0 for third-party login
+- SSL/TLS encryption
+- Input validation and sanitization
+- SQL injection protection
+- CSRF protection
+- Rate limiting to prevent abuse
+
+## Performance Optimization
+
+- Database indexing strategies
+- Redis caching layer
+- Image optimization
+- Code splitting
+- Service workers for offline functionality
+- Elasticsearch for advanced search
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Support
+
+For support, please open an issue in the repository or contact the development team.
+
+---
+
+*This documentation is maintained with the codebase and updated with each release.*

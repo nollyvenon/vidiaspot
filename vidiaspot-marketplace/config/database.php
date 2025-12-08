@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', 'mysql'),
 
     /*
     |--------------------------------------------------------------------------
@@ -191,6 +191,19 @@ return [
             'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
         ],
 
+    ],
+
+    // Additional SQLite connection for local caching
+    'sqlite_cache' => [
+        'driver' => 'sqlite',
+        'url' => env('DB_URL'),
+        'database' => env('SQLITE_CACHE_DATABASE', database_path('cache.sqlite')),
+        'prefix' => '',
+        'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+        'busy_timeout' => null,
+        'journal_mode' => 'wal',
+        'synchronous' => 'normal',
+        'transaction_mode' => 'DEFERRED',
     ],
 
 ];
