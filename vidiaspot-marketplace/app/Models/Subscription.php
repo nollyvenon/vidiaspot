@@ -32,6 +32,8 @@ class Subscription extends Model
         'ad_limit' => 'integer',
         'featured_ads_limit' => 'integer',
         'features' => 'array',
+        'billing_cycle' => 'string', // daily, weekly, monthly, quarterly, yearly
+        'duration_days' => 'integer',
     ];
 
     /**
