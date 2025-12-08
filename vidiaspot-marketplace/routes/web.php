@@ -54,6 +54,25 @@ Route::middleware(['auth'])->prefix('messaging')->group(function () {
     Route::post('/notifications/read', [App\Http\Controllers\SmartMessagingController::class, 'markNotificationsAsRead']);
 });
 
+// Advanced Payment routes (protected)
+Route::middleware(['auth'])->prefix('payments')->group(function () {
+    Route::get('/methods', function() {
+        return view('payments.methods');
+    })->name('payments.methods');
+    Route::get('/cryptocurrency', function() {
+        return view('payments.cryptocurrency');
+    })->name('payments.cryptocurrency');
+    Route::get('/bnpl', function() {
+        return view('payments.bnpl');
+    })->name('payments.bnpl');
+    Route::get('/split', function() {
+        return view('payments.split');
+    })->name('payments.split');
+    Route::get('/insurance', function() {
+        return view('payments.insurance');
+    })->name('payments.insurance');
+});
+
 // Admin routes (protected)
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::resource('how-it-works', \App\Http\Controllers\Admin\HowItWorksController::class)->names([
@@ -64,4 +83,37 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
         'update' => 'admin.how-it-works.update',
         'destroy' => 'admin.how-it-works.destroy',
     ]);
+
+    Route::resource('payment-settings', \App\Http\Controllers\Admin\PaymentSettingController::class)->names([
+        'index' => 'admin.payment-settings.index',
+        'create' => 'admin.payment-settings.create',
+        'store' => 'admin.payment-settings.store',
+        'show' => 'admin.payment-settings.show',
+        'edit' => 'admin.payment-settings.edit',
+        'update' => 'admin.payment-settings.update',
+        'destroy' => 'admin.payment-settings.destroy',
+    ]);
+
+    Route::patch('/payment-settings/{id}/toggle-status', [\App\Http\Controllers\Admin\PaymentSettingController::class, 'toggleStatus'])
+        ->name('admin.payment-settings.toggle-status');
+});
+
+// API documentation route
+Route::get('/api-docs', function () {
+    return view('api.documentation');
+})->name('api.documentation');
+
+// User personalization and settings routes (protected)
+Route::middleware(['auth'])->prefix('settings')->group(function () {
+    Route::get('/personalization', function () {
+        return view('settings.personalization');
+    })->name('settings.personalization');
+
+    Route::get('/notifications', function () {
+        return view('settings.notifications');
+    })->name('settings.notifications');
+
+    Route::get('/payment-methods', function () {
+        return view('settings.payment-methods');
+    })->name('settings.payment-methods');
 });

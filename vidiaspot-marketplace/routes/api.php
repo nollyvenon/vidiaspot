@@ -287,3 +287,41 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/products/import/settings', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'getImportSettings']);
     Route::put('/products/import/settings', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'updateImportSettings']);
 });
+
+// Advanced Payment Solutions routes
+Route::middleware(['auth:sanctum'])->prefix('advanced-payments')->group(function () {
+    Route::post('/methods', [App\Http\Controllers\AdvancedPaymentController::class, 'addPaymentMethod']);
+    Route::get('/methods', [App\Http\Controllers\AdvancedPaymentController::class, 'getUserPaymentMethods']);
+    Route::put('/methods/{id}/default', [App\Http\Controllers\AdvancedPaymentController::class, 'setDefaultPaymentMethod']);
+
+    // Cryptocurrency payments
+    Route::post('/cryptocurrency', [App\Http\Controllers\AdvancedPaymentController::class, 'processCryptocurrencyPayment']);
+    Route::get('/cryptocurrency/supported', [App\Http\Controllers\AdvancedPaymentController::class, 'getSupportedCryptocurrencies']);
+
+    // Buy-now-pay-later
+    Route::post('/bnpl', [App\Http\Controllers\AdvancedPaymentController::class, 'processBuyNowPayLater']);
+
+    // Split payments
+    Route::post('/split', [App\Http\Controllers\AdvancedPaymentController::class, 'processSplitPayment']);
+    Route::post('/split/{id}/join', [App\Http\Controllers\AdvancedPaymentController::class, 'joinSplitPayment']);
+
+    // Insurance
+    Route::post('/insurance', [App\Http\Controllers\AdvancedPaymentController::class, 'processInsurance']);
+
+    // Tax calculation
+    Route::post('/tax/calculate', [App\Http\Controllers\AdvancedPaymentController::class, 'calculateTax']);
+
+    // Mobile money
+    Route::post('/mobile-money', [App\Http\Controllers\AdvancedPaymentController::class, 'processMobileMoneyPayment']);
+});
+
+// Payment Transactions routes
+Route::middleware(['auth:sanctum'])->prefix('payment-transactions')->group(function () {
+    Route::get('/', [App\Http\Controllers\PaymentTransactionController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\PaymentTransactionController::class, 'store']);
+    Route::get('/{id}', [App\Http\Controllers\PaymentTransactionController::class, 'show']);
+    Route::put('/{id}', [App\Http\Controllers\PaymentTransactionController::class, 'update']);
+    Route::delete('/{id}', [App\Http\Controllers\PaymentTransactionController::class, 'destroy']);
+    Route::get('/ad/{adId}', [App\Http\Controllers\PaymentTransactionController::class, 'forAd']);
+    Route::post('/webhook', [App\Http\Controllers\PaymentTransactionController::class, 'webhook'])->withoutMiddleware(['auth:sanctum']);
+});

@@ -4,55 +4,52 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PaymentTransaction extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'transaction_id',
-        'payment_gateway',
-        'transaction_reference',
         'user_id',
         'ad_id',
-        'subscription_id',
-        'type',
+        'transaction_id',
+        'payment_method',
         'amount',
         'currency',
         'status',
-        'gateway_response',
+        'payment_gateway',
+        'provider_reference',
+        'payment_details',
+        'processed_at',
+        'confirmed_at',
+        'expires_at',
+        'callback_url',
         'metadata',
-        'paid_at'
+        'tax_region',
+        'tax_rate',
+        'tax_amount',
+        'total_amount_with_tax',
+        'tax_breakdown',
     ];
 
     protected $casts = [
-        'gateway_response' => 'array',
+        'processed_at' => 'datetime',
+        'confirmed_at' => 'datetime',
+        'expires_at' => 'datetime',
+        'amount' => 'decimal:2',
+        'tax_rate' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'total_amount_with_tax' => 'decimal:2',
+        'payment_details' => 'array',
         'metadata' => 'array',
-        'paid_at' => 'datetime',
-        'amount' => 'decimal:2'
+        'tax_breakdown' => 'array',
     ];
 
-    protected $primaryKey = 'id';
-    public $incrementing = true;
-    protected $keyType = 'int';
-    public $timestamps = true;
-
-    // Relationship to User
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relationship to Ad
     public function ad(): BelongsTo
     {
         return $this->belongsTo(Ad::class);
-    }
-
-    // Relationship to Subscription
-    public function subscription(): BelongsTo
-    {
-        return $this->belongsTo(Subscription::class);
     }
 }
