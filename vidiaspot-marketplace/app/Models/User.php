@@ -41,6 +41,7 @@ class User extends Authenticatable
         'featured_ads_limit',
         'has_priority_support',
         'subscription_features',
+        'reputation_score',
     ];
 
     protected $attributes = [

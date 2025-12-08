@@ -302,6 +302,26 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/ads/{adId}/insurance', [\App\Http\Controllers\VendorStoreController::class, 'processAdInsurance']);
     Route::post('/insurance-policies/{policyId}/claim', [\App\Http\Controllers\VendorStoreController::class, 'submitInsuranceClaim']);
 
+    // Social commerce routes
+    Route::post('/social-posts', [\App\Http\Controllers\SocialCommerceController::class, 'createPost']);
+    Route::get('/social-feed', [\App\Http\Controllers\SocialCommerceController::class, 'getFeed']);
+    Route::get('/social-trending', [\App\Http\Controllers\SocialCommerceController::class, 'getTrending']);
+    Route::post('/social-posts/{postId}/like', [\App\Http\Controllers\SocialCommerceController::class, 'likePost']);
+    Route::post('/social-posts/{postId}/unlike', [\App\Http\Controllers\SocialCommerceController::class, 'unlikePost']);
+    Route::post('/social-posts/{postId}/comment', [\App\Http\Controllers\SocialCommerceController::class, 'commentOnPost']);
+    Route::post('/social-posts/{postId}/share', [\App\Http\Controllers\SocialCommerceController::class, 'sharePost']);
+    Route::post('/social-follow', [\App\Http\Controllers\SocialCommerceController::class, 'followEntity']);
+    Route::post('/social-unfollow', [\App\Http\Controllers\SocialCommerceController::class, 'unfollowEntity']);
+    Route::get('/social-followers/{userId}', [\App\Http\Controllers\SocialCommerceController::class, 'getFollowers']);
+    Route::get('/social-following/{userId}', [\App\Http\Controllers\SocialCommerceController::class, 'getFollowing']);
+    Route::get('/social-proof/{productId}/{productType}', [\App\Http\Controllers\SocialCommerceController::class, 'getSocialProof']);
+    Route::get('/group-buying', [\App\Http\Controllers\SocialCommerceController::class, 'getGroupBuying']);
+    Route::get('/community/{categoryId}', [\App\Http\Controllers\SocialCommerceController::class, 'getCategoryCommunity']);
+    Route::get('/reputation/{userId?}', [\App\Http\Controllers\SocialCommerceController::class, 'getUserReputation']);
+    Route::get('/influencers', [\App\Http\Controllers\SocialCommerceController::class, 'getInfluencers']);
+    Route::get('/live-shopping-events', [\App\Http\Controllers\SocialCommerceController::class, 'getLiveShoppingEvents']);
+    Route::get('/ugc-campaigns', [\App\Http\Controllers\SocialCommerceController::class, 'getUserGeneratedContentCampaigns']);
+
     // Food vendor routes
     Route::get('/food-vendors', [\App\Http\Controllers\FoodVendorController::class, 'index']);
     Route::get('/food-vendors/{vendorId}', [\App\Http\Controllers\FoodVendorController::class, 'show']);
