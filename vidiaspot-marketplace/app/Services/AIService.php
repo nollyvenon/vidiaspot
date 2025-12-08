@@ -745,10 +745,1193 @@ class AIService
     private function getSeasonalPricingTrends($categoryId) {
         // Get seasonal pricing trends
         return [
-            'peak_seasons' => ['Q4' => 'high'], // Holiday season for most categories
-            'off_seasons' => ['Q1' => 'low'], // Post-holiday period
+            'peak_seasons' => ['Q4' => 95], // Holiday season for most categories
+            'off_seasons' => ['Q1' => 75], // Post-holiday period
             'current_season_impact' => rand(90, 110) / 100, // Current seasonal factor
         ];
+    }
+
+    private function getCompetitorPricingChanges($categoryId, $locationId) {
+        // Get information about competitor pricing changes
+        return [
+            'major_price_changes' => [],
+            'average_price_shift' => rand(95, 105) / 100, // 5% up/down
+            'promotional_periods' => [],
+        ];
+    }
+
+    private function generatePricingReasoning($ad, $recommendedPrice, $marketAverage) {
+        // Generate human-readable reasoning for the pricing recommendation
+        $priceDiff = $recommendedPrice - $marketAverage;
+        $priceDiffPercent = $marketAverage > 0 ? abs(($priceDiff / $marketAverage) * 100) : 0;
+
+        $reasoning = "Based on market analysis, the recommended price of " . number_format($recommendedPrice, 2) .
+                    " is " . ($priceDiff > 0 ? 'higher' : 'lower') . " than the market average of " .
+                    number_format($marketAverage, 2) . " by " . number_format($priceDiffPercent, 2) . "%.";
+
+        // Add specific factors that influenced the recommendation
+        if (isset($ad->condition) && strtolower($ad->condition) === 'new') {
+            $reasoning .= " The item being new justifies the premium pricing.";
+        } elseif (isset($ad->condition) && in_array(strtolower($ad->condition), ['poor', 'damaged'])) {
+            $reasoning .= " The condition of the item affects the recommended pricing.";
+        }
+
+        if (isset($ad->images) && is_array($ad->images)) {
+            $imageCount = count($ad->images);
+            if ($imageCount > 3) {
+                $reasoning .= " The high number of quality images increases the perceived value.";
+            } elseif ($imageCount > 0) {
+                $reasoning .= " Including images adds to the listing's value.";
+            }
+        }
+
+        $descriptionLength = strlen($ad->description ?? '');
+        if ($descriptionLength > 200) {
+            $reasoning .= " The detailed description adds to the listing's value.";
+        } elseif ($descriptionLength > 50) {
+            $reasoning .= " The comprehensive description helps with visibility.";
+        }
+
+        return $reasoning;
+    }
+
+    private function analyzeSuccessFactors($ad, $categoryId, $locationId) {
+        // Analyze factors that affect ad success
+        $factors = [
+            'title_quality' => $this->assessTitleQuality($ad->title),
+            'description_quality' => $this->assessDescriptionQuality($ad->description),
+            'image_quality' => $this->assessImageQuality($ad->images ?? []),
+            'pricing_competitiveness' => $this->assessPricingCompetitiveness($ad),
+            'category_popularity' => $this->assessCategoryPopularity($categoryId),
+            'location_demand' => $this->assessLocationDemand($locationId),
+            'timing_factors' => $this->assessTimingFactors($ad),
+            'user_reputation' => $this->assessUserReputation($ad->user),
+        ];
+
+        return $factors;
+    }
+
+    private function assessTitleQuality($title) {
+        // Assess the quality of the ad title
+        if (empty($title)) {
+            return [
+                'score' => 10,
+                'length' => 0,
+                'keywords_present' => false,
+                'capitalization' => 0,
+                'assessment' => 'poor',
+            ];
+        }
+
+        $score = 50; // Base score
+
+        // Length assessment
+        $length = strlen($title);
+        if ($length >= 10 && $length <= 100) {
+            $score += 15; // Good length range
+        } elseif ($length < 10) {
+            $score -= 5; // Too short
+        } else {
+            $score -= 5; // Too long
+        }
+
+        // Keywords assessment
+        $stopWords = ['free', 'urgent', 'sale', 'wanted', 'bargain', 'negotiable'];
+        $keywordCount = 0;
+        foreach ($stopWords as $word) {
+            if (stripos($title, $word) !== false) {
+                $keywordCount++;
+            }
+        }
+        $score += min($keywordCount * 3, 10); // Up to 10 points for good keywords
+
+        // Capitalization assessment
+        $capsRatio = (float) preg_match_all('/[A-Z]/', $title) / max(1, $length);
+        if ($capsRatio > 0.1 && $capsRatio < 0.9) {
+            $score += 5; // Good capitalization balance
+        } elseif ($capsRatio >= 0.9) {
+            $score -= 5; // Too much caps
+        }
+
+        return [
+            'score' => max(0, min(100, $score)),
+            'length' => $length,
+            'keywords_present' => $keywordCount > 0,
+            'capitalization' => $capsRatio,
+            'assessment' => $score > 75 ? 'excellent' : ($score > 50 ? 'good' : ($score > 25 ? 'fair' : 'poor')),
+        ];
+    }
+
+    private function assessDescriptionQuality($description) {
+        // Assess the quality of the ad description
+        if (empty($description)) {
+            return [
+                'score' => 10,
+                'length' => 0,
+                'word_count' => 0,
+                'has_formatting' => false,
+                'assessment' => 'poor',
+            ];
+        }
+
+        $score = 50; // Base score
+
+        // Length assessment
+        $length = strlen($description);
+        if ($length >= 50 && $length <= 1000) {
+            $score += 20; // Good length range
+        } elseif ($length < 50) {
+            $score -= 10; // Too short
+        }
+
+        // Word count assessment
+        $words = str_word_count($description);
+        if ($words >= 25) {
+            $score += 15; // Good amount of content
+        } elseif ($words >= 10) {
+            $score += 5; // Decent amount of content
+        }
+
+        // Formatting assessment
+        $hasParagraphs = substr_count($description, "\n\n") > 0;
+        $hasBulletPoints = preg_match('/[-*]\s/', $description);
+
+        if ($hasParagraphs || $hasBulletPoints) {
+            $score += 10; // Good formatting
+        }
+
+        return [
+            'score' => max(0, min(100, $score)),
+            'length' => $length,
+            'word_count' => $words,
+            'has_formatting' => $hasParagraphs || $hasBulletPoints,
+            'assessment' => $score > 75 ? 'excellent' : ($score > 50 ? 'good' : ($score > 25 ? 'fair' : 'poor')),
+        ];
+    }
+
+    private function assessImageQuality($images) {
+        // Assess the quality of ad images
+        $imageCount = is_array($images) ? count($images) : (empty($images) ? 0 : 1);
+
+        $score = match (true) {
+            $imageCount >= 5 => 90, // Excellent
+            $imageCount >= 3 => 75, // Good
+            $imageCount >= 1 => 50, // Fair
+            default => 20, // Poor
+        };
+
+        $score += min($imageCount * 8, 40); // Up to 40 points for multiple images
+
+        return [
+            'score' => min(100, $score),
+            'image_count' => $imageCount,
+            'has_good_images' => $imageCount > 0,
+            'assessment' => $score > 75 ? 'excellent' : ($score > 50 ? 'good' : ($score > 25 ? 'fair' : 'poor')),
+        ];
+    }
+
+    private function assessPricingCompetitiveness($ad) {
+        // Assess if the price is competitive
+        if (!$ad || !$ad->category_id) {
+            return [
+                'score' => 50,
+                'is_competitive' => null,
+                'price_ratio' => null,
+            ];
+        }
+
+        // Get market average for similar ads
+        $marketPrices = $this->getMarketPrices($ad->category_id, $ad->location_id ?? null, $ad->condition ?? 'any');
+        $marketAverage = $marketPrices['average'] ?? 0;
+
+        if (!$marketAverage) {
+            return [
+                'score' => 50, // Neutral score if no comparison available
+                'is_competitive' => null,
+                'price_ratio' => null,
+            ];
+        }
+
+        $priceRatio = $ad->price / $marketAverage;
+        $score = 50; // Base score
+
+        // Adjust score based on competitiveness
+        if ($priceRatio >= 0.8 && $priceRatio <= 1.2) {
+            $score += 25; // Very competitive
+        } elseif ($priceRatio >= 0.6 && $priceRatio <= 1.4) {
+            $score += 15; // Competitive
+        } elseif ($priceRatio >= 0.4 && $priceRatio <= 1.6) {
+            $score += 5; // Somewhat competitive
+        } else {
+            $score -= 10; // Non-competitive
+        }
+
+        return [
+            'score' => max(0, min(100, $score)),
+            'is_competitive' => $priceRatio >= 0.8 && $priceRatio <= 1.2,
+            'price_ratio' => $priceRatio,
+            'market_average' => $marketAverage,
+            'assessment' => $priceRatio > 1.5 ? 'overpriced' : ($priceRatio < 0.7 ? 'underpriced' : 'competitive'),
+        ];
+    }
+
+    private function assessCategoryPopularity($categoryId) {
+        // Assess how popular the category is
+        if (!$categoryId) {
+            return [
+                'score' => 50,
+                'ad_count' => 0,
+                'popularity_level' => 'unknown',
+            ];
+        }
+
+        $adCount = \App\Models\Ad::where('category_id', $categoryId)->count();
+
+        $score = match (true) {
+            $adCount > 1000 => 90,
+            $adCount > 500 => 75,
+            $adCount > 100 => 60,
+            $adCount > 25 => 50,
+            $adCount > 5 => 35,
+            default => 20,
+        };
+
+        return [
+            'score' => $score,
+            'ad_count' => $adCount,
+            'popularity_level' => $score > 75 ? 'high' : ($score > 50 ? 'medium' : ($score > 20 ? 'low' : 'very_low')),
+        ];
+    }
+
+    private function assessLocationDemand($locationId) {
+        // Assess demand in the location
+        if (!$locationId) {
+            return [
+                'score' => 50,
+                'ad_count' => 0,
+                'demand_level' => 'unknown',
+            ];
+        }
+
+        $adCount = \App\Models\Ad::where('location_id', $locationId)->count();
+
+        $score = match (true) {
+            $adCount > 2000 => 95,
+            $adCount > 1000 => 80,
+            $adCount > 500 => 65,
+            $adCount > 100 => 50,
+            $adCount > 25 => 35,
+            default => 20,
+        };
+
+        return [
+            'score' => $score,
+            'ad_count' => $adCount,
+            'demand_level' => $score > 75 ? 'high' : ($score > 50 ? 'medium' : ($score > 25 ? 'low' : 'very_low')),
+        ];
+    }
+
+    private function assessTimingFactors($ad) {
+        // Assess timing factors
+        if (!isset($ad->created_at)) {
+            return [
+                'score' => 50,
+                'days_active' => 0,
+                'posted_day_of_week' => null,
+                'assessment' => 'neutral',
+            ];
+        }
+
+        $daysActive = \Carbon\Carbon::parse($ad->created_at)->diffInDays(now());
+        $dayOfWeek = \Carbon\Carbon::parse($ad->created_at)->dayOfWeek;
+
+        $score = 50;
+
+        // Time-based assessment
+        if ($daysActive < 7) {
+            $score += 15; // Fresh listings perform better initially
+        } elseif ($daysActive > 30) {
+            $score -= 10; // Performance typically decreases over time
+        }
+
+        // Day of week assessment (weekends might vary by category)
+        if (in_array($dayOfWeek, [0, 6])) { // Weekend
+            $score += 5; // Might get more visibility
+        }
+
+        return [
+            'score' => max(0, min(100, $score)),
+            'days_active' => $daysActive,
+            'posted_day_of_week' => $dayOfWeek,
+            'assessment' => $score > 70 ? 'good_timing' : ($score > 40 ? 'ok_timing' : 'poor_timing'),
+        ];
+    }
+
+    private function assessUserReputation($user) {
+        // Assess user reputation
+        if (!$user) {
+            return [
+                'score' => 50,
+                'verification_status' => 'unknown',
+                'reputation_level' => 'neutral',
+            ];
+        }
+
+        $score = 50;
+
+        // Verification status
+        if ($user->is_verified ?? false) {
+            $score += 20;
+        }
+
+        // Activity level
+        $userAds = $user->ads()->count() ?? 0;
+        $userReviews = $user->receivedReviews()->count() ?? 0; // Assuming there's a relationship for reviews
+
+        if ($userAds > 10) {
+            $score += 10; // Experienced seller
+        } elseif ($userAds > 3) {
+            $score += 5; // Some experience
+        }
+
+        if ($userReviews > 5) {
+            $score += 15; // Established seller with reviews
+        } elseif ($userReviews > 1) {
+            $score += 5; // Some feedback
+        }
+
+        return [
+            'score' => max(0, min(100, $score)),
+            'verification_status' => $user->is_verified ? 'verified' : 'unverified',
+            'reputation_level' => $score > 75 ? 'high' : ($score > 50 ? 'medium' : 'low'),
+            'activity_score' => $userAds,
+            'review_score' => $userReviews,
+        ];
+    }
+
+    private function calculateSuccessProbability($successFactors) {
+        // Calculate success probability based on all factors
+        $scores = array_values(array_map(function($factor) {
+            return is_array($factor) && isset($factor['score']) ? $factor['score'] : 50;
+        }, $successFactors));
+
+        if (empty($scores)) {
+            return 50; // Default probability if no factors
+        }
+
+        // Weighted average with some factors having more importance
+        $totalScore = array_sum($scores);
+        $factorCount = count($scores);
+
+        // If we have specific important factors, we can weight them more
+        $titleScore = $successFactors['title_quality']['score'] ?? 50;
+        $pricingScore = $successFactors['pricing_competitiveness']['score'] ?? 50;
+        $imageScore = $successFactors['image_quality']['score'] ?? 50;
+
+        // Give slightly more weight to these important factors
+        $adjustedScore = ($titleScore * 1.2 + $pricingScore * 1.2 + $imageScore * 1.1) / 3.5 +
+                        ($totalScore - $titleScore - $pricingScore - $imageScore) / ($factorCount - 3);
+
+        return max(0, min(100, $adjustedScore));
+    }
+
+    private function estimateViews($successFactors) {
+        // Estimate potential views based on success factors
+        $baseViews = 30; // Base number of views
+        $multiplier = 1.0;
+
+        foreach ($successFactors as $factor) {
+            if (isset($factor['score'])) {
+                // Normalize the factor score (0-100) to multiplier (0.5-2.0)
+                $factorMultiplier = 0.5 + ($factor['score'] / 100) * 1.5;
+                $multiplier *= $factorMultiplier;
+            }
+        }
+
+        return (int)($baseViews * $multiplier);
+    }
+
+    private function estimateResponses($successFactors) {
+        // Estimate potential responses based on success factors
+        $estimatedViews = $this->estimateViews($successFactors);
+        $responseRate = 0.05; // Base response rate
+
+        // Adjust based on location and category demand
+        if (isset($successFactors['location_demand']['score'])) {
+            $responseRate *= ($successFactors['location_demand']['score'] / 50);
+        }
+
+        if (isset($successFactors['category_popularity']['score'])) {
+            $responseRate *= ($successFactors['category_popularity']['score'] / 50);
+        }
+
+        return (int)($estimatedViews * $responseRate);
+    }
+
+    private function estimateConversionRate($successFactors) {
+        // Estimate conversion rate based on success factors
+        $baseRate = 0.10; // 10% base conversion rate
+
+        $multiplier = 1.0;
+        foreach ($successFactors as $factor) {
+            if (isset($factor['score'])) {
+                $multiplier *= ($factor['score'] / 50);
+            }
+        }
+
+        // Average the multipliers and adjust base rate
+        $factorCount = count($successFactors);
+        $avgMultiplier = $factorCount > 0 ? $multiplier / $factorCount : 1.0;
+
+        return min(0.50, $baseRate * $avgMultiplier); // Cap at 50%
+    }
+
+    private function identifyRiskFactors($ad, $successFactors) {
+        // Identify risk factors that might negatively impact success
+        $risks = [];
+
+        // Pricing risks
+        if (isset($successFactors['pricing_competitiveness'])) {
+            $priceFactor = $successFactors['pricing_competitiveness'];
+            if (isset($priceFactor['price_ratio'])) {
+                if ($priceFactor['price_ratio'] > 2.0) {
+                    $risks[] = 'significantly_overpriced_compares_to_market';
+                } elseif ($priceFactor['price_ratio'] < 0.5) {
+                    $risks[] = 'quality_perception_issues_due_to_low_price';
+                }
+            }
+        }
+
+        // Title risks
+        if (isset($successFactors['title_quality'])) {
+            $titleFactor = $successFactors['title_quality'];
+            if (isset($titleFactor['score']) && $titleFactor['score'] < 30) {
+                $risks[] = 'poor_title_quality_affecting_visibility';
+            }
+        }
+
+        // Description risks
+        if (isset($successFactors['description_quality'])) {
+            $descFactor = $successFactors['description_quality'];
+            if (isset($descFactor['score']) && $descFactor['score'] < 30) {
+                $risks[] = 'insufficient_description_affecting_conversion';
+            }
+        }
+
+        // Image risks
+        if (isset($successFactors['image_quality'])) {
+            $imgFactor = $successFactors['image_quality'];
+            if (isset($imgFactor['score']) && $imgFactor['score'] < 30) {
+                $risks[] = 'poor_image_quality_affecting_trust';
+            }
+        }
+
+        return $risks;
+    }
+
+    private function getComparativeAnalysis($ad, $categoryId, $locationId) {
+        // Get comparative analysis with similar successful ads
+        $query = \App\Models\Ad::where('category_id', $categoryId)
+                       ->where('id', '!=', $ad->id)
+                       ->where('status', 'active')
+                       ->where('price', '>', 0);
+
+        if ($locationId) {
+            $query->where('location_id', $locationId);
+        }
+
+        $similarAds = $query->orderBy('views_count', 'desc')
+                       ->limit(5)
+                       ->get();
+
+        $comparisons = [];
+        foreach ($similarAds as $similarAd) {
+            $comparisons[] = [
+                'id' => $similarAd->id,
+                'title' => $similarAd->title,
+                'price' => $similarAd->price,
+                'views' => $similarAd->views_count ?? 0,
+                'responses' => $similarAd->inquiries_count ?? 0,
+                'created_at' => $similarAd->created_at->format('Y-m-d'),
+                'success_metrics' => [
+                    'view_to_response_ratio' => ($similarAd->views_count ?? 0) > 0 ?
+                                                ($similarAd->inquiries_count ?? 0) / ($similarAd->views_count ?? 1) : 0,
+                ],
+            ];
+        }
+
+        return $comparisons;
+    }
+
+    private function generateImprovementSuggestions($ad, $successFactors) {
+        // Generate improvement suggestions based on weaknesses
+        $suggestions = [];
+
+        // Title suggestions
+        if (isset($successFactors['title_quality'])) {
+            $titleFactor = $successFactors['title_quality'];
+            if (isset($titleFactor['score']) && $titleFactor['score'] < 60) {
+                $suggestions[] = 'Improve your ad title by using relevant keywords and keeping it between 10-100 characters';
+            }
+        }
+
+        // Description suggestions
+        if (isset($successFactors['description_quality'])) {
+            $descFactor = $successFactors['description_quality'];
+            if (isset($descFactor['score']) && $descFactor['score'] < 60) {
+                $suggestions[] = 'Write a more detailed description with at least 50 words, good formatting, and key features';
+            }
+        }
+
+        // Image suggestions
+        if (isset($successFactors['image_quality'])) {
+            $imgFactor = $successFactors['image_quality'];
+            if (isset($imgFactor['score']) && $imgFactor['score'] < 60) {
+                $suggestions[] = 'Add more high-quality images (at least 3-5) showing different angles and features';
+            }
+        }
+
+        // Pricing suggestions
+        if (isset($successFactors['pricing_competitiveness'])) {
+            $priceFactor = $successFactors['pricing_competitiveness'];
+            if (isset($priceFactor['price_ratio'])) {
+                if ($priceFactor['price_ratio'] > 1.5) {
+                    $suggestions[] = 'Consider lowering your price to be more competitive with similar listings';
+                } elseif ($priceFactor['price_ratio'] < 0.7) {
+                    $suggestions[] = 'Consider increasing your price slightly to avoid perception of low quality';
+                }
+            }
+        }
+
+        // General suggestions
+        $suggestions[] = 'Post your ad at optimal times when your target audience is most active';
+        $suggestions[] = 'Respond promptly to inquiries to improve your seller reputation';
+        $suggestions[] = 'Consider featuring your ad during high-traffic periods';
+
+        return $suggestions;
+    }
+
+    private function calculateEngagementScore($title, $description, $images) {
+        // Calculate engagement score based on content quality
+        $score = 50; // Base score
+
+        // Title engagement
+        $titleLength = strlen($title ?? '');
+        if ($titleLength >= 10 && $titleLength <= 100) {
+            $score += 10;
+        }
+
+        // Description engagement
+        $descLength = strlen($description ?? '');
+        if ($descLength >= 50 && $descLength <= 1000) {
+            $score += 15;
+        } elseif ($descLength >= 20) {
+            $score += 5;
+        }
+
+        // Image engagement
+        $imageCount = is_array($images) ? count($images) : (empty($images) ? 0 : 1);
+        $score += min($imageCount * 5, 20); // Up to 20 points for images
+
+        // Content richness
+        if (preg_match('/[A-Z][a-z]/', $title ?? '') && preg_match('/[A-Z].*[A-Z]/', $title ?? '')) {
+            $score += 5; // Shows mixed case usage
+        }
+
+        if (strpos($description ?? '', "\n") !== false) {
+            $score += 5; // Has some formatting
+        }
+
+        return min(100, max(0, $score));
+    }
+
+    private function calculateConversionProbability($price, $marketPosition) {
+        // Calculate conversion probability based on price and market position
+        $baseProbability = 0.15; // Base 15% conversion probability
+
+        // Adjust based on pricing competitiveness
+        $competitiveFactor = 1.0;
+        if (isset($marketPosition['is_competitive'])) {
+            $competitiveFactor = $marketPosition['is_competitive'] ? 1.2 : 0.8;
+        } elseif (isset($marketPosition['price_ratio'])) {
+            $ratio = $marketPosition['price_ratio'];
+            if ($ratio >= 0.8 && $ratio <= 1.2) {
+                $competitiveFactor = 1.2; // Competitive pricing
+            } elseif ($ratio >= 0.6 && $ratio <= 1.4) {
+                $competitiveFactor = 1.0; // Reasonable pricing
+            } else {
+                $competitiveFactor = 0.8; // Non-competitive pricing
+            }
+        }
+
+        // Adjust based on price (lower prices tend to convert better for some products)
+        $priceFactor = $price > 100000 ? 0.8 : ($price > 50000 ? 0.9 : 1.0);
+
+        $probability = $baseProbability * $competitiveFactor * $priceFactor;
+
+        return min(0.75, max(0.05, $probability)); // Cap between 5% and 75%
+    }
+
+    private function generateOptimizationTips($ad, $successFactors) {
+        // Generate optimization tips based on success factors
+        $tips = [
+            'immediate_actions' => [],
+            'short_term_improvements' => [],
+            'long_term_strategies' => [],
+        ];
+
+        if (isset($successFactors['title_quality']) && $successFactors['title_quality']['score'] < 60) {
+            $tips['immediate_actions'][] = 'Improve your ad title with better keywords';
+        }
+
+        if (isset($successFactors['description_quality']) && $successFactors['description_quality']['score'] < 60) {
+            $tips['immediate_actions'][] = 'Add more detailed description with key features';
+        }
+
+        if (isset($successFactors['image_quality']) && $successFactors['image_quality']['score'] < 60) {
+            $tips['immediate_actions'][] = 'Upload higher quality images';
+        }
+
+        if (isset($successFactors['pricing_competitiveness'])) {
+            $priceFactor = $successFactors['pricing_competitiveness'];
+            if (isset($priceFactor['price_ratio']) && $priceFactor['price_ratio'] > 1.5) {
+                $tips['short_term_improvements'][] = 'Consider a temporary discount to boost sales';
+            } elseif (isset($priceFactor['price_ratio']) && $priceFactor['price_ratio'] < 0.7) {
+                $tips['short_term_improvements'][] = 'Add more value propositions to justify pricing';
+            }
+        }
+
+        return $tips;
+    }
+
+    private function findSimilarAds($ad) {
+        // Find similar ads based on category, location, price, and content
+        $query = \App\Models\Ad::where('category_id', $ad->category_id)
+                              ->where('id', '!=', $ad->id)
+                              ->where('status', 'active');
+
+        if ($ad->location_id) {
+            $query->where('location_id', $ad->location_id);
+        }
+
+        // Filter by approximate price (within 50%)
+        $priceRangeMin = $ad->price * 0.5;
+        $priceRangeMax = $ad->price * 1.5;
+        $query->whereBetween('price', [$priceRangeMin, $priceRangeMax]);
+
+        return $query->limit(10)->get();
+    }
+
+    private function calculateSimilarityScore($ad1, $ad2) {
+        // Calculate similarity score based on multiple attributes
+        $score = 0;
+        $maxScore = 100;
+
+        // Title similarity (30 points)
+        $titleSim = $this->calculateTextSimilarity($ad1->title ?? '', $ad2->title ?? '');
+        $score += $titleSim * 0.3 * 30;
+
+        // Category match (20 points)
+        if ($ad1->category_id === $ad2->category_id) {
+            $score += 20;
+        }
+
+        // Location match (15 points)
+        if ($ad1->location_id && $ad2->location_id && $ad1->location_id === $ad2->location_id) {
+            $score += 15;
+        }
+
+        // Price similarity (20 points)
+        if ($ad1->price > 0 && $ad2->price > 0) {
+            $priceDiff = abs($ad1->price - $ad2->price);
+            $priceThreshold = min($ad1->price, $ad2->price) * 0.1; // 10% threshold
+            if ($priceDiff <= $priceThreshold) {
+                $score += 20;
+            } else {
+                $score += max(0, 20 - ($priceDiff / $priceThreshold * 10));
+            }
+        }
+
+        // Description similarity (15 points)
+        $descSim = $this->calculateTextSimilarity($ad1->description ?? '', $ad2->description ?? '');
+        $score += $descSim * 0.15 * 15;
+
+        return min(100, max(0, $score));
+    }
+
+    private function calculateTextSimilarity($text1, $text2) {
+        // Calculate text similarity using a simple word overlap method
+        if (empty($text1) || empty($text2)) {
+            return 0;
+        }
+
+        $words1 = array_flip(array_map('strtolower', array_filter(preg_split('/[\s,\.\!\?]+/', $text1))));
+        $words2 = array_flip(array_map('strtolower', array_filter(preg_split('/[\s,\.\!\?]+/', $text2))));
+
+        if (empty($words1) || empty($words2)) {
+            return 0;
+        }
+
+        $common = array_intersect_key($words1, $words2);
+        $total = array_unique(array_merge($words1, $words2));
+
+        return count($common) / max(1, count($total));
+    }
+
+    private function compareAdAttributes($ad1, $ad2) {
+        // Compare specific attributes between two ads
+        $matches = [];
+
+        if (strtolower($ad1->title ?? '') === strtolower($ad2->title ?? '')) {
+            $matches[] = 'title';
+        }
+
+        if ($ad1->category_id === $ad2->category_id) {
+            $matches[] = 'category';
+        }
+
+        if ($ad1->location_id === $ad2->location_id) {
+            $matches[] = 'location';
+        }
+
+        if (abs(($ad1->price ?? 0) - ($ad2->price ?? 0)) < min($ad1->price ?? 1, $ad2->price ?? 1) * 0.05) { // 5% difference
+            $matches[] = 'price';
+        }
+
+        if (($ad1->condition ?? '') === ($ad2->condition ?? '')) {
+            $matches[] = 'condition';
+        }
+
+        return $matches;
+    }
+
+    private function analyzeImageSimilarity($ad1, $ad2) {
+        // Analyze image similarity (in a production system, this would use computer vision)
+        // For now, we'll simulate the result
+        $hasSimilarImages = false;
+        $confidence = 0;
+
+        // Check if both ads have images
+        $images1 = is_array($ad1->images) ? $ad1->images : (!empty($ad1->images) ? [$ad1->images] : []);
+        $images2 = is_array($ad2->images) ? $ad2->images : (!empty($ad2->images) ? [$ad2->images] : []);
+
+        if (!empty($images1) && !empty($images2)) {
+            // Check if they have similar number of images or same filenames
+            $hasSimilarImages = count($images1) === count($images2);
+            $confidence = $hasSimilarImages ? 75 : 25;
+        }
+
+        return [
+            'has_similar_images' => $hasSimilarImages,
+            'confidence' => $confidence,
+            'details' => [
+                'ad1_image_count' => count($images1),
+                'ad2_image_count' => count($images2),
+            ],
+        ];
+    }
+
+    private function analyzeTextSimilarity($ad1, $ad2) {
+        // Analyze text similarity between ad titles and descriptions
+        $titleSimilarity = $this->calculateTextSimilarity($ad1->title ?? '', $ad2->title ?? '');
+        $descSimilarity = $this->calculateTextSimilarity($ad1->description ?? '', $ad2->description ?? '');
+
+        $overallSimilarity = ($titleSimilarity + $descSimilarity) / 2;
+        $confidence = min(100, max(0, $overallSimilarity * 100));
+
+        return [
+            'similarity' => $overallSimilarity,
+            'confidence' => $confidence,
+            'breakdown' => [
+                'title_similarity' => $titleSimilarity,
+                'description_similarity' => $descSimilarity,
+            ],
+        ];
+    }
+
+    private function calculatePriceSimilarity($ad1, $ad2) {
+        // Calculate price similarity percentage
+        if (($ad1->price ?? 0) === 0 || ($ad2->price ?? 0) === 0) {
+            return 0;
+        }
+
+        $difference = abs(($ad1->price ?? 0) - ($ad2->price ?? 0));
+        $average = (($ad1->price ?? 0) + ($ad2->price ?? 0)) / 2;
+
+        return $average > 0 ? (1 - ($difference / $average)) * 100 : 0;
+    }
+
+    private function calculateLocationSimilarity($ad1, $ad2) {
+        // Calculate location similarity
+        if (!$ad1->location_id || !$ad2->location_id) {
+            return ($ad1->location_id ?? null) === ($ad2->location_id ?? null) ? 100 : 0;
+        }
+
+        return ($ad1->location_id === $ad2->location_id) ? 100 : 0;
+    }
+
+    private function generateDuplicateReasoning($ad1, $ad2, $similarityScore) {
+        // Generate reasoning for why these might be duplicates
+        $reasons = [];
+
+        $titleSim = $this->calculateTextSimilarity($ad1->title ?? '', $ad2->title ?? '');
+        if ($titleSim > 0.9) {
+            $reasons[] = "Both ads have nearly identical titles";
+        } elseif ($titleSim > 0.8) {
+            $reasons[] = "Both ads have very similar titles";
+        }
+
+        if ($ad1->price && $ad2->price) {
+            $priceDiff = abs($ad1->price - $ad2->price);
+            $priceThreshold = min($ad1->price, $ad2->price) * 0.05; // 5% threshold
+            if ($priceDiff <= $priceThreshold) {
+                $reasons[] = "Both ads have nearly identical pricing";
+            }
+        }
+
+        $descSim = $this->calculateTextSimilarity($ad1->description ?? '', $ad2->description ?? '');
+        if ($descSim > 0.8) {
+            $reasons[] = "Both ads have very similar descriptions";
+        }
+
+        if ($ad1->category_id === $ad2->category_id) {
+            $reasons[] = "Both ads are in the same category";
+        }
+
+        if ($ad1->location_id && $ad2->location_id && $ad1->location_id === $ad2->location_id) {
+            $reasons[] = "Both ads are in the same location";
+        }
+
+        if ($similarityScore > 90) {
+            $reasons[] = "Overall similarity between ads is extremely high";
+        } elseif ($similarityScore > 80) {
+            $reasons[] = "Overall similarity between ads is very high";
+        }
+
+        return implode("; ", $reasons);
+    }
+
+    private function analyzeUserBehavior($user) {
+        // Analyze user behavior patterns for fraud detection
+        $flags = [
+            'risk_score' => 0,
+            'indicators' => [],
+            'behavioral_patterns' => [],
+            'suspicious_activities' => [],
+        ];
+
+        if (!$user) {
+            return $flags;
+        }
+
+        $recentAds = $user->ads()->where('created_at', '>', now()->subHours(24))->get();
+
+        // Check if user is creating many ads in a short time
+        if ($recentAds->count() > 5) {
+            $flags['risk_score'] += 20;
+            $flags['indicators'][] = 'multiple_ads_created_in_short_period';
+            $flags['suspicious_activities'][] = 'rapid_ad_creation_pattern';
+            $flags['behavioral_patterns'][] = 'bulk_listing_behavior';
+        }
+
+        // Check if user has incomplete profile
+        if (empty($user->phone) || empty($user->address)) {
+            $flags['risk_score'] += 10;
+            $flags['indicators'][] = 'incomplete_profile';
+        }
+
+        // Check if user has verification
+        if (!$user->is_verified) {
+            $flags['risk_score'] += 5;
+            $flags['indicators'][] = 'unverified_account';
+        }
+
+        // Check for similar ads across multiple accounts
+        $recentAdTitles = $recentAds->pluck('title')->filter()->toArray();
+        $similarInOtherAccounts = 0;
+
+        // This would check for ads with similar titles in other accounts
+        foreach ($recentAdTitles as $title) {
+            $similarCount = \App\Models\Ad::where('title', $title)
+                                          ->where('user_id', '!=', $user->id)
+                                          ->count();
+            if ($similarCount > 0) {
+                $similarInOtherAccounts++;
+            }
+        }
+
+        if ($similarInOtherAccounts > 0) {
+            $flags['risk_score'] += 15;
+            $flags['indicators'][] = 'similar_ads_across_accounts';
+        }
+
+        return $flags;
+    }
+
+    private function analyzeAdContent($ad) {
+        // Analyze ad content for potential fraud indicators
+        $flags = [
+            'risk_score' => 0,
+            'indicators' => [],
+            'suspicious_activities' => [],
+        ];
+
+        if (!$ad) {
+            return $flags;
+        }
+
+        // Check for suspicious keywords in title or description
+        $suspiciousKeywords = ['free', 'urgent', 'act_now', 'limited_time', 'cash_only', 'wire_transfer', 'gift_card', 'bitcoin', 'crypto'];
+        $content = strtolower(($ad->title ?? '') . ' ' . ($ad->description ?? ''));
+
+        foreach ($suspiciousKeywords as $keyword) {
+            if (strpos($content, $keyword) !== false) {
+                $flags['risk_score'] += 10;
+                $flags['indicators'][] = 'suspicious_keyword_' . $keyword;
+                $flags['suspicious_activities'][] = 'use_of_suspicious_keywords';
+            }
+        }
+
+        // Check if price seems too good to be true
+        $categoryAvg = \App\Models\Ad::where('category_id', $ad->category_id)
+                                   ->avg('price') ?? 0;
+
+        if ($categoryAvg > 0 && $ad->price < ($categoryAvg * 0.1)) { // Price is less than 10% of category avg
+            $flags['risk_score'] += 25;
+            $flags['indicators'][] = 'suspiciously_low_price';
+            $flags['suspicious_activities'][] = 'bait_advertising';
+        }
+
+        // Check if description is too short
+        if (strlen($ad->description ?? '') < 20) {
+            $flags['risk_score'] += 5;
+            $flags['indicators'][] = 'sparse_description';
+        }
+
+        return $flags;
+    }
+
+    private function analyzePayment($payment) {
+        // Analyze payment for fraud indicators
+        $flags = [
+            'risk_score' => 0,
+            'indicators' => [],
+            'suspicious_activities' => [],
+        ];
+
+        if (!$payment) {
+            return $flags;
+        }
+
+        // Check for unusually high amounts
+        $amount = $payment->amount ?? 0;
+        if ($amount > 1000000) { // Over 1M naira
+            $flags['risk_score'] += 20;
+            $flags['indicators'][] = 'unusually_high_amount';
+            $flags['suspicious_activities'][] = 'potential_money_laundering';
+        }
+
+        // Check if payment was failed previously
+        if (isset($payment->status) && $payment->status === 'failed') {
+            $flags['risk_score'] += 10;
+            $flags['indicators'][] = 'previous_failed_payments';
+        }
+
+        return $flags;
+    }
+
+    private function checkCommonFraudPatterns($ad, $user, $payment) {
+        // Check for common fraud patterns across the system
+        $flags = [
+            'risk_score' => 0,
+            'indicators' => [],
+            'suspicious_activities' => [],
+        ];
+
+        if ($user && $ad) {
+            // Check for bulk posting patterns from same IP (would need to store user IP)
+            // This is a simplified version - in reality, you'd track user IPs
+
+            // Check for repeated phone numbers across accounts
+            if ($user->phone) {
+                $otherUsersWithSamePhone = \App\Models\User::where('phone', $user->phone)
+                                                           ->where('id', '!=', $user->id)
+                                                           ->count();
+
+                if ($otherUsersWithSamePhone > 0) {
+                    $flags['risk_score'] += 15;
+                    $flags['indicators'][] = 'multiple_accounts_same_phone';
+                    $flags['suspicious_activities'][] = 'multiple_accounts_same_contact';
+                }
+            }
+
+            // Check for same email domain pattern abuse
+            $emailDomain = substr(strrchr($user->email, "@"), 1);
+            if (in_array($emailDomain, ['tempmail.com', 'guerrillamail.com', '10minutemail.com', 'yopmail.com', 'mailinator.com'])) {
+                $flags['risk_score'] += 25;
+                $flags['indicators'][] = 'temporary_email_service';
+                $flags['suspicious_activities'][] = 'use_of_temporary_email';
+            }
+        }
+
+        return $flags;
+    }
+
+    private function determineFraudType($indicators) {
+        // Determine the type of fraud based on indicators
+        $type = 'general';
+
+        if (in_array('multiple_ads_created_in_short_period', $indicators)) {
+            $type = 'bulk_spam';
+        } elseif (in_array('suspiciously_low_price', $indicators)) {
+            $type = 'bait_advertising';
+        } elseif (in_array('temporary_email_service', $indicators)) {
+            $type = 'account_fraud';
+        } elseif (in_array('suspicious_keyword_free', $indicators) || in_array('suspicious_keyword_cash_only', $indicators)) {
+            $type = 'scam';
+        } elseif (in_array('unusually_high_amount', $indicators)) {
+            $type = 'money_laundering';
+        }
+
+        return $type;
+    }
+
+    private function generateFraudAnalysis($indicators, $behavioralPatterns, $suspiciousActivities) {
+        // Generate analysis details for fraud detection
+        return [
+            'summary' => 'Multiple indicators suggest potential fraudulent activity',
+            'primary_indicators' => $indicators,
+            'behavioral_analysis' => $behavioralPatterns,
+            'suspicious_activities' => $suspiciousActivities,
+            'recommendation' => count($indicators) > 3 ? 'manual_review_required' : 'monitor_closely',
+        ];
+    }
+
+    private function calculateUserBehaviorConfidence($user) {
+        // Calculate confidence in user behavior assessment
+        if (!$user) {
+            return 0;
+        }
+
+        $factors = [
+            'account_age' => now()->diffInDays($user->created_at) > 30 ? 100 : 50,
+            'ads_posted' => $user->ads()->count() > 10 ? 100 : ($user->ads()->count() > 5 ? 75 : 50),
+            'verification_status' => $user->is_verified ? 100 : 50,
+            'profile_completeness' => (empty($user->phone) ? 0 : 25) + (empty($user->address) ? 0 : 25) + (empty($user->email_verified_at) ? 0 : 50),
+        ];
+
+        return array_sum($factors) / count($factors);
+    }
+
+    private function calculateContentAnalysisConfidence($ad) {
+        // Calculate confidence in content analysis
+        if (!$ad) {
+            return 0;
+        }
+
+        $factors = [
+            'title_length' => strlen($ad->title ?? '') > 10 ? 100 : 50,
+            'description_length' => strlen($ad->description ?? '') > 50 ? 100 : 50,
+            'has_images' => !empty($ad->images) ? 100 : 30,
+        ];
+
+        return array_sum($factors) / count($factors);
+    }
+
+    private function calculatePaymentIndicatorConfidence($payment) {
+        // Calculate confidence in payment indicators
+        if (!$payment) {
+            return 0;
+        }
+
+        $factors = [
+            'payment_method' => 100, // All payment methods can be analyzed
+            'amount_validity' => ($payment->amount ?? 0) > 0 ? 100 : 0,
+            'status' => isset($payment->status) ? 100 : 50,
+        ];
+
+        return array_sum($factors) / count($factors);
+    }
+
+    private function calculatePatternMatchingConfidence($patternFlags) {
+        // Calculate confidence in pattern matching
+        $count = count($patternFlags['indicators'] ?? []);
+        return min(100, $count * 20);
+    }
+
+    private function generateRecommendedActions($riskScore, $type) {
+        // Generate recommended actions based on risk score and type
+        $actions = [];
+
+        if ($riskScore > 80) {
+            $actions[] = 'immediate_account_suspension';
+            $actions[] = 'refund_pending_transactions';
+            $actions[] = 'escalate_to_security_team';
+        } elseif ($riskScore > 60) {
+            $actions[] = 'manual_review_required';
+            $actions[] = 'restrict_ad_posting';
+            $actions[] = 'require_additional_verification';
+        } elseif ($riskScore > 40) {
+            $actions[] = 'monitor_closely';
+            $actions[] = 'verify_user_identity';
+            $actions[] = 'warn_user_of_policy_violations';
+        } else {
+            $actions[] = 'continue_normal_operations';
+            $actions[] = 'monitor_for_changes';
+        }
+
+        return $actions;
+    }
+
+    /**
+     * Process recurring billing for subscription renewal (for scheduled job)
+     */
+    public function processRecurringBilling(\App\Models\User $user)
+    {
+        if (!$user->subscription_id || !$user->subscription_end_date) {
+            return false;
+        }
+
+        $subscription = \App\Models\Subscription::find($user->subscription_id);
+        if (!$subscription || !$subscription->billing_cycle) {
+            return false;
+        }
+
+        // For now, return false to indicate no renewal processing needed
+        // This would be implemented in a more complete system
+        return false;
+    }
+
+    /**
+     * Process successful subscription payment
+     */
+    public function processSuccessfulSubscription($transaction)
+    {
+        if (!$transaction || ($transaction->type ?? '') !== 'subscription') {
+            return false;
+        }
+
+        $user = $transaction->user;
+        $subscription = $transaction->subscription;
+
+        // Update user with subscription details
+        $user->update([
+            'subscription_id' => $subscription->id,
+            'subscription_start_date' => now(),
+            'subscription_end_date' => now()->addDays($subscription->duration_days),
+            'subscription_status' => 'active',
+            'ad_limit' => $subscription->ad_limit,
+            'featured_ads_limit' => $subscription->featured_ads_limit,
+            'has_priority_support' => $subscription->has_priority_support,
+        ]);
+
+        // Update transaction status
+        $transaction->update([
+            'status' => 'success',
+            'paid_at' => now()
+        ]);
+
+        return true;
     }
     
     private function getCompetitorPricingChanges($categoryId, $locationId) {
