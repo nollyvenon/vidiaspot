@@ -25,6 +25,35 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/settings/notifications', [App\Http\Controllers\UserController::class, 'showNotificationSettings'])->name('settings.notifications');
 });
 
+// Smart Messaging routes (protected)
+Route::middleware(['auth'])->prefix('messaging')->group(function () {
+    // Smart replies and auto-responses
+    Route::post('/smart-replies', [App\Http\Controllers\SmartMessagingController::class, 'getSmartReplies']);
+    Route::post('/translate', [App\Http\Controllers\SmartMessagingController::class, 'translateMessage']);
+
+    // Conversations
+    Route::post('/conversations', [App\Http\Controllers\SmartMessagingController::class, 'startConversation']);
+    Route::get('/conversations', [App\Http\Controllers\SmartMessagingController::class, 'getUserConversations']);
+    Route::get('/conversations/{conversationId}', [App\Http\Controllers\SmartMessagingController::class, 'getConversationHistory']);
+    Route::post('/conversations/{conversationId}/messages', [App\Http\Controllers\SmartMessagingController::class, 'sendMessage']);
+
+    // Video calls
+    Route::post('/video-call', [App\Http\Controllers\SmartMessagingController::class, 'createVideoCall']);
+
+    // Scheduling
+    Route::post('/schedule', [App\Http\Controllers\SmartMessagingController::class, 'scheduleMeeting']);
+
+    // Escrow services
+    Route::post('/escrow', [App\Http\Controllers\SmartMessagingController::class, 'createEscrow']);
+    Route::post('/escrow/{escrowId}/release', [App\Http\Controllers\SmartMessagingController::class, 'releaseEscrow']);
+    Route::get('/escrow/{escrowId}/verify', [App\Http\Controllers\SmartMessagingController::class, 'verifyEscrowOnBlockchain']);
+    Route::post('/escrow/{escrowId}/resolve', [App\Http\Controllers\SmartMessagingController::class, 'resolveEscrowDispute']);
+
+    // Notifications
+    Route::get('/notifications', [App\Http\Controllers\SmartMessagingController::class, 'getNotifications']);
+    Route::post('/notifications/read', [App\Http\Controllers\SmartMessagingController::class, 'markNotificationsAsRead']);
+});
+
 // Admin routes (protected)
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::resource('how-it-works', \App\Http\Controllers\Admin\HowItWorksController::class)->names([

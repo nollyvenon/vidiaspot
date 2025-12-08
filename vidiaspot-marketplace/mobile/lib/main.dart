@@ -8,6 +8,7 @@ import 'screens/search_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/post_ad_screen.dart';
 import 'screens/messages_screen.dart';
+import 'screens/comprehensive_messaging_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,7 +70,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const SearchScreen(),
     const PostAdScreen(),
-    const MessagesScreen(),
+    const ComprehensiveMessagingScreen(), // Changed to comprehensive messaging screen
     const ProfileScreen(),
   ];
 

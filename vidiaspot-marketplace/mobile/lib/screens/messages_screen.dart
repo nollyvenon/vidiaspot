@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/translation_widget.dart';
+import 'chat_screen.dart';
+import '../models/conversation_model.dart';
+import '../services/smart_messaging_service.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({Key? key}) : super(key: key);
@@ -10,33 +13,36 @@ class MessagesScreen extends StatefulWidget {
 
 class _MessagesScreenState extends State<MessagesScreen> {
   String _currentLanguage = 'en';
+  final SmartMessagingService _smartMessagingService = SmartMessagingService();
+  List<Conversation> _conversations = [];
+  bool _isLoading = true;
 
-  final List<_Message> _messages = [
-    _Message(
-      id: 1,
-      senderName: 'Jane Smith',
-      lastMessage: 'Hi, I\'m interested in your iPhone',
-      time: '2 min ago',
-      unread: true,
-      avatar: 'https://via.placeholder.com/50x50',
-    ),
-    _Message(
-      id: 2,
-      senderName: 'Mike Johnson',
-      lastMessage: 'The car is still available?',
-      time: '1 hour ago',
-      unread: false,
-      avatar: 'https://via.placeholder.com/50x50',
-    ),
-    _Message(
-      id: 3,
-      senderName: 'Sarah Williams',
-      lastMessage: 'Thanks for the quick response',
-      time: '3 hours ago',
-      unread: false,
-      avatar: 'https://via.placeholder.com/50x50',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadConversations();
+  }
+
+  Future<void> _loadConversations() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final conversations = await _smartMessagingService.getUserConversations();
+      setState(() {
+        _conversations = conversations;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load conversations: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,45 +65,69 @@ class _MessagesScreenState extends State<MessagesScreen> {
               // Search functionality
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.video_call),
+            onPressed: () {
+              // Start video call
+            },
+          ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: _messages.length,
-        itemBuilder: (context, index) {
-          final message = _messages[index];
-          return _buildMessageItem(message);
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Start new conversation
+          // Implement user selection for new conversation
         },
+        child: Icon(Icons.add_comment),
+        backgroundColor: Colors.blue,
       ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadConversations,
+              child: ListView.builder(
+                itemCount: _conversations.length,
+                itemBuilder: (context, index) {
+                  final conversation = _conversations[index];
+                  return _buildConversationItem(conversation);
+                },
+              ),
+            ),
     );
   }
 
-  Widget _buildMessageItem(_Message message) {
+  Widget _buildConversationItem(Conversation conversation) {
+    // For this example, assuming we're getting the last message from somewhere
+    // In a real implementation, we'd fetch this from the server along with conversations
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundImage: NetworkImage(message.avatar),
           backgroundColor: Colors.grey[300],
+          child: Icon(
+            Icons.person,
+            color: Colors.blue,
+          ),
         ),
         title: Row(
           children: [
             TranslationWidget(
-              text: message.senderName,
+              text: conversation.title ?? 'Conversation',
               to: _currentLanguage,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
               ),
             ),
-            if (message.unread)
+            if (conversation.unreadCount > 0)
               Container(
                 margin: const EdgeInsets.only(left: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.blue,
+                  color: Colors.red,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text(
-                  'New',
+                child: Text(
+                  conversation.unreadCount.toString(),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 10,
@@ -106,42 +136,32 @@ class _MessagesScreenState extends State<MessagesScreen> {
               ),
           ],
         ),
-        subtitle: TranslationWidget(
-          text: message.lastMessage,
-          to: _currentLanguage,
-          style: TextStyle(
-            color: message.unread ? Colors.black : Colors.grey[600],
-          ),
+        subtitle: Text(
+          'Last message: ${conversation.lastMessageAt?.toString() ?? 'No messages yet'}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         trailing: Text(
-          message.time,
+          conversation.lastMessageAt?.hour.toString().padLeft(2, '0') +
+          ':' +
+          conversation.lastMessageAt?.minute.toString().padLeft(2, '0'),
           style: TextStyle(
-            color: message.unread ? Colors.blue : Colors.grey[600],
+            color: Colors.grey[600],
             fontSize: 12,
           ),
         ),
         onTap: () {
-          // Navigate to chat screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChatScreen(
+                conversation: conversation,
+                currentLanguage: _currentLanguage,
+              ),
+            ),
+          );
         },
       ),
     );
   }
-}
-
-class _Message {
-  final int id;
-  final String senderName;
-  final String lastMessage;
-  final String time;
-  final bool unread;
-  final String avatar;
-
-  _Message({
-    required this.id,
-    required this.senderName,
-    required this.lastMessage,
-    required this.time,
-    required this.unread,
-    required this.avatar,
-  });
 }
