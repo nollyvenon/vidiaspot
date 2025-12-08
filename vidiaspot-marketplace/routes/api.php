@@ -376,6 +376,24 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/insurance/documents', [\App\Http\Controllers\VendorStoreController::class, 'getPolicyDocuments']);
     Route::post('/insurance/term', [\App\Http\Controllers\VendorStoreController::class, 'createTermInsurancePolicy']);
 
+    // Professional seller tools
+    Route::get('/seller-tools/inventory-locations', [\App\Http\Controllers\SellerToolsController::class, 'getInventoryLocations']);
+    Route::post('/seller-tools/inventory-locations', [\App\Http\Controllers\SellerToolsController::class, 'createInventoryLocation']);
+    Route::put('/seller-tools/inventory-locations/{locationId}', [\App\Http\Controllers\SellerToolsController::class, 'updateInventoryLocation']);
+    Route::delete('/seller-tools/inventory-locations/{locationId}', [\App\Http\Controllers\SellerToolsController::class, 'deleteInventoryLocation']);
+    Route::get('/seller-tools/inventory-items/{locationId}', [\App\Http\Controllers\SellerToolsController::class, 'getInventoryItems']);
+    Route::post('/seller-tools/inventory-bulk-update', [\App\Http\Controllers\SellerToolsController::class, 'bulkUpdateInventory']);
+    Route::get('/seller-tools/dashboard', [\App\Http\Controllers\SellerToolsController::class, 'getSellerDashboard']);
+    Route::get('/seller-tools/seasonal-planning', [\App\Http\Controllers\SellerToolsController::class, 'getSeasonalPlanning']);
+    Route::post('/seller-tools/automated-repricing', [\App\Http\Controllers\SellerToolsController::class, 'setupAutomatedRepricing']);
+    Route::get('/seller-tools/repricing-recommendations', [\App\Http\Controllers\SellerToolsController::class, 'getRepricingRecommendations']);
+    Route::get('/seller-tools/cross-platform-opportunities', [\App\Http\Controllers\SellerToolsController::class, 'getCrossPlatformOpportunities']);
+    Route::get('/seller-tools/customer-management', [\App\Http\Controllers\SellerToolsController::class, 'getCustomerManagementData']);
+    Route::post('/seller-tools/loyalty-program', [\App\Http\Controllers\SellerToolsController::class, 'setupLoyaltyProgram']);
+    Route::get('/seller-tools/customer-segmentation', [\App\Http\Controllers\SellerToolsController::class, 'getCustomerSegmentation']);
+    Route::get('/seller-tools/inventory-report', [\App\Http\Controllers\SellerToolsController::class, 'getInventoryPerformanceReport']);
+    Route::get('/seller-tools/sales-forecast', [\App\Http\Controllers\SellerToolsController::class, 'getSalesForecast']);
+
     // Admin category import routes
     Route::post('/categories/import/jiji', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importFromJiji']);
     Route::get('/categories/import/status', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importStatus']);
