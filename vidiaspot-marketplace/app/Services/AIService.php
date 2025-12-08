@@ -456,7 +456,7 @@ class AIService
 
     private function getMarketPrices($categoryId, $locationId = null, $condition = 'any') {
         // Get market prices for similar ads
-        $query = Ad::where('category_id', $categoryId)
+        $query = \App\Models\Ad::where('category_id', $categoryId)
                   ->where('status', 'active')
                   ->where('price', '>', 0);
 
@@ -507,13 +507,13 @@ class AIService
     
     private function getCompetitiveAnalysis($categoryId, $locationId) {
         // Get competitive analysis for the category in the location
-        $activeAds = Ad::where('category_id', $categoryId)
+        $activeAds = \App\Models\Ad::where('category_id', $categoryId)
                   ->when($locationId, function($query) use ($locationId) {
                       return $query->where('location_id', $locationId);
                   })
                   ->count();
-                  
-        $avgPrice = Ad::where('category_id', $categoryId)
+
+        $avgPrice = \App\Models\Ad::where('category_id', $categoryId)
                  ->when($locationId, function($query) use ($locationId) {
                      return $query->where('location_id', $locationId);
                  })

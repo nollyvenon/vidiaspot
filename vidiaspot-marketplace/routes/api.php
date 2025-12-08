@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\RecommendationController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\SubscriptionController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -74,6 +75,31 @@ Route::prefix('subscription')->middleware(['auth:sanctum'])->group(function () {
 
     // Process successful payment callback
     Route::post('/process-payment', [SubscriptionController::class, 'processSuccessfulPayment'])->withoutMiddleware(['auth:sanctum']);
+});
+
+// AI-powered features routes
+Route::prefix('ai')->middleware(['auth:sanctum'])->group(function () {
+    // Pricing recommendations
+    Route::post('/pricing-recommendation', [AIController::class, 'getPricingRecommendation']);
+
+    // Demand forecasting
+    Route::get('/demand-forecast', [AIController::class, 'getDemandForecast']);
+
+    // Success prediction
+    Route::post('/success-prediction', [AIController::class, 'getSuccessPrediction']);
+
+    // Duplicate detection
+    Route::get('/check-duplicates/{ad_id}', [AIController::class, 'checkDuplicates']);
+
+    // Fraud analysis
+    Route::get('/fraud-analysis', [AIController::class, 'getFraudAnalysis']);
+    Route::post('/fraud-analysis', [AIController::class, 'getFraudAnalysis']);
+
+    // Smart recommendations
+    Route::get('/recommendations', [AIController::class, 'getRecommendations']);
+
+    // Seasonal trends
+    Route::get('/seasonal-trends/{category_id}', [AIController::class, 'getSeasonalTrends']);
 });
 
 // Recommendation routes (both public and protected)

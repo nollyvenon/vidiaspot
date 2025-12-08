@@ -284,8 +284,8 @@ class SubscriptionController extends Controller
                 'ad_limit' => $user->ad_limit ?? 0,
                 'featured_ads_limit' => $user->featured_ads_limit ?? 0,
                 'has_priority_support' => $user->has_priority_support ?? false,
-                'remaining_ads' => max(0, ($user->ad_limit ?? 0) - count($user->ads)), // Assuming user has ads relation
-                'remaining_featured_ads' => max(0, ($user->featured_ads_limit ?? 0) - count($user->featuredAds)),
+                'remaining_ads' => max(0, ($user->ad_limit ?? 0) - $user->ads()->count()), // Count user's ads
+                'remaining_featured_ads' => max(0, ($user->featured_ads_limit ?? 0) - $user->featuredAds()->count()),
                 'expires_at' => $user->subscription_end_date ? $user->subscription_end_date->toISOString() : null,
                 'plan_name' => $subscription ? $subscription->name : 'Free'
             ];
