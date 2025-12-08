@@ -213,8 +213,8 @@ QUEUE_CONNECTION=database  # or redis, database, sync
 ### Payment Gateway Keys
 ```bash
 # Paystack
-PAYSTACK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxxxxx
-PAYSTACK_PUBLIC_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxxxxx
+PAYSTACK_SECRET_KEY=SECRET_KEY_GOES_HERE
+PAYSTACK_PUBLIC_KEY=PUBLIC_KEY_GOES_HERE
 
 # Flutterwave
 FLUTTERWAVE_SECRET_KEY=FLWSECK-xxxxxxxxxxxxxxxxx-X
