@@ -57,4 +57,12 @@ class Subscription extends Model
     {
         return $query->where('is_featured', true);
     }
+
+    /**
+     * Get the payment transactions for this subscription.
+     */
+    public function paymentTransactions(): HasMany
+    {
+        return $this->hasMany(PaymentTransaction::class, 'subscription_id');
+    }
 }

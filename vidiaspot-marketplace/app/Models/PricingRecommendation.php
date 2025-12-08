@@ -25,8 +25,8 @@ class PricingRecommendation extends Model
         'market_trends',
         'reasoning',
         'is_optimal',
-        'generated_at',
         'expires_at',
+        'generated_at',
     ];
 
     protected $casts = [

@@ -190,6 +190,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the ads associated with this user's subscription (feature limit related)
+     */
+    public function ads(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Ad::class);
+    }
+
+    /**
      * Get the featured ads created by this user.
      */
     public function featuredAds(): \Illuminate\Database\Eloquent\Relations\HasMany
