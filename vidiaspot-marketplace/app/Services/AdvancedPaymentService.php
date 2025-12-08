@@ -12,39 +12,6 @@ use Illuminate\Support\Facades\Storage;
 
 class AdvancedPaymentService
 {
-    // Predefined themes for vendor stores
-    private $themes = [
-        'default' => [
-            'name' => 'Default Theme',
-            'description' => 'Clean and simple theme',
-            'features' => ['responsive', 'fast', 'minimal'],
-        ],
-        'modern' => [
-            'name' => 'Modern Theme',
-            'description' => 'Contemporary and sleek design',
-            'features' => ['gallery', 'animations', 'modern'],
-        ],
-        'classic' => [
-            'name' => 'Classic Theme',
-            'description' => 'Traditional and reliable look',
-            'features' => ['trusted', 'professional', 'classic'],
-        ],
-        'premium' => [
-            'name' => 'Premium Theme',
-            'description' => 'Elegant and feature-rich',
-            'features' => ['exclusive', 'enhanced', 'premium'],
-        ],
-        'storefront' => [
-            'name' => 'Storefront Theme',
-            'description' => 'Designed for shopping experience',
-            'features' => ['cart', 'checkout', 'shopping'],
-        ],
-        'portfolio' => [
-            'name' => 'Portfolio Theme',
-            'description' => 'Showcase your products beautifully',
-            'features' => ['gallery', 'presentation', 'showcase'],
-        ],
-    ];
 
     /**
      * Creates or gets a vendor store for the user
@@ -115,7 +82,21 @@ class AdvancedPaymentService
      */
     public function getAvailableThemes()
     {
-        return $this->themes;
+        $templates = \App\Models\StoreTemplate::where('is_active', true)
+                                              ->orderBy('sort_order')
+                                              ->orderBy('created_at')
+                                              ->get();
+
+        $themes = [];
+        foreach ($templates as $template) {
+            $themes[$template->key] = [
+                'name' => $template->name,
+                'description' => $template->description,
+                'features' => $template->features ?? [],
+            ];
+        }
+
+        return $themes;
     }
 
     /**

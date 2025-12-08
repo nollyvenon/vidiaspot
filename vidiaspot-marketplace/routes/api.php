@@ -278,6 +278,11 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('content-pages', \App\Http\Controllers\Api\Admin\ContentPagesController::class);
     Route::patch('/content-pages/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\ContentPagesController::class, 'toggleStatus']);
 
+    // Store template management routes (Admin)
+    Route::apiResource('store-templates', \App\Http\Controllers\Api\Admin\StoreTemplatesController::class);
+    Route::patch('/store-templates/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\StoreTemplatesController::class, 'toggleStatus']);
+    Route::get('/store-templates/active', [\App\Http\Controllers\Api\Admin\StoreTemplatesController::class, 'getActiveTemplates']);
+
     // Vendor store management routes
     Route::post('/vendor-store/custom-field-templates', [\App\Http\Controllers\VendorStoreController::class, 'getCustomFieldTemplates']);
     Route::post('/ads/{adId}/custom-fields', [\App\Http\Controllers\VendorStoreController::class, 'addCustomAdFields']);
