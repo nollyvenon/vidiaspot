@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use PragmaRX\Google2FALaravel\Support\Authenticator;
 
 class User extends Authenticatable
 {
@@ -42,6 +43,9 @@ class User extends Authenticatable
         'has_priority_support',
         'subscription_features',
         'reputation_score',
+        'google2fa_secret',
+        'google2fa_enabled',
+        'backup_codes',
     ];
 
     protected $attributes = [
@@ -75,6 +79,8 @@ class User extends Authenticatable
             'ad_limit' => 'integer',
             'featured_ads_limit' => 'integer',
             'subscription_features' => 'array',
+            'google2fa_enabled' => 'boolean',
+            'backup_codes' => 'array',
         ];
     }
 
@@ -266,5 +272,22 @@ class User extends Authenticatable
                 $this->roles()->detach($role);
             }
         }
+    }
+
+    /**
+     * Determine if the user has enabled two-factor authentication.
+     */
+    public function hasGoogle2faEnabled(): bool
+    {
+        return $this->google2fa_enabled;
+    }
+
+    /**
+     * Get the QR code URL for the user's Google 2FA.
+     */
+    public function getGoogle2faQrCodeUrl(): string
+    {
+        $authenticator = new Authenticator($this);
+        return $authenticator->getQRCodeUrl();
     }
 }

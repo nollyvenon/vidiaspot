@@ -501,3 +501,63 @@ Route::middleware(['auth:sanctum'])->prefix('payment-transactions')->group(funct
     Route::get('/ad/{adId}', [App\Http\Controllers\PaymentTransactionController::class, 'forAd']);
     Route::post('/webhook', [App\Http\Controllers\PaymentTransactionController::class, 'webhook'])->withoutMiddleware(['auth:sanctum']);
 });
+
+// Two-Factor Authentication routes
+Route::middleware(['auth:sanctum'])->prefix('2fa')->group(function () {
+    // TOTP (Google Authenticator) routes
+    Route::post('/enable', [App\Http\Controllers\TwoFactorAuthController::class, 'enable2FA']);
+    Route::post('/confirm', [App\Http\Controllers\TwoFactorAuthController::class, 'confirm2FA']);
+    Route::post('/disable', [App\Http\Controllers\TwoFactorAuthController::class, 'disable2FA']);
+    Route::post('/verify', [App\Http\Controllers\TwoFactorAuthController::class, 'verify2FA']);
+
+    // SMS 2FA routes
+    Route::post('/sms/request', [App\Http\Controllers\TwoFactorAuthController::class, 'requestSmsCode']);
+
+    // Email 2FA routes
+    Route::post('/email/request', [App\Http\Controllers\TwoFactorAuthController::class, 'requestEmailCode']);
+
+    // Backup codes routes
+    Route::post('/backup/generate', [App\Http\Controllers\TwoFactorAuthController::class, 'generateBackupCodes']);
+    Route::post('/backup/verify', [App\Http\Controllers\TwoFactorAuthController::class, 'verifyBackupCode']);
+
+    // Status and info routes
+    Route::get('/status', [App\Http\Controllers\TwoFactorAuthController::class, 'getStatus']);
+});
+
+// Blockchain Identity Verification routes
+Route::middleware(['auth:sanctum'])->prefix('blockchain-verification')->group(function () {
+    Route::post('/initiate', [App\Http\Controllers\BlockchainVerificationController::class, 'initiateVerification']);
+    Route::get('/status', [App\Http\Controllers\BlockchainVerificationController::class, 'getStatus']);
+    Route::get('/verifications', [App\Http\Controllers\BlockchainVerificationController::class, 'getUserVerifications']);
+    Route::post('/verify-transaction', [App\Http\Controllers\BlockchainVerificationController::class, 'verifyTransaction']);
+    Route::post('/upload-documents', [App\Http\Controllers\BlockchainVerificationController::class, 'uploadDocuments']);
+});
+
+// Payment Tokenization routes
+Route::middleware(['auth:sanctum'])->prefix('payment-tokenization')->group(function () {
+    Route::post('/create', [App\Http\Controllers\PaymentTokenizationController::class, 'createToken']);
+    Route::post('/create-single-use', [App\Http\Controllers\PaymentTokenizationController::class, 'createSingleUseToken']);
+    Route::post('/retrieve', [App\Http\Controllers\PaymentTokenizationController::class, 'retrievePaymentData']);
+    Route::delete('/delete', [App\Http\Controllers\PaymentTokenizationController::class, 'deleteToken']);
+    Route::post('/tokenize-card', [App\Http\Controllers\PaymentTokenizationController::class, 'tokenizeCard']);
+});
+
+// Device Fingerprinting routes
+Route::middleware(['auth:sanctum'])->prefix('device-fingerprint')->group(function () {
+    Route::get('/current', [App\Http\Controllers\DeviceFingerprintController::class, 'getCurrentFingerprint']);
+    Route::get('/check-suspicious', [App\Http\Controllers\DeviceFingerprintController::class, 'checkSuspiciousDevice']);
+    Route::get('/trusted-devices', [App\Http\Controllers\DeviceFingerprintController::class, 'getUserDevices']);
+    Route::delete('/trusted-devices/{deviceId}', [App\Http\Controllers\DeviceFingerprintController::class, 'removeDevice']);
+    Route::post('/validate', [App\Http\Controllers\DeviceFingerprintController::class, 'validateDeviceToken']);
+});
+
+// Biometric Authorization routes
+Route::middleware(['auth:sanctum'])->prefix('biometric-auth')->group(function () {
+    Route::post('/register', [App\Http\Controllers\BiometricAuthorizationController::class, 'registerTemplate']);
+    Route::post('/verify', [App\Http\Controllers\BiometricAuthorizationController::class, 'verifyBiometric']);
+    Route::post('/authorize-transaction', [App\Http\Controllers\BiometricAuthorizationController::class, 'authorizeTransaction']);
+    Route::get('/templates', [App\Http\Controllers\BiometricAuthorizationController::class, 'getUserTemplates']);
+    Route::put('/templates/{templateId}/status', [App\Http\Controllers\BiometricAuthorizationController::class, 'updateTemplateStatus']);
+    Route::delete('/templates/{templateId}', [App\Http\Controllers\BiometricAuthorizationController::class, 'deleteTemplate']);
+    Route::get('/verification-history', [App\Http\Controllers\BiometricAuthorizationController::class, 'getVerificationHistory']);
+});

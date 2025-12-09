@@ -18,10 +18,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'encrypt.sensitive' => \App\Http\Middleware\EncryptSensitiveData::class,
+            'decrypt.sensitive' => \App\Http\Middleware\DecryptSensitiveData::class,
+            'device.fingerprint' => \App\Http\Middleware\DeviceFingerprintMiddleware::class,
         ]);
 
         //
     })
+    ->withEvents()
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
