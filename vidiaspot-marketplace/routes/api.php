@@ -561,3 +561,91 @@ Route::middleware(['auth:sanctum'])->prefix('biometric-auth')->group(function ()
     Route::delete('/templates/{templateId}', [App\Http\Controllers\BiometricAuthorizationController::class, 'deleteTemplate']);
     Route::get('/verification-history', [App\Http\Controllers\BiometricAuthorizationController::class, 'getVerificationHistory']);
 });
+
+// Carbon Footprint Calculator routes
+Route::middleware(['auth:sanctum'])->prefix('carbon-footprint')->group(function () {
+    Route::post('/shipping', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'calculateShippingFootprint']);
+    Route::post('/distance', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'calculateDistance']);
+    Route::get('/shipping-methods', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'getShippingMethods']);
+    Route::get('/package-sizes', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'getPackageSizes']);
+    Route::post('/suggest-eco-options', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'suggestEcoOptions']);
+    Route::post('/multiple-shipments', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'calculateMultipleShipments']);
+    Route::get('/equivalents-info', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'getEquivalentsInfo']);
+});
+
+// Eco-Friendly Packaging routes
+Route::middleware(['auth:sanctum'])->prefix('eco-packaging')->group(function () {
+    Route::get('/options', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'getPackagingOptions']);
+    Route::get('/sizes', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'getPackagingSizes']);
+    Route::get('/options/{type}', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'getPackagingOption']);
+    Route::post('/calculate', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'calculateBestPackaging']);
+    Route::post('/calculate-multiple', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'calculateMultipleItemPackaging']);
+    Route::post('/carbon-reduction', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'getCarbonFootprintReduction']);
+    Route::post('/sustainability-report', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'generateSustainabilityReport']);
+});
+
+// Second-Hand & Refurbishment Marketplace routes
+Route::middleware(['auth:sanctum'])->prefix('second-hand')->group(function () {
+    Route::get('/condition-ratings', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'getConditionRatings']);
+    Route::post('/validate-item', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'validateItem']);
+    Route::post('/list-item', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'listItem']);
+    Route::post('/inspect/{itemId}', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'inspectItem']);
+    Route::get('/my-items', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'getUserItems']);
+    Route::get('/category/{category}', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'getItemsByCategory']);
+    Route::get('/refurbished', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'getRefurbishedItems']);
+    Route::get('/quality-standards/{category}', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'getQualityStandards']);
+    Route::post('/environmental-impact', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'calculateEnvironmentalImpact']);
+    Route::get('/all-items', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'getAllItems']);
+});
+
+// Recycling Program Integration routes
+Route::middleware(['auth:sanctum'])->prefix('recycling')->group(function () {
+    Route::get('/programs', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'getRecyclingPrograms']);
+    Route::get('/materials', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'getMaterialRecyclingInfo']);
+    Route::get('/programs-for-material/{material}', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'findProgramsForMaterial']);
+    Route::post('/nearby-collection-points', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'findNearbyCollectionPoints']);
+    Route::post('/schedule-pickup', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'schedulePickup']);
+    Route::get('/program-status/{programId}', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'getProgramCredentialsStatus']);
+    Route::post('/register/{programId}', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'registerWithProgram']);
+    Route::post('/statistics', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'getRecyclingStatistics']);
+    Route::post('/impact', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'calculateRecyclingImpact']);
+    Route::get('/program-info/{programId}', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'getProgramInfo']);
+    Route::post('/generate-report', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'generateRecyclingReport']);
+});
+
+// Sustainable Product Certifications routes
+Route::middleware(['auth:sanctum'])->prefix('certifications')->group(function () {
+    Route::get('/', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getCertifications']);
+    Route::get('/{certId}', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getCertification']);
+    Route::get('/{certId}/levels', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getCertificationLevels']);
+    Route::post('/{certId}/validate', [App\Http\Controllers\SustainableProductCertificationsController::class, 'validateProductForCertification']);
+    Route::post('/{certId}/apply', [App\Http\Controllers\SustainableProductCertificationsController::class, 'applyForCertification']);
+    Route::get('/user-applications', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getUserApplications']);
+    Route::get('/{certId}/certified-products', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getCertifiedProducts']);
+    Route::post('/verify', [App\Http\Controllers\SustainableProductCertificationsController::class, 'verifyCertification']);
+    Route::post('/impact', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getSustainabilityImpact']);
+    Route::get('/guide/{category}', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getCertificationGuide']);
+});
+
+// Environmental Impact Ratings routes
+Route::middleware(['auth:sanctum'])->prefix('environmental-rating')->group(function () {
+    Route::post('/calculate', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'calculateProductRating']);
+    Route::get('/criteria', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'getImpactCriteria']);
+    Route::post('/compare', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'getProductComparison']);
+    Route::get('/benchmarks/{category}', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'getIndustryBenchmarks']);
+    Route::post('/vendor-sustainability', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'calculateVendorSustainabilityScore']);
+    Route::get('/history/{productId}', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'getRatingHistory']);
+    Route::get('/leaderboard', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'getLeaderboard']);
+});
+
+// Green Delivery Options routes
+Route::middleware(['auth:sanctum'])->prefix('green-delivery')->group(function () {
+    Route::post('/calculate-options', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'calculateGreenOptions']);
+    Route::get('/methods', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'getDeliveryMethods']);
+    Route::get('/eco-packaging', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'getEcoPackagingOptions']);
+    Route::get('/zone-recommendations', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'getZoneRecommendations']);
+    Route::post('/environmental-benefit', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'calculateEnvironmentalBenefit']);
+    Route::post('/carbon-offsets', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'getCarbonOffsetOptions']);
+    Route::post('/delivery-promise', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'createDeliveryPromise']);
+    Route::get('/methods/{methodId}', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'getDeliveryMethod']);
+});
