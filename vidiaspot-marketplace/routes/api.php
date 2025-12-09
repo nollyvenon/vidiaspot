@@ -381,6 +381,20 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/advanced-listings/book-photography-service', [\App\Http\Controllers\AdvancedListingController::class, 'bookPhotographyService']);
     Route::get('/advanced-listings/features/{adId}', [\App\Http\Controllers\AdvancedListingController::class, 'getAdvancedListingFeatures']);
 
+    // Hero banner management routes (Admin)
+    Route::apiResource('hero-banners', \App\Http\Controllers\Api\Admin\HeroBannersController::class);
+    Route::patch('/hero-banners/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\HeroBannersController::class, 'toggleStatus']);
+    Route::post('/hero-banners/reorder', [\App\Http\Controllers\Api\Admin\HeroBannersController::class, 'reorder']);
+    Route::get('/hero-banners/active', [\App\Http\Controllers\Api\Admin\HeroBannersController::class, 'getActiveBanners']);
+
+    // Frontend hero banner routes
+    Route::get('/hero-banners/frontend', [\App\Http\Controllers\HeroBannerController::class, 'getActiveBanners']);
+    Route::get('/hero-banners/featured', [\App\Http\Controllers\HeroBannerController::class, 'getFeaturedBanners']);
+    Route::post('/hero-banners/{id}/click', [\App\Http\Controllers\HeroBannerController::class, 'recordClick']);
+    Route::post('/hero-banners/{id}/conversion', [\App\Http\Controllers\HeroBannerController::class, 'recordConversion']);
+    Route::get('/hero-banners/{id}', [\App\Http\Controllers\HeroBannerController::class, 'getBanner']);
+    Route::get('/hero-section', [\App\Http\Controllers\HeroBannerController::class, 'renderHeroSection']);
+
     // Enhanced insurance features
     Route::post('/insurance/calculate-premium', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsurancePremium']);
     Route::post('/insurance/calculate-emi', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsuranceEMI']);

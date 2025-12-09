@@ -279,6 +279,30 @@ class HeroBanner extends Model
     }
 
     /**
+     * Increment view count
+     */
+    public function incrementViewCount()
+    {
+        $this->increment('view_count');
+    }
+
+    /**
+     * Increment click count
+     */
+    public function incrementClickCount()
+    {
+        $this->increment('click_count');
+    }
+
+    /**
+     * Increment conversion count
+     */
+    public function incrementConversionCount()
+    {
+        $this->increment('conversion_count');
+    }
+
+    /**
      * Helper methods for processing
      */
 
