@@ -15,6 +15,7 @@ use App\Services\DroneDeliveryService;
 use App\Services\AICustomerServiceAvatar;
 use App\Services\PredictiveMaintenanceService;
 use App\Services\SmartContractService;
+use App\Services\CryptoP2PService;
 use Illuminate\Support\Facades\Auth;
 
 class LandingController extends Controller
@@ -29,6 +30,7 @@ class LandingController extends Controller
     protected $aiCustomerServiceAvatar;
     protected $predictiveMaintenanceService;
     protected $smartContractService;
+    protected $cryptoP2PService;
 
     public function __construct(
         TrendingSearchService $trendingSearchService,
@@ -40,7 +42,8 @@ class LandingController extends Controller
         DroneDeliveryService $droneDeliveryService,
         AICustomerServiceAvatar $aiCustomerServiceAvatar,
         PredictiveMaintenanceService $predictiveMaintenanceService,
-        SmartContractService $smartContractService
+        SmartContractService $smartContractService,
+        CryptoP2PService $cryptoP2PService
     ) {
         $this->trendingSearchService = $trendingSearchService;
         $this->recommendationService = $recommendationService;
@@ -52,6 +55,7 @@ class LandingController extends Controller
         $this->aiCustomerServiceAvatar = $aiCustomerServiceAvatar;
         $this->predictiveMaintenanceService = $predictiveMaintenanceService;
         $this->smartContractService = $smartContractService;
+        $this->cryptoP2PService = $cryptoP2PService;
     }
 
     public function index()
@@ -175,6 +179,12 @@ class LandingController extends Controller
                 'active_contracts' => $this->smartContractService->getActiveContracts()->count(),
                 'recent_transactions' => $user ? $this->smartContractService->getRecentTransactions(null, 3) : collect(),
             ],
+            'crypto_p2p_marketplace' => [
+                'total_listings' => $this->cryptoP2PService->getActiveListings(['per_page' => 1])->total(),
+                'active_trades' => $user ? $this->cryptoP2PService->getUserTrades($user->id)->count() : 0,
+                'featured_listings' => $this->cryptoP2PService->getActiveListings(['per_page' => 3]),
+                'trading_volume' => $user ? $this->cryptoP2PService->getTradeStatistics($user->id)['total_volume'] ?? 0 : 0,
+            ],
         ];
 
         return view('landing.index', compact(
@@ -231,6 +241,13 @@ class LandingController extends Controller
                 'active_contracts' => $this->smartContractService->getActiveContracts()->count(),
                 'recent_transactions' => $user ? $this->smartContractService->getRecentTransactions($user->id, 6) : collect(),
                 'user_contracts' => $user ? $this->smartContractService->getActiveContracts($user->id) : collect(),
+            ],
+            'crypto_p2p_marketplace' => [
+                'total_listings' => $this->cryptoP2PService->getActiveListings(['per_page' => 1])->total(),
+                'active_trades' => $user ? $this->cryptoP2PService->getUserTrades($user->id)->count() : 0,
+                'featured_listings' => $this->cryptoP2PService->getActiveListings(['per_page' => 6]),
+                'trading_volume' => $user ? $this->cryptoP2PService->getTradeStatistics($user->id)['total_volume'] ?? 0 : 0,
+                'user_listings' => $user ? $this->cryptoP2PService->getUserListings($user->id) : collect(),
             ],
         ];
 

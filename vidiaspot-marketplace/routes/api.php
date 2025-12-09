@@ -474,6 +474,34 @@ Route::middleware(['auth:sanctum'])->prefix('advanced-payments')->group(function
     Route::post('/cryptocurrency', [App\Http\Controllers\AdvancedPaymentController::class, 'processCryptocurrencyPayment']);
     Route::get('/cryptocurrency/supported', [App\Http\Controllers\AdvancedPaymentController::class, 'getSupportedCryptocurrencies']);
 
+    // P2P Crypto Marketplace
+    Route::prefix('crypto-p2p')->group(function () {
+        // Listings
+        Route::get('/listings', [App\Http\Controllers\CryptoP2PController::class, 'index']);
+        Route::post('/listings', [App\Http\Controllers\CryptoP2PController::class, 'storeListing']);
+        Route::get('/listings/{id}', [App\Http\Controllers\CryptoP2PController::class, 'showListing']);
+        Route::put('/listings/{id}', [App\Http\Controllers\CryptoP2PController::class, 'updateListing']);
+        Route::delete('/listings/{id}', [App\Http\Controllers\CryptoP2PController::class, 'deleteListing']);
+
+        // Get user's listings
+        Route::get('/my-listings', [App\Http\Controllers\CryptoP2PController::class, 'getUserListings']);
+
+        // Trades
+        Route::post('/listings/{listingId}/trade', [App\Http\Controllers\CryptoP2PController::class, 'storeTrade']);
+        Route::get('/trades/{id}', [App\Http\Controllers\CryptoP2PController::class, 'showTrade']);
+        Route::post('/trades/{id}/confirm-payment', [App\Http\Controllers\CryptoP2PController::class, 'confirmPayment']);
+        Route::post('/trades/{id}/release-crypto', [App\Http\Controllers\CryptoP2PController::class, 'releaseCrypto']);
+
+        // Get user's trades
+        Route::get('/my-trades', [App\Http\Controllers\CryptoP2PController::class, 'getUserTrades']);
+
+        // Matching listings
+        Route::get('/matching-listings', [App\Http\Controllers\CryptoP2PController::class, 'getMatchingListings']);
+
+        // Statistics
+        Route::get('/statistics', [App\Http\Controllers\CryptoP2PController::class, 'getTradeStatistics']);
+    });
+
     // Buy-now-pay-later
     Route::post('/bnpl', [App\Http\Controllers\AdvancedPaymentController::class, 'processBuyNowPayLater']);
 

@@ -62,6 +62,25 @@ Route::middleware(['auth'])->prefix('payments')->group(function () {
     Route::get('/cryptocurrency', function() {
         return view('payments.cryptocurrency');
     })->name('payments.cryptocurrency');
+
+    // P2P Crypto Marketplace routes
+    Route::middleware(['auth'])->prefix('crypto-p2p')->group(function () {
+        Route::get('/', [App\Http\Controllers\CryptoP2PController::class, 'index'])->name('crypto-p2p.index');
+        Route::get('/create-listing', [App\Http\Controllers\CryptoP2PController::class, 'createListing'])->name('crypto-p2p.create-listing');
+        Route::post('/listings', [App\Http\Controllers\CryptoP2PController::class, 'storeListing'])->name('crypto-p2p.store-listing');
+
+        Route::get('/listings/{id}', [App\Http\Controllers\CryptoP2PController::class, 'showListing'])->name('crypto-p2p.show-listing');
+        Route::get('/listings/{id}/initiate-trade', [App\Http\Controllers\CryptoP2PController::class, 'initiateTrade'])->name('crypto-p2p.initiate-trade');
+
+        Route::post('/trades/{listingId}', [App\Http\Controllers\CryptoP2PController::class, 'storeTrade'])->name('crypto-p2p.store-trade');
+        Route::get('/trades/{id}', [App\Http\Controllers\CryptoP2PController::class, 'showTrade'])->name('crypto-p2p.show-trade');
+        Route::post('/trades/{id}/confirm-payment', [App\Http\Controllers\CryptoP2PController::class, 'confirmPayment'])->name('crypto-p2p.confirm-payment');
+        Route::post('/trades/{id}/release-crypto', [App\Http\Controllers\CryptoP2PController::class, 'releaseCrypto'])->name('crypto-p2p.release-crypto');
+
+        Route::get('/my-listings', [App\Http\Controllers\CryptoP2PController::class, 'getUserListings'])->name('crypto-p2p.my-listings');
+        Route::get('/my-trades', [App\Http\Controllers\CryptoP2PController::class, 'getUserTrades'])->name('crypto-p2p.my-trades');
+    });
+
     Route::get('/bnpl', function() {
         return view('payments.bnpl');
     })->name('payments.bnpl');
