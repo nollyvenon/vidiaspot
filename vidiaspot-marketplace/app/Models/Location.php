@@ -44,6 +44,32 @@ class Location extends Model
         'available_slot_times', // Available time slots for deliveries
         'last_updated',
         'custom_fields',
+        'qr_code_enabled',
+        'qr_code_url',
+        'beacon_enabled',
+        'beacon_uuid',
+        'beacon_major',
+        'beacon_minor',
+        'indoor_navigation_enabled',
+        'navigation_map_url',
+        'section_coordinates',
+        'department_coordinates',
+        'special_zones', // {'cold_storage': coords, 'fragile': coords, 'electronics': coords}
+        'delivery_routing_info', // Info for delivery route optimization
+        'access_restrictions', // Access restrictions for the location
+        'security_features', // Security features at this location
+        'delivery_instructions', // Special delivery instructions
+        'parking_info', // Parking availability and information
+        'loading_dock_info', // Information about loading docks (for larger deliveries)
+        'accessibility_features', // Wheelchair accessibility, etc.
+        'environmental_conditions', // Temperature, humidity controls
+        'contactless_pickup_available', // Whether contactless pickup is available
+        'appointment_required', // Whether appointments are required for delivery/pickup
+        'delivery_partners', // List of accepted delivery partners
+        'courier_instructions', // Instructions for couriers
+        'security_check_required', // Whether security check is required for access
+        'visitor_registration_required', // Whether visitor registration is required
+        'operational_restrictions', // Any operational restrictions
     ];
 
     protected $casts = [
@@ -52,11 +78,32 @@ class Location extends Model
         'altitude' => 'decimal:2',
         'is_primary' => 'boolean',
         'is_active' => 'boolean',
+        'qr_code_enabled' => 'boolean',
+        'beacon_enabled' => 'boolean',
+        'indoor_navigation_enabled' => 'boolean',
+        'contactless_pickup_available' => 'boolean',
+        'appointment_required' => 'boolean',
+        'security_check_required' => 'boolean',
+        'visitor_registration_required' => 'boolean',
         'geofence_radius' => 'decimal:2',
         'operating_hours' => 'array',
         'indoor_map_data' => 'array',
         'floor_plan' => 'array',
         'aisle_positions' => 'array',
+        'section_coordinates' => 'array',
+        'department_coordinates' => 'array',
+        'special_zones' => 'array',
+        'delivery_routing_info' => 'array',
+        'access_restrictions' => 'array',
+        'security_features' => 'array',
+        'delivery_instructions' => 'string',
+        'parking_info' => 'array',
+        'loading_dock_info' => 'array',
+        'accessibility_features' => 'array',
+        'environmental_conditions' => 'array',
+        'delivery_partners' => 'array',
+        'courier_instructions' => 'string',
+        'operational_restrictions' => 'array',
         'location_metadata' => 'array',
         'delivery_availability' => 'array',
         'cold_chain_supported' => 'boolean',
@@ -69,6 +116,11 @@ class Location extends Model
         'custom_fields' => 'array',
         'coordinates_precision' => 'string',
         'timezone' => 'string',
+        'beacon_uuid' => 'string',
+        'beacon_major' => 'integer',
+        'beacon_minor' => 'integer',
+        'qr_code_url' => 'string',
+        'navigation_map_url' => 'string',
     ];
 
     /**
@@ -234,6 +286,33 @@ class Location extends Model
         }
 
         return $currentTime >= $hours['open'] && $currentTime <= $hours['close'];
+    }
+
+    /**
+     * Scope to get locations nearby a coordinate
+     */
+    public function scopeNearby($query, $latitude, $longitude, $radiusKm = 10)
+    {
+        $earthRadius = 6371; // Earth radius in km
+
+        return $query->selectRaw("
+            *,
+            ({$earthRadius} * acos(
+                cos(radians(?)) *
+                cos(radians(latitude)) *
+                cos(radians(longitude) - radians(?)) +
+                sin(radians(?)) *
+                sin(radians(latitude))
+            )) AS distance
+        ", [$latitude, $longitude, $latitude])
+        ->whereRaw("
+            ({$earthRadius} * acos(
+                cos(radians(?)) *
+                cos(radians(latitude)) *
+                cos(radians(longitude) - radians(?)) +
+                sin(radians(?)) *
+                sin(radians(latitude))
+            )) <= ?", [$latitude, $longitude, $latitude, $radiusKm]);
     }
 
     /**
