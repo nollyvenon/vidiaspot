@@ -275,7 +275,25 @@ class HeroBanner extends Model
             return 0;
         }
 
-        return round(($this->cost / ($this->view_count / 1000)), 2);
+        return round(($this->cost ?? 0 / ($this->view_count / 1000)), 2);
+    }
+
+    /**
+     * Check if this banner is currently active based on dates
+     */
+    public function isCurrentlyActive()
+    {
+        $now = now();
+
+        if ($this->start_date && $now < $this->start_date) {
+            return false;
+        }
+
+        if ($this->end_date && $now > $this->end_date) {
+            return false;
+        }
+
+        return $this->is_active;
     }
 
     /**

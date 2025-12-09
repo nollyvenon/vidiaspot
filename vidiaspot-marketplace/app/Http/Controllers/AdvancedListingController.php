@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\TrustSafetyService;
+use App\Services\AdvancedListingService;
 use App\Models\ListingMedia;
 use App\Models\ListingAbTest;
 use App\Models\InventoryTracking;
@@ -15,10 +16,12 @@ use Illuminate\Support\Str;
 class AdvancedListingController extends Controller
 {
     protected $trustSafetyService;
+    protected $advancedListingService;
 
-    public function __construct(TrustSafetyService $trustSafetyService)
+    public function __construct(TrustSafetyService $trustSafetyService, AdvancedListingService $advancedListingService)
     {
         $this->trustSafetyService = $trustSafetyService;
+        $this->advancedListingService = $advancedListingService;
     }
 
     /**
@@ -42,40 +45,25 @@ class AdvancedListingController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $mediaItems = [];
-        foreach ($request->file('photos') as $photo) {
-            $path = $photo->store('listing-360-photos', 'public');
-            $mediaItems[] = ListingMedia::create([
-                'user_id' => $user->id,
-                'ad_id' => $request->ad_id,
-                'media_type' => '360_image',
-                'file_path' => $path,
-                'file_url' => Storage::url($path),
-                'original_filename' => $photo->getClientOriginalName(),
-                'media_caption' => $request->title,
-                'media_alt_text' => $request->description ?: '360-degree view',
-                'is_primary' => false,
-                'display_order' => count($mediaItems),
-                'is_active' => true,
-                'media_metadata' => [
-                    'size' => $photo->getSize(),
-                    'width' => $this->getImageDimensions($photo)[0],
-                    'height' => $this->getImageDimensions($photo)[1],
-                    'uploaded_at' => now(),
-                ],
-            ]);
-        }
+        try {
+            $result = $this->advancedListingService->upload360Photos(
+                $user->id,
+                $request->ad_id,
+                $request->file('photos'),
+                [
+                    'caption' => $request->title,
+                    'alt_text' => $request->description,
+                    'angles' => range(0, 330, 360 / count($request->file('photos'))), // Distribute angles
+                ]
+            );
 
-        // Set the first photo as primary
-        if (!empty($mediaItems)) {
-            $mediaItems[0]->update(['is_primary' => true]);
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload 360 photos: ' . $e->getMessage()
+            ], 400);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => '360-degree photos uploaded successfully',
-            'media_items' => $mediaItems
-        ]);
     }
 
     /**

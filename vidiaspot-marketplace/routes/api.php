@@ -395,6 +395,21 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/hero-banners/{id}', [\App\Http\Controllers\HeroBannerController::class, 'getBanner']);
     Route::get('/hero-section', [\App\Http\Controllers\HeroBannerController::class, 'renderHeroSection']);
 
+    // Advanced listing features
+    Route::get('/advanced-listings/active-banners', [\App\Http\Controllers\AdvancedListingController::class, 'getActiveBanners']);
+    Route::post('/advanced-listings/360-photos', [\App\Http\Controllers\AdvancedListingController::class, 'upload360Photos']);
+    Route::post('/advanced-listings/video', [\App\Http\Controllers\AdvancedListingController::class, 'uploadVideo']);
+    Route::post('/advanced-listings/vr-tour', [\App\Http\Controllers\AdvancedListingController::class, 'createVRTour']);
+    Route::post('/advanced-listings/interactive-demo', [\App\Http\Controllers\AdvancedListingController::class, 'createInteractiveDemo']);
+    Route::get('/advanced-listings/{adId}/inventory', [\App\Http\Controllers\AdvancedListingController::class, 'getLiveInventory']);
+    Route::post('/advanced-listings/{adId}/inventory', [\App\Http\Controllers\AdvancedListingController::class, 'updateInventory']);
+    Route::post('/advanced-listings/optimization', [\App\Http\Controllers\AdvancedListingController::class, 'setupAutoRenewOptimization']);
+    Route::post('/advanced-listings/{optimizerId}/run', [\App\Http\Controllers\AdvancedListingController::class, 'runOptimization']);
+    Route::post('/advanced-listings/ab-test', [\App\Http\Controllers\AdvancedListingController::class, 'createABTest']);
+    Route::get('/advanced-listings/ab-test/{testId}/results', [\App\Http\Controllers\AdvancedListingController::class, 'getABTestResults']);
+    Route::post('/advanced-listings/book-photography', [\App\Http\Controllers\AdvancedListingController::class, 'bookPhotographyService']);
+    Route::get('/advanced-listings/features/{adId}', [\App\Http\Controllers\AdvancedListingController::class, 'getAdvancedListingFeatures']);
+
     // Enhanced insurance features
     Route::post('/insurance/calculate-premium', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsurancePremium']);
     Route::post('/insurance/calculate-emi', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsuranceEMI']);

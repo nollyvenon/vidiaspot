@@ -636,11 +636,17 @@ class TrustSafetyService
                 $store = \App\Models\VendorStore::find($entityId);
                 return $store ? $store->user_id : null;
             case 'insurance_provider':
-                $provider = InsuranceProvider::find($entityId);
+                $provider = \App\Models\InsuranceProvider::find($entityId);
                 return $provider ? $provider->user_id : null; // Assuming providers are linked to users
             case 'food_vendor':
                 $vendor = \App\Models\FoodVendor::find($entityId);
                 return $vendor ? $vendor->user_id : null;
+            case 'courier_partner':
+                $partner = \App\Models\CourierPartner::find($entityId);
+                return $partner ? $partner->user_id : null;
+            case 'location':
+                $location = \App\Models\Location::find($entityId);
+                return $location ? $location->user_id : null;
             default:
                 return null;
         }

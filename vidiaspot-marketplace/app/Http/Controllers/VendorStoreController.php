@@ -17,6 +17,7 @@ class VendorStoreController extends Controller
     public function __construct(AdvancedPaymentService $advancedPaymentService)
     {
         $this->advancedPaymentService = $advancedPaymentService;
+        $this->trustSafetyService = new \App\Services\TrustSafetyService();
     }
 
     /**

@@ -117,4 +117,20 @@ class TrustScore extends Model
     {
         return $this->background_check_status === 'verified';
     }
+
+    /**
+     * Check if eligible for buyer protection
+     */
+    public function isEligibleForBuyerProtection(): bool
+    {
+        return $this->protection_eligibility && $this->trust_score >= 70;
+    }
+
+    /**
+     * Check if eligible for insurance
+     */
+    public function isEligibleForInsurance(): bool
+    {
+        return $this->insurance_eligibility && $this->trust_score >= 65;
+    }
 }
