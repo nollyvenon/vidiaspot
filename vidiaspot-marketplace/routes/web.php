@@ -126,3 +126,19 @@ Route::middleware(['auth'])->prefix('settings')->group(function () {
         return view('settings.payment-methods');
     })->name('settings.payment-methods');
 });
+
+// Accessibility routes
+Route::middleware(['auth'])->prefix('accessibility')->group(function () {
+    Route::get('/settings', [App\Http\Controllers\AccessibilityController::class, 'getSettings'])->name('accessibility.settings');
+    Route::put('/settings', [App\Http\Controllers\AccessibilityController::class, 'updateSettings'])->name('accessibility.settings.update');
+    Route::post('/aria-attributes', [App\Http\Controllers\AccessibilityController::class, 'getAriaAttributes'])->name('accessibility.aria');
+    Route::post('/element-attributes', [App\Http\Controllers\AccessibilityController::class, 'getAccessibilityAttributes'])->name('accessibility.element');
+    Route::post('/skip-link', [App\Http\Controllers\AccessibilityController::class, 'getSkipLink'])->name('accessibility.skip-link');
+    Route::post('/screen-reader-text', [App\Http\Controllers\AccessibilityController::class, 'getScreenReaderOnly'])->name('accessibility.screen-reader');
+    Route::post('/accessible-table', [App\Http\Controllers\AccessibilityController::class, 'createAccessibleTable'])->name('accessibility.table');
+});
+
+// Accessibility settings page
+Route::get('/accessibility', function () {
+    return view('accessibility.settings');
+})->name('accessibility.page');

@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'encrypt.sensitive' => \App\Http\Middleware\EncryptSensitiveData::class,
             'decrypt.sensitive' => \App\Http\Middleware\DecryptSensitiveData::class,
             'device.fingerprint' => \App\Http\Middleware\DeviceFingerprintMiddleware::class,
+            'accessibility' => \App\Http\Middleware\AccessibilityMiddleware::class,
         ]);
 
         //
