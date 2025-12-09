@@ -696,6 +696,49 @@ Route::middleware(['auth:sanctum'])->prefix('sustainability-education')->group(f
     Route::get('/engagement-metrics', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getUserEngagementMetrics']);
 });
 
+// Intelligent Bandwidth Management routes
+Route::middleware(['auth:sanctum'])->prefix('bandwidth-management')->group(function () {
+    Route::get('/strategies', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getOptimizationStrategies']);
+    Route::get('/connection-qualities', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getConnectionQualities']);
+    Route::get('/profiles', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getBandwidthProfiles']);
+    Route::get('/content-options', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getContentOptimizationOptions']);
+    Route::post('/assess-connection', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'assessConnectionQuality']);
+    Route::get('/settings', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getBandwidthOptimizationSettings']);
+    Route::post('/optimize-content', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'optimizeContentForBandwidth']);
+    Route::post('/calculate-savings', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'calculateBandwidthSavings']);
+    Route::post('/recommendations', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getOptimizationRecommendations']);
+    Route::get('/dynamic-quality-settings', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getDynamicQualitySettings']);
+    Route::post('/optimize-api-response', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'optimizeApiResponse']);
+    Route::get('/usage-report', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getBandwidthUsageReport']);
+    Route::get('/recommendations/network-aware', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getNetworkAwareRecommendations']);
+    Route::get('/user-settings', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getUserBandwidthSettings']);
+    Route::put('/user-settings', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'updateUserBandwidthSettings']);
+});
+
+// Serverless Functions routes
+Route::middleware(['auth:sanctum'])->prefix('serverless-functions')->group(function () {
+    Route::get('/available', [App\Http\Controllers\ServerlessFunctionsController::class, 'getAvailableFunctions']);
+    Route::get('/environments', [App\Http\Controllers\ServerlessFunctionsController::class, 'getExecutionEnvironments']);
+    Route::post('/execute', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeFunction']);
+    Route::get('/statistics/{functionName?}', [App\Http\Controllers\ServerlessFunctionsController::class, 'getFunctionStatistics']);
+    Route::post('/schedule', [App\Http\Controllers\ServerlessFunctionsController::class, 'scheduleFunctionExecution']);
+    Route::get('/scheduled', [App\Http\Controllers\ServerlessFunctionsController::class, 'getScheduledFunctionExecutions']);
+    Route::delete('/scheduled/{jobId}/cancel', [App\Http\Controllers\ServerlessFunctionsController::class, 'cancelScheduledFunctionExecution']);
+
+    // Specific function endpoints
+    Route::post('/image-resize', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeImageResize']);
+    Route::post('/text-summarize', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeTextSummarization']);
+    Route::post('/pdf-generate', [App\Http\Controllers\ServerlessFunctionsController::class, 'executePdfGeneration']);
+    Route::post('/data-validate', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeDataValidation']);
+    Route::post('/content-enhance', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeContentEnhancement']);
+    Route::post('/geolocation-resolve', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeGeolocationResolver']);
+    Route::post('/currency-convert', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeCurrencyConverter']);
+    Route::post('/rate-limit', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeRateLimiter']);
+    Route::post('/data-aggregate', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeDataAggregator']);
+    Route::post('/send-notification', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeNotificationSender']);
+    Route::post('/process-payment', [App\Http\Controllers\ServerlessFunctionsController::class, 'executePaymentProcessor']);
+});
+
 // Local Artisans and Small Businesses Support routes
 Route::middleware(['auth:sanctum'])->prefix('local-artisans')->group(function () {
     Route::get('/support-types', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getSupportTypes']);
@@ -727,4 +770,91 @@ Route::middleware(['auth:sanctum'])->prefix('wmep-support')->group(function () {
     Route::get('/success-stories', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getSuccessStories']);
     Route::get('/community-metrics', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getCommunitySupportMetrics']);
     Route::get('/legal-guides/{category?}', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getLegalResourceGuides']);
+});
+
+// Edge Computing Optimization routes
+Route::middleware(['auth:sanctum'])->prefix('edge-computing')->group(function () {
+    Route::get('/optimal-server', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getOptimalEdgeServer']);
+    Route::post('/pre-cache-content', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'preCacheContent']);
+    Route::get('/content/{contentId}', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getContentFromEdge']);
+    Route::post('/warm-cache', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'warmEdgeCache']);
+    Route::get('/performance-metrics', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getPerformanceMetrics']);
+    Route::post('/optimization-recommendations', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getContentOptimizationRecommendations']);
+    Route::post('/invalidate-cache', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'invalidateEdgeCache']);
+    Route::get('/server-status', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getEdgeServerStatus']);
+    Route::get('/locations', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getEdgeLocationOptions']);
+    Route::get('/cache-options', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getCacheConfigurationOptions']);
+});
+
+// Predictive Caching routes
+Route::middleware(['auth:sanctum'])->prefix('predictive-caching')->group(function () {
+    Route::get('/user-patterns', [App\Http\Controllers\PredictiveCachingController::class, 'getUserBehaviorPatterns']);
+    Route::post('/record-activity', [App\Http\Controllers\PredictiveCachingController::class, 'recordActivity']);
+    Route::get('/recommendations', [App\Http\Controllers\PredictiveCachingController::class, 'getPredictiveRecommendations']);
+    Route::post('/pre-cache', [App\Http\Controllers\PredictiveCachingController::class, 'preCachePredictedContent']);
+    Route::get('/likely-content', [App\Http\Controllers\PredictiveCachingController::class, 'getLikelyToBeAccessedContent']);
+    Route::get('/system-predictions', [App\Http\Controllers\PredictiveCachingController::class, 'getSystemWideContentPredictions']);
+    Route::get('/optimization-recommendations', [App\Http\Controllers\PredictiveCachingController::class, 'getCacheOptimizationRecommendations']);
+    Route::get('/warming-schedule', [App\Http\Controllers\PredictiveCachingController::class, 'getUserCacheWarmingSchedule']);
+    Route::post('/model-feedback', [App\Http\Controllers\PredictiveCachingController::class, 'updateModelWithFeedback']);
+    Route::get('/model-accuracy', [App\Http\Controllers\PredictiveCachingController::class, 'getModelAccuracy']);
+    Route::get('/performance-metrics', [App\Http\Controllers\PredictiveCachingController::class, 'getPerformanceMetrics']);
+});
+
+// Progressive Web App routes
+Route::prefix('pwa')->group(function () {
+    Route::get('/manifest.json', [App\Http\Controllers\ProgressiveWebAppController::class, 'getManifest']);
+    Route::get('/sw.js', [App\Http\Controllers\ProgressiveWebAppController::class, 'getServiceWorker']);
+    Route::get('/features', [App\Http\Controllers\ProgressiveWebAppController::class, 'getPwaFeatures']);
+
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/installation-status', [App\Http\Controllers\ProgressiveWebAppController::class, 'getInstallationStatus']);
+        Route::put('/installation-status', [App\Http\Controllers\ProgressiveWebAppController::class, 'updateInstallationStatus']);
+        Route::get('/offline-content', [App\Http\Controllers\ProgressiveWebAppController::class, 'getOfflineContent']);
+        Route::post('/preload-content', [App\Http\Controllers\ProgressiveWebAppController::class, 'preloadContent']);
+        Route::post('/sync-offline-data', [App\Http\Controllers\ProgressiveWebAppController::class, 'syncOfflineData']);
+        Route::get('/offline-queue', [App\Http\Controllers\ProgressiveWebAppController::class, 'getOfflineDataQueue']);
+        Route::post('/offline-queue', [App\Http\Controllers\ProgressiveWebAppController::class, 'addToOfflineQueue']);
+        Route::get('/performance-metrics', [App\Http\Controllers\ProgressiveWebAppController::class, 'getPerformanceMetrics']);
+        Route::get('/user-preferences', [App\Http\Controllers\ProgressiveWebAppController::class, 'getUserPwaPreferences']);
+        Route::put('/user-preferences', [App\Http\Controllers\ProgressiveWebAppController::class, 'updateUserPwaPreferences']);
+    });
+
+    Route::get('/update-info', [App\Http\Controllers\ProgressiveWebAppController::class, 'getUpdateInfo']);
+    Route::get('/troubleshooting', [App\Http\Controllers\ProgressiveWebAppController::class, 'getTroubleshootingInfo']);
+    Route::post('/check-support', [App\Http\Controllers\ProgressiveWebAppController::class, 'checkPwaSupport']);
+});
+
+// Real-Time Data Synchronization routes
+Route::middleware(['auth:sanctum'])->prefix('realtime-sync')->group(function () {
+    Route::post('/start', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'startRealTimeSync']);
+    Route::post('/{sessionId}/sync-data', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'synchronizeData']);
+    Route::get('/syncable-data-types', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getSyncableDataTypes']);
+    Route::get('/channels', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getSyncChannels']);
+    Route::get('/conflict-strategies', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getConflictResolutionStrategies']);
+    Route::get('/user-sessions', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getUserSyncSessions']);
+    Route::post('/{sessionId}/stop', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'stopRealTimeSync']);
+    Route::get('/history', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getSyncHistory']);
+    Route::get('/performance-metrics', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getSyncPerformanceMetrics']);
+    Route::post('/sync-offline-data', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'syncOfflineData']);
+    Route::get('/recommended-strategy', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getRecommendedSyncStrategy']);
+    Route::get('/status/{dataType}', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getSyncStatus']);
+    Route::post('/force-critical', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'forceSyncCriticalData']);
+});
+
+// Optimized Media Compression routes
+Route::middleware(['auth:sanctum'])->prefix('media-compression')->group(function () {
+    Route::post('/compress-image', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'compressImage']);
+    Route::post('/batch-compress-images', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'batchCompressImages']);
+    Route::post('/compress-video', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'compressVideo']);
+    Route::post('/compress-document', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'compressDocument']);
+    Route::post('/optimize-image-device', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'optimizeImageForDevice']);
+    Route::post('/optimized-media-url', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getOptimizedMediaUrl']);
+    Route::post('/bandwidth-suggestions', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getBandwidthOptimizationSuggestions']);
+    Route::get('/quality-recommendations', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getQualityRecommendations']);
+    Route::post('/auto-optimize-media', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'autoOptimizeMedia']);
+    Route::get('/bandwidth-report', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getBandwidthSavingsReport']);
+    Route::get('/supported-formats', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getSupportedFormats']);
+    Route::get('/bandwidth-profiles', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getBandwidthProfiles']);
+    Route::get('/compression-settings', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getCompressionSettings']);
 });
