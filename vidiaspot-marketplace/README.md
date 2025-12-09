@@ -279,6 +279,15 @@ Complete documentation is available in the following files:
 - Environmental impact ratings
 - Green delivery options
 
+## Social Good Integration
+
+### Community and Social Impact Implementation
+- Charity donation options during checkout
+- Local community support features
+- Educational content about sustainability
+- Support for local artisans and small businesses
+- Women and minority entrepreneur support programs
+
 ## Setup
 
 1. Follow the setup guide in [DOCUMENTATION.md](DOCUMENTATION.md)

@@ -649,3 +649,82 @@ Route::middleware(['auth:sanctum'])->prefix('green-delivery')->group(function ()
     Route::post('/delivery-promise', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'createDeliveryPromise']);
     Route::get('/methods/{methodId}', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'getDeliveryMethod']);
 });
+
+// Charity Donation routes
+Route::middleware(['auth:sanctum'])->prefix('charity-donation')->group(function () {
+    Route::get('/charities', [App\Http\Controllers\CharityDonationController::class, 'getCharityPartners']);
+    Route::get('/charities/{charityId}', [App\Http\Controllers\CharityDonationController::class, 'getCharityPartner']);
+    Route::get('/options', [App\Http\Controllers\CharityDonationController::class, 'getDonationOptions']);
+    Route::post('/process', [App\Http\Controllers\CharityDonationController::class, 'processDonation']);
+    Route::post('/suggested-amounts', [App\Http\Controllers\CharityDonationController::class, 'calculateSuggestedDonationAmounts']);
+    Route::get('/history', [App\Http\Controllers\CharityDonationController::class, 'getUserDonationHistory']);
+    Route::get('/stats/{charityId}', [App\Http\Controllers\CharityDonationController::class, 'getCharityDonationStats']);
+    Route::post('/validate-eligibility', [App\Http\Controllers\CharityDonationController::class, 'validateDonationEligibility']);
+    Route::get('/recommended', [App\Http\Controllers\CharityDonationController::class, 'getRecommendedCharities']);
+    Route::get('/receipt/{donationId}', [App\Http\Controllers\CharityDonationController::class, 'getDonationReceipt']);
+});
+
+// Local Community Support routes
+Route::middleware(['auth:sanctum'])->prefix('community-support')->group(function () {
+    Route::get('/initiatives', [App\Http\Controllers\LocalCommunitySupportController::class, 'getSupportInitiatives']);
+    Route::get('/local-businesses', [App\Http\Controllers\LocalCommunitySupportController::class, 'getLocalBusinesses']);
+    Route::get('/upcoming-events', [App\Http\Controllers\LocalCommunitySupportController::class, 'getUpcomingCommunityEvents']);
+    Route::post('/register-engagement', [App\Http\Controllers\LocalCommunitySupportController::class, 'registerForCommunityEngagement']);
+    Route::get('/engagement-score', [App\Http\Controllers\LocalCommunitySupportController::class, 'getCommunityEngagementScore']);
+    Route::get('/recommendations', [App\Http\Controllers\LocalCommunitySupportController::class, 'getLocalImpactRecommendations']);
+    Route::post('/record-activity', [App\Http\Controllers\LocalCommunitySupportController::class, 'recordCommunityActivity']);
+    Route::get('/challenges', [App\Http\Controllers\LocalCommunitySupportController::class, 'getCommunityChallenges']);
+    Route::get('/economic-impact', [App\Http\Controllers\LocalCommunitySupportController::class, 'getLocalEconomicImpact']);
+    Route::get('/volunteer-opportunities', [App\Http\Controllers\LocalCommunitySupportController::class, 'getVolunteerOpportunities']);
+    Route::post('/challenges/{challengeId}/join', [App\Http\Controllers\LocalCommunitySupportController::class, 'joinCommunityChallenge']);
+});
+
+// Educational Content About Sustainability routes
+Route::middleware(['auth:sanctum'])->prefix('sustainability-education')->group(function () {
+    Route::get('/topics', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getEducationTopics']);
+    Route::get('/topics/{topicId}', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getEducationTopic']);
+    Route::get('/difficulty-levels', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getDifficultyLevels']);
+    Route::get('/categories', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getContentCategories']);
+    Route::get('/filtered-content', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getFilteredContent']);
+    Route::get('/progress', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getUserProgress']);
+    Route::get('/learning-pathway', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getLearningPathway']);
+    Route::post('/topics/{topicId}/complete', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'markTopicCompleted']);
+    Route::post('/topics/{topicId}/save', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'saveTopicForLater']);
+    Route::get('/resources', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getSustainabilityResources']);
+    Route::get('/quiz/{topicId}', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getSustainabilityQuiz']);
+    Route::get('/category/{category}', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getContentByCategory']);
+    Route::get('/engagement-metrics', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getUserEngagementMetrics']);
+});
+
+// Local Artisans and Small Businesses Support routes
+Route::middleware(['auth:sanctum'])->prefix('local-artisans')->group(function () {
+    Route::get('/support-types', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getSupportTypes']);
+    Route::get('/categories', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getArtisanCategories']);
+    Route::get('/certification-levels', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getCertificationLevels']);
+    Route::post('/register-business', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'registerBusiness']);
+    Route::get('/business/{businessId}', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getBusinessProfile']);
+    Route::get('/category/{category}', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getBusinessesByCategory']);
+    Route::get('/find-nearby', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'findArtisansNearbyLocation']);
+    Route::post('/business/{businessId}/certification', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'applyForCertification']);
+    Route::get('/business/{businessId}/eligible-programs', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getEligibleSupportPrograms']);
+    Route::post('/business/{businessId}/apply-support', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'applyForSupportProgram']);
+    Route::get('/business/{businessId}/dashboard', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getBusinessDashboardMetrics']);
+    Route::get('/directory', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getArtisanDirectory']);
+    Route::get('/resource-center', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getResourceCenterContent']);
+    Route::get('/community-impact', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getCommunityImpactMetrics']);
+});
+
+// Women and Minority Entrepreneur Support routes
+Route::middleware(['auth:sanctum'])->prefix('wmep-support')->group(function () {
+    Route::get('/programs', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getSupportPrograms']);
+    Route::get('/certifications', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getCertificationRequirements']);
+    Route::get('/resources', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getResources']);
+    Route::post('/register', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'registerForSupport']);
+    Route::post('/{profileId}/apply-program', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'applyForSupportProgram']);
+    Route::get('/certifications/available/{demographic?}', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getAvailableCertifications']);
+    Route::post('/{profileId}/certification', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'applyForCertification']);
+    Route::get('/{profileId}/recommendations', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getPersonalizedRecommendations']);
+    Route::get('/success-stories', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getSuccessStories']);
+    Route::get('/community-metrics', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getCommunitySupportMetrics']);
+    Route::get('/legal-guides/{category?}', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getLegalResourceGuides']);
+});
