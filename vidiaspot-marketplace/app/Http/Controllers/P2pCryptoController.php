@@ -428,4 +428,32 @@ class P2pCryptoController extends Controller
             'data' => $order->fresh()
         ]);
     }
+
+    /**
+     * Get a specific P2P order
+     */
+    public function show(Request $request, $orderId): JsonResponse
+    {
+        $user = $request->user();
+
+        $order = P2pCryptoOrder::with(['cryptoCurrency', 'seller', 'buyer', 'escrow'])
+            ->where('id', $orderId)
+            ->where(function($q) use ($user) {
+                $q->where('seller_id', $user->id)
+                  ->orWhere('buyer_id', $user->id);
+            })
+            ->first();
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $order
+        ]);
+    }
 }

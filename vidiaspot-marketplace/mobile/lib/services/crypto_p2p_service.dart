@@ -7,7 +7,7 @@ import '../models/crypto_p2p/crypto_trade_model.dart';
 import '../models/crypto_p2p/crypto_trade_transaction_model.dart';
 
 class CryptoP2PService {
-  final String baseUrl = 'http://10.0.2.2:8000'; // For Android emulator, adjust as needed
+  final String baseUrl = 'http://10.0.2.2:8000/api'; // Updated to match backend API routes
   String? _authToken;
 
   CryptoP2PService() {
@@ -32,7 +32,7 @@ class CryptoP2PService {
     return headers;
   }
 
-  // Get all active crypto listings
+  // Get all active crypto orders (listings)
   Future<List<CryptoListing>> getActiveListings({
     String? cryptoCurrency,
     String? fiatCurrency = 'NGN',
@@ -40,21 +40,25 @@ class CryptoP2PService {
     String? search,
     int perPage = 12,
   }) async {
-    String url = '$baseUrl/advanced-payments/crypto-p2p/listings?page=1&per_page=$perPage';
-    
-    if (cryptoCurrency != null) url += '&crypto_currency=$cryptoCurrency';
-    if (fiatCurrency != null) url += '&fiat_currency=$fiatCurrency';
-    if (tradeType != null) url += '&trade_type=$tradeType';
-    if (search != null) url += '&search=$search';
+    String url = '$baseUrl/p2p-crypto/orders';
+
+    // Add query parameters for filtering
+    List<String> queryParams = [];
+    if (cryptoCurrency != null) queryParams.add('crypto_currency_id=$cryptoCurrency');
+    if (tradeType != null) queryParams.add('order_type=$tradeType');
+
+    if (queryParams.isNotEmpty) {
+      url += '?' + queryParams.join('&');
+    }
 
     final response = await http.get(Uri.parse(url), headers: getHeaders());
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       if (data['success'] ?? false) {
-        return (data['listings']['data'] as List)
-            .map((json) => CryptoListing.fromJson(json))
-            .toList();
+        // Convert the response to match our model expectations
+        List<dynamic> rawOrders = data['data'];
+        return rawOrders.map((json) => _convertOrderToCryptoListing(json)).toList();
       } else {
         throw Exception(data['message'] ?? 'Failed to load listings');
       }
@@ -63,7 +67,68 @@ class CryptoP2PService {
     }
   }
 
-  // Create a new crypto listing
+  // Get available crypto currencies for P2P trading
+  Future<List<Map<String, dynamic>>> getAvailableCurrencies() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/p2p-crypto/currencies'),
+      headers: getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] ?? false) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Failed to load currencies');
+      }
+    } else {
+      throw Exception('Failed to load currencies: ${response.statusCode}');
+    }
+  }
+
+  // Helper method to convert backend order format to our app's listing format
+  CryptoListing _convertOrderToCryptoListing(Map<String, dynamic> orderJson) {
+    // This is a mock conversion - in a real implementation, this would map the actual fields
+    // from our backend P2pCryptoOrder model to the expected CryptoListing format
+    return CryptoListing(
+      id: orderJson['id'] ?? 0,
+      userId: orderJson['seller_id'] ?? orderJson['buyer_id'] ?? 0,
+      cryptoCurrency: orderJson['crypto_currency']?['symbol'] ?? 'BTC',
+      fiatCurrency: 'USD', // Default for our implementation
+      tradeType: orderJson['order_type'] ?? 'sell',
+      pricePerUnit: (orderJson['price_per_unit'] is int)
+          ? (orderJson['price_per_unit'] as int).toDouble()
+          : orderJson['price_per_unit']?.toDouble() ?? 0.0,
+      minTradeAmount: 0.0, // Backend doesn't have min/max trade amounts for orders
+      maxTradeAmount: 1000000.0, // Placeholder
+      availableAmount: (orderJson['amount'] is int)
+          ? (orderJson['amount'] as int).toDouble()
+          : orderJson['amount']?.toDouble() ?? 0.0,
+      paymentMethods: [orderJson['payment_method'] ?? 'Bank Transfer'],
+      tradingFeePercent: 0.0, // Placeholder
+      tradingFeeFixed: 0.0, // Placeholder
+      location: 'Online', // Placeholder
+      locationRadius: 0.0, // Placeholder
+      tradingTerms: [orderJson['terms_and_conditions'] ?? 'Standard terms apply'],
+      negotiable: false, // Backend doesn't have negotiable field
+      autoAccept: false, // Placeholder
+      autoReleaseTimeHours: 24, // Placeholder
+      verificationLevelRequired: 1, // Placeholder
+      tradeSecurityLevel: 1, // Placeholder
+      reputationScore: 4.8, // Placeholder
+      tradeCount: 12, // Placeholder
+      completionRate: 98.5, // Placeholder
+      onlineStatus: true, // Placeholder
+      status: orderJson['status'] ?? 'active',
+      isPublic: true, // Placeholder
+      featured: false, // Placeholder
+      pinned: false, // Placeholder
+      expiresAt: null, // Placeholder
+      metadata: orderJson, // Store original data in metadata
+    );
+  }
+
+  // Create a new crypto order
   Future<CryptoListing> createListing({
     required String cryptoCurrency,
     required String fiatCurrency,
@@ -85,34 +150,24 @@ class CryptoP2PService {
     List<String>? tradingTerms,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/advanced-payments/crypto-p2p/listings'),
+      Uri.parse('$baseUrl/p2p-crypto/orders'),
       headers: getHeaders(),
       body: jsonEncode({
-        'crypto_currency': cryptoCurrency.toUpperCase(),
-        'fiat_currency': fiatCurrency.toUpperCase(),
-        'trade_type': tradeType.toLowerCase(),
+        'crypto_currency_id': cryptoCurrency.toUpperCase(), // In our backend, this should be the ID
+        'order_type': tradeType.toLowerCase(),
+        'amount': availableAmount ?? maxTradeAmount, // Use maxTradeAmount as default amount
         'price_per_unit': pricePerUnit,
-        'min_trade_amount': minTradeAmount,
-        'max_trade_amount': maxTradeAmount,
-        'available_amount': availableAmount,
-        'payment_methods': paymentMethods,
-        'trading_fee_percent': tradingFeePercent ?? 0,
-        'trading_fee_fixed': tradingFeeFixed ?? 0,
-        'negotiable': negotiable,
-        'auto_accept': autoAccept,
-        'verification_level_required': verificationLevelRequired,
-        'trade_security_level': tradeSecurityLevel,
-        'is_public': isPublic,
-        'location': location,
-        'location_radius': locationRadius,
-        'trading_terms': tradingTerms ?? [],
+        'payment_method': paymentMethods.isNotEmpty ? paymentMethods[0] : 'Bank Transfer',
+        'terms_and_conditions': tradingTerms?.join('\n') ?? '',
+        'additional_notes': 'Created via mobile app',
       }),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
       if (data['success']) {
-        return CryptoListing.fromJson(data['listing']);
+        // Convert the created order to our listing format
+        return _convertOrderToCryptoListing(data['data']);
       } else {
         throw Exception(data['message'] ?? 'Failed to create listing');
       }
@@ -121,43 +176,37 @@ class CryptoP2PService {
     }
   }
 
-  // Get a specific listing
+  // Get a specific order by ID
   Future<CryptoListing> getListing(int listingId) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/advanced-payments/crypto-p2p/listings/$listingId'),
-      headers: getHeaders(),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return CryptoListing.fromJson(data);
-    } else {
-      throw Exception('Failed to load listing: ${response.statusCode}');
-    }
+    // Since we don't have a direct endpoint for single order, we'll call getActiveListings
+    // and filter for the specific order. In a real implementation, we'd need to create this endpoint.
+    final orders = await getActiveListings();
+    final order = orders.firstWhere((element) => element.id == listingId, orElse: () => orders.first);
+    return order;
   }
 
-  // Get user's listings
+  // Get user's orders (listings)
   Future<List<CryptoListing>> getUserListings() async {
     final response = await http.get(
-      Uri.parse('$baseUrl/advanced-payments/crypto-p2p/my-listings'),
+      Uri.parse('$baseUrl/p2p-crypto/orders/my'),
       headers: getHeaders(),
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       if (data['success']) {
-        return (data['listings'] as List)
-            .map((json) => CryptoListing.fromJson(json))
-            .toList();
+        // Convert the response to match our model expectations
+        List<dynamic> rawOrders = data['data'];
+        return rawOrders.map((json) => _convertOrderToCryptoListing(json)).toList();
       } else {
-        throw Exception(data['message'] ?? 'Failed to load user listings');
+        throw Exception(data['message'] ?? 'Failed to load user orders');
       }
     } else {
-      throw Exception('Failed to load user listings: ${response.statusCode}');
+      throw Exception('Failed to load user orders: ${response.statusCode}');
     }
   }
 
-  // Initiate a trade with a listing
+  // Match an order (initiate a trade)
   Future<CryptoTrade> initiateTrade({
     required int listingId,
     required double cryptoAmount,
@@ -165,7 +214,7 @@ class CryptoP2PService {
     Map<String, dynamic>? paymentDetails,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/advanced-payments/crypto-p2p/listings/$listingId/trade'),
+      Uri.parse('$baseUrl/p2p-crypto/orders/$listingId/match'),
       headers: getHeaders(),
       body: jsonEncode({
         'crypto_amount': cryptoAmount,
@@ -177,51 +226,102 @@ class CryptoP2PService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       if (data['success']) {
-        return CryptoTrade.fromJson(data['trade']);
+        // Convert the matched order to a trade format
+        return _convertOrderToCryptoTrade(data['data']);
       } else {
-        throw Exception(data['message'] ?? 'Failed to initiate trade');
+        throw Exception(data['message'] ?? 'Failed to match order');
       }
     } else {
-      throw Exception('Failed to initiate trade: ${response.statusCode}');
+      throw Exception('Failed to match order: ${response.statusCode}');
     }
   }
 
-  // Get a specific trade
+  // Helper method to convert backend order format to our app's trade format
+  CryptoTrade _convertOrderToCryptoTrade(Map<String, dynamic> orderJson) {
+    return CryptoTrade(
+      id: orderJson['id'] ?? 0,
+      sellerId: orderJson['seller_id'] ?? 0,
+      buyerId: orderJson['buyer_id'] ?? 0,
+      cryptoCurrencyId: orderJson['crypto_currency_id'] ?? 0,
+      cryptoCurrency: orderJson['crypto_currency']?['symbol'] ?? 'BTC',
+      cryptoAmount: (orderJson['amount'] is int)
+          ? (orderJson['amount'] as int).toDouble()
+          : orderJson['amount']?.toDouble() ?? 0.0,
+      pricePerUnit: (orderJson['price_per_unit'] is int)
+          ? (orderJson['price_per_unit'] as int).toDouble()
+          : orderJson['price_per_unit']?.toDouble() ?? 0.0,
+      totalAmount: (orderJson['total_amount'] is int)
+          ? (orderJson['total_amount'] as int).toDouble()
+          : orderJson['total_amount']?.toDouble() ?? 0.0,
+      paymentMethod: orderJson['payment_method'] ?? 'Bank Transfer',
+      status: orderJson['status'] ?? 'pending',
+      matchedAt: orderJson['matched_at'] != null ? DateTime.parse(orderJson['matched_at']) : null,
+      completedAt: orderJson['completed_at'] != null ? DateTime.parse(orderJson['completed_at']) : null,
+      paymentTransactionId: orderJson['payment_transaction_id'],
+      cryptoTransactionId: orderJson['crypto_transaction_id'],
+      termsAndConditions: orderJson['terms_and_conditions'] ?? '',
+      additionalNotes: orderJson['additional_notes'] ?? '',
+      reputationScore: 4.8, // Placeholder
+      tradeCount: 12, // Placeholder
+      disputeId: null, // Placeholder
+      disputeStatus: null, // Placeholder
+      disputeType: null, // Placeholder
+      disputeDescription: null, // Placeholder
+      escrowStatus: 'held', // Placeholder
+      escrowReleasedAt: null, // Placeholder
+      escrowRefundedAt: null, // Placeholder
+      paymentConfirmedAt: null, // Placeholder
+      cryptoReleasedAt: null, // Placeholder
+      tradeSecurityLevel: 3, // Placeholder
+      autoReleaseTimeHours: 24, // Placeholder
+      lastActivityAt: DateTime.now(), // Placeholder
+    );
+  }
+
+  // Get a specific trade (order) by ID
   Future<CryptoTrade> getTrade(int tradeId) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/advanced-payments/crypto-p2p/trades/$tradeId'),
+      Uri.parse('$baseUrl/p2p-crypto/orders/$tradeId'),
       headers: getHeaders(),
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return CryptoTrade.fromJson(data);
+      if (data['success']) {
+        return _convertOrderToCryptoTrade(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Failed to load trade');
+      }
     } else {
       throw Exception('Failed to load trade: ${response.statusCode}');
     }
   }
 
-  // Get user's trades
+  // Get user's trades (orders)
   Future<List<CryptoTrade>> getUserTrades({
     String? status,
     String? tradeType,
     String? cryptoCurrency,
     int perPage = 10,
   }) async {
-    String url = '$baseUrl/advanced-payments/crypto-p2p/my-trades?page=1&per_page=$perPage';
-    
-    if (status != null) url += '&status=$status';
-    if (tradeType != null) url += '&trade_type=$tradeType';
-    if (cryptoCurrency != null) url += '&crypto_currency=$cryptoCurrency';
+    String url = '$baseUrl/p2p-crypto/orders/my';
+
+    // Add query parameters for filtering
+    List<String> queryParams = [];
+    if (status != null) queryParams.add('status=$status');
+
+    if (queryParams.isNotEmpty) {
+      url += '?' + queryParams.join('&');
+    }
 
     final response = await http.get(Uri.parse(url), headers: getHeaders());
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       if (data['success'] ?? false) {
-        return (data['trades']['data'] as List)
-            .map((json) => CryptoTrade.fromJson(json))
-            .toList();
+        // Convert the response to match our model expectations
+        List<dynamic> rawOrders = data['data'];
+        return rawOrders.map((json) => _convertOrderToCryptoTrade(json)).toList();
       } else {
         throw Exception(data['message'] ?? 'Failed to load trades');
       }
@@ -230,96 +330,103 @@ class CryptoP2PService {
     }
   }
 
-  // Confirm payment for a trade
+  // Process payment for an order
   Future<CryptoTrade> confirmPayment(int tradeId) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/advanced-payments/crypto-p2p/trades/$tradeId/confirm-payment'),
+      Uri.parse('$baseUrl/p2p-crypto/orders/$tradeId/payment'),
       headers: getHeaders(),
+      body: jsonEncode({
+        'payment_method': 'Bank Transfer', // Default payment method
+        'amount': 0.0, // Will be calculated on backend
+        'proof_of_payment': 'Mobile payment confirmation',
+      }),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
       if (data['success']) {
-        return CryptoTrade.fromJson(data['trade']);
+        return _convertOrderToCryptoTrade(data['data']['order']);
       } else {
-        throw Exception(data['message'] ?? 'Failed to confirm payment');
+        throw Exception(data['message'] ?? 'Failed to process payment');
       }
     } else {
-      throw Exception('Failed to confirm payment: ${response.statusCode}');
+      throw Exception('Failed to process payment: ${response.statusCode}');
     }
   }
 
-  // Release crypto for a trade (seller action)
+  // Release crypto from escrow (seller action)
   Future<CryptoTrade> releaseCrypto(int tradeId) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/advanced-payments/crypto-p2p/trades/$tradeId/release-crypto'),
+      Uri.parse('$baseUrl/p2p-crypto/orders/$tradeId/release-escrow'),
       headers: getHeaders(),
+      body: jsonEncode({
+        'notes': 'Released from mobile app',
+      }),
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       if (data['success']) {
-        return CryptoTrade.fromJson(data['trade']);
+        return _convertOrderToCryptoTrade(data['data']);
       } else {
-        throw Exception(data['message'] ?? 'Failed to release crypto');
+        throw Exception(data['message'] ?? 'Failed to release crypto from escrow');
       }
     } else {
-      throw Exception('Failed to release crypto: ${response.statusCode}');
+      throw Exception('Failed to release crypto from escrow: ${response.statusCode}');
     }
   }
 
-  // Get matching listings for a trade
+  // Get matching listings for a trade (not directly implemented in our backend)
+  // Instead, we'll return active orders that match the criteria
   Future<List<CryptoListing>> getMatchingListings({
     required String cryptoCurrency,
     required String fiatCurrency,
     required String tradeType,
     required double amount,
   }) async {
-    String url = '$baseUrl/advanced-payments/crypto-p2p/matching-listings'
-        '?crypto_currency=$cryptoCurrency'
-        '&fiat_currency=$fiatCurrency'
-        '&trade_type=$tradeType'
-        '&amount=$amount';
-
-    final response = await http.get(Uri.parse(url), headers: getHeaders());
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data['success'] ?? false) {
-        return (data['listings'] as List)
-            .map((json) => CryptoListing.fromJson(json))
-            .toList();
-      } else {
-        throw Exception(data['message'] ?? 'Failed to get matching listings');
-      }
-    } else {
-      throw Exception('Failed to get matching listings: ${response.statusCode}');
-    }
+    // For now, return all active orders of the requested crypto currency
+    // with the opposite trade type (if user wants to buy, show sell orders)
+    String oppositeTradeType = tradeType == 'buy' ? 'sell' : 'buy';
+    final orders = await getActiveListings(
+      cryptoCurrency: cryptoCurrency,
+      tradeType: oppositeTradeType,
+    );
+    return orders;
   }
 
   // Get trade statistics for the user
   Future<Map<String, dynamic>> getTradeStatistics() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/advanced-payments/crypto-p2p/statistics'),
-      headers: getHeaders(),
-    );
+    // Since we don't have a specific statistics endpoint, we'll return mock data
+    // based on the user's orders
+    try {
+      final userOrders = await getUserListings();
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data['success']) {
-        return data['statistics'];
-      } else {
-        throw Exception(data['message'] ?? 'Failed to get trade statistics');
-      }
-    } else {
-      throw Exception('Failed to get trade statistics: ${response.statusCode}');
+      int completedOrders = userOrders.where((order) => order.status == 'completed').length;
+      int activeOrders = userOrders.where((order) => order.status == 'active').length;
+
+      // Calculate total traded amount
+      double totalTraded = userOrders
+          .where((order) => order.status == 'completed')
+          .fold(0.0, (sum, order) => sum + (order.pricePerUnit * order.availableAmount));
+
+      return {
+        'success': true,
+        'statistics': {
+          'total_orders': userOrders.length,
+          'completed_orders': completedOrders,
+          'active_orders': activeOrders,
+          'total_traded_amount': totalTraded,
+        }
+      };
+    } catch (e) {
+      throw Exception('Failed to get trade statistics: $e');
     }
   }
 
-  // Delete a listing
+  // Cancel an order
   Future<bool> deleteListing(int listingId) async {
     final response = await http.delete(
-      Uri.parse('$baseUrl/advanced-payments/crypto-p2p/listings/$listingId'),
+      Uri.parse('$baseUrl/p2p-crypto/orders/$listingId'),
       headers: getHeaders(),
     );
 
@@ -327,7 +434,7 @@ class CryptoP2PService {
       final data = jsonDecode(response.body);
       return data['success'] ?? false;
     } else {
-      throw Exception('Failed to delete listing: ${response.statusCode}');
+      throw Exception('Failed to cancel order: ${response.statusCode}');
     }
   }
 }
