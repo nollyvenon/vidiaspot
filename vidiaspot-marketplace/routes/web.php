@@ -138,6 +138,79 @@ Route::middleware(['auth'])->prefix('accessibility')->group(function () {
     Route::post('/accessible-table', [App\Http\Controllers\AccessibilityController::class, 'createAccessibleTable'])->name('accessibility.table');
 });
 
+// Voice Navigation routes
+Route::middleware(['auth'])->prefix('voice-navigation')->group(function () {
+    Route::post('/command', [App\Http\Controllers\VoiceNavigationController::class, 'processCommand'])->name('voice.command');
+    Route::post('/transcribe', [App\Http\Controllers\VoiceNavigationController::class, 'transcribeSpeech'])->name('voice.transcribe');
+    Route::get('/commands', [App\Http\Controllers\VoiceNavigationController::class, 'getCommands'])->name('voice.commands');
+    Route::post('/start-session', [App\Http\Controllers\VoiceNavigationController::class, 'startSession'])->name('voice.start');
+    Route::post('/end-session', [App\Http\Controllers\VoiceNavigationController::class, 'endSession'])->name('voice.end');
+    Route::get('/status', [App\Http\Controllers\VoiceNavigationController::class, 'getStatus'])->name('voice.status');
+});
+
+// Sign Language Video routes
+Route::prefix('sign-language-videos')->group(function () {
+    Route::get('/', [App\Http\Controllers\SignLanguageVideoController::class, 'index'])->name('sign-language-videos.index');
+    Route::post('/upload', [App\Http\Controllers\SignLanguageVideoController::class, 'upload'])->name('sign-language-videos.upload');
+    Route::get('/search', [App\Http\Controllers\SignLanguageVideoController::class, 'search'])->name('sign-language-videos.search');
+    Route::get('/categories', [App\Http\Controllers\SignLanguageVideoController::class, 'getCategories'])->name('sign-language-videos.categories');
+    Route::get('/trending', [App\Http\Controllers\SignLanguageVideoController::class, 'getTrending'])->name('sign-language-videos.trending');
+    Route::get('/recommended', [App\Http\Controllers\SignLanguageVideoController::class, 'getRecommended'])->name('sign-language-videos.recommended');
+    Route::get('/history', [App\Http\Controllers\SignLanguageVideoController::class, 'getViewingHistory'])->name('sign-language-videos.history');
+    Route::get('/{videoId}', [App\Http\Controllers\SignLanguageVideoController::class, 'show'])->name('sign-language-videos.show');
+    Route::get('/category/{category}', [App\Http\Controllers\SignLanguageVideoController::class, 'getByCategory'])->name('sign-language-videos.category');
+});
+
+// Cognitive Accessibility routes
+Route::middleware(['auth'])->prefix('cognitive-accessibility')->group(function () {
+    Route::get('/settings', [App\Http\Controllers\CognitiveAccessibilityController::class, 'getSettings'])->name('cognitive.settings');
+    Route::put('/settings', [App\Http\Controllers\CognitiveAccessibilityController::class, 'updateSettings'])->name('cognitive.settings.update');
+    Route::post('/simplify-text', [App\Http\Controllers\CognitiveAccessibilityController::class, 'simplifyText'])->name('cognitive.simplify');
+    Route::post('/alternative-formats', [App\Http\Controllers\CognitiveAccessibilityController::class, 'getAlternativeFormats'])->name('cognitive.alternatives');
+    Route::post('/simplify-interface', [App\Http\Controllers\CognitiveAccessibilityController::class, 'createSimplifiedInterface'])->name('cognitive.simplify.interface');
+    Route::post('/simplify-page', [App\Http\Controllers\CognitiveAccessibilityController::class, 'getSimplifiedPage'])->name('cognitive.simplify.page');
+    Route::get('/guidelines', [App\Http\Controllers\CognitiveAccessibilityController::class, 'getCognitiveGuidelines'])->name('cognitive.guidelines');
+    Route::get('/status', [App\Http\Controllers\CognitiveAccessibilityController::class, 'getStatus'])->name('cognitive.status');
+});
+
+// Offline Mode routes
+Route::middleware(['auth'])->prefix('offline-mode')->group(function () {
+    Route::post('/prepare', [App\Http\Controllers\OfflineModeController::class, 'prepareForOffline'])->name('offline.prepare');
+    Route::get('/content', [App\Http\Controllers\OfflineModeController::class, 'getOfflineContent'])->name('offline.content');
+    Route::post('/sync', [App\Http\Controllers\OfflineModeController::class, 'syncOfflineChanges'])->name('offline.sync');
+    Route::get('/available', [App\Http\Controllers\OfflineModeController::class, 'getAvailableContent'])->name('offline.available');
+    Route::get('/status', [App\Http\Controllers\OfflineModeController::class, 'getStatus'])->name('offline.status');
+    Route::get('/check-availability', [App\Http\Controllers\OfflineModeController::class, 'checkAvailability'])->name('offline.check');
+    Route::post('/cleanup', [App\Http\Controllers\OfflineModeController::class, 'cleanup'])->name('offline.cleanup');
+    Route::delete('/package/{packageId}', [App\Http\Controllers\OfflineModeController::class, 'removePackage'])->name('offline.remove');
+    Route::get('/package/{packageId}/download', [App\Http\Controllers\OfflineModeController::class, 'downloadPackage'])->name('offline.download');
+});
+
+// Low Bandwidth Optimization routes
+Route::middleware(['auth'])->prefix('low-bandwidth')->group(function () {
+    Route::get('/status', [App\Http\Controllers\LowBandwidthOptimizationController::class, 'getStatus'])->name('lowbandwidth.status');
+    Route::put('/toggle', [App\Http\Controllers\LowBandwidthOptimizationController::class, 'toggleMode'])->name('lowbandwidth.toggle');
+    Route::post('/optimize-image', [App\Http\Controllers\LowBandwidthOptimizationController::class, 'optimizeImage'])->name('lowbandwidth.optimize.image');
+    Route::post('/optimize-text', [App\Http\Controllers\LowBandwidthOptimizationController::class, 'optimizeTextContent'])->name('lowbandwidth.optimize.text');
+    Route::post('/optimize-response', [App\Http\Controllers\LowBandwidthOptimizationController::class, 'optimizeResponse'])->name('lowbandwidth.optimize.response');
+    Route::post('/generate-low-bandwidth-page', [App\Http\Controllers\LowBandwidthOptimizationController::class, 'generateLowBandwidthPage'])->name('lowbandwidth.generate.page');
+    Route::post('/recommendations', [App\Http\Controllers\LowBandwidthOptimizationController::class, 'getRecommendations'])->name('lowbandwidth.recommendations');
+    Route::get('/should-activate', [App\Http\Controllers\LowBandwidthOptimizationController::class, 'shouldActivate'])->name('lowbandwidth.should.activate');
+});
+
+// Multiple Input Methods routes
+Route::middleware(['auth'])->prefix('input-methods')->group(function () {
+    Route::get('/preferences', [App\Http\Controllers\MultipleInputMethodsController::class, 'getPreferences'])->name('input-methods.preferences');
+    Route::put('/preferences', [App\Http\Controllers\MultipleInputMethodsController::class, 'updatePreferences'])->name('input-methods.preferences.update');
+    Route::post('/voice', [App\Http\Controllers\MultipleInputMethodsController::class, 'processVoiceInput'])->name('input-methods.voice');
+    Route::post('/gesture', [App\Http\Controllers\MultipleInputMethodsController::class, 'processGestureInput'])->name('input-methods.gesture');
+    Route::post('/touch', [App\Http\Controllers\MultipleInputMethodsController::class, 'processTouchInput'])->name('input-methods.touch');
+    Route::post('/adapt-interface', [App\Http\Controllers\MultipleInputMethodsController::class, 'adaptInterface'])->name('input-methods.adapt');
+    Route::get('/analytics', [App\Http\Controllers\MultipleInputMethodsController::class, 'getAnalytics'])->name('input-methods.analytics');
+    Route::get('/supported', [App\Http\Controllers\MultipleInputMethodsController::class, 'getSupportedMethods'])->name('input-methods.supported');
+    Route::post('/calibrate-gestures', [App\Http\Controllers\MultipleInputMethodsController::class, 'calibrateGestures'])->name('input-methods.calibrate');
+});
+
 // Accessibility settings page
 Route::get('/accessibility', function () {
     return view('accessibility.settings');
