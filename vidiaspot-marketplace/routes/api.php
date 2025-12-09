@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\RecommendationController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\P2pCryptoController;
+use App\Http\Controllers\LandingController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -75,6 +77,34 @@ Route::prefix('subscription')->middleware(['auth:sanctum'])->group(function () {
     // Process successful payment callback
     Route::post('/process-payment', [SubscriptionController::class, 'processSuccessfulPayment'])->withoutMiddleware(['auth:sanctum']);
 });
+
+// P2P Crypto Marketplace routes
+Route::prefix('p2p-crypto')->group(function () {
+    // Public routes
+    Route::get('/currencies', [P2pCryptoController::class, 'getCryptoCurrencies']);
+    Route::get('/orders', [P2pCryptoController::class, 'getActiveOrders']);
+
+    // Protected routes
+    Route::middleware(['auth:sanctum'])->group(function () {
+        // Order management
+        Route::post('/orders', [P2pCryptoController::class, 'createOrder']);
+        Route::get('/orders/my', [P2pCryptoController::class, 'getUserOrders']);
+        Route::post('/orders/{orderId}/match', [P2pCryptoController::class, 'matchOrder']);
+        Route::delete('/orders/{orderId}', [P2pCryptoController::class, 'cancelOrder']);
+
+        // Dispute management
+        Route::post('/orders/{orderId}/dispute', [P2pCryptoController::class, 'createDispute']);
+
+        // Payment and escrow management
+        Route::post('/orders/{orderId}/payment', [P2pCryptoController::class, 'processPayment']);
+        Route::post('/orders/{orderId}/release-escrow', [P2pCryptoController::class, 'releaseEscrow']);
+    });
+});
+
+// Landing page routes
+Route::get('/landing', [LandingController::class, 'index']);
+Route::get('/p2p-crypto-marketplace', [LandingController::class, 'p2pCryptoMarketplace']);
+Route::get('/marketplace-modules', [LandingController::class, 'marketplaceModules']);
 
 // Recommendation routes (both public and protected)
 Route::get('/recommendations/trending', [RecommendationController::class, 'getTrendingAds']);

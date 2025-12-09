@@ -8,6 +8,17 @@ import 'screens/search_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/post_ad_screen.dart';
 import 'screens/messages_screen.dart';
+// Crypto P2P screens
+import 'screens/crypto_p2p/crypto_p2p_home_screen.dart';
+import 'screens/crypto_p2p/create_crypto_listing_screen.dart';
+import 'screens/crypto_p2p/initiate_crypto_trade_screen.dart';
+import 'screens/crypto_p2p/crypto_trade_details_screen.dart';
+// IoT screens
+import 'screens/iot/iot_home_screen.dart';
+// NFT screens
+import 'screens/nft/nft_marketplace_home_screen.dart';
+import 'models/crypto_p2p/crypto_listing_model.dart';
+import 'models/crypto_p2p/crypto_trade_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +61,19 @@ class VidiaSpotApp extends StatelessWidget {
         Locale('ha', 'NG'), // Hausa
       ],
       home: const MainScreen(),
+      routes: {
+        '/crypto-p2p': (context) => const CryptoP2PHomeScreen(),
+        '/create-listing': (context) => const CreateCryptoListingScreen(),
+        '/initiate-trade': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return InitiateCryptoTradeScreen(listing: args['listing'] as CryptoListing);
+        },
+        '/trade-details': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return CryptoTradeDetailsScreen(trade: args['trade'] as CryptoTrade);
+        },
+        '/iot': (context) => const IoTHomeScreen(),
+      },
       debugShowCheckedModeBanner: false,
     );
   }
