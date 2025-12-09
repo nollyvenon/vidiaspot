@@ -8,6 +8,13 @@ use App\Models\Category;
 use App\Services\TrendingSearchService;
 use App\Services\RecommendationService;
 use App\Services\NotificationPreferenceService;
+use App\Services\IoTDeviceService;
+use App\Services\NftService;
+use App\Services\MetaverseService;
+use App\Services\DroneDeliveryService;
+use App\Services\AICustomerServiceAvatar;
+use App\Services\PredictiveMaintenanceService;
+use App\Services\SmartContractService;
 use Illuminate\Support\Facades\Auth;
 
 class LandingController extends Controller
@@ -15,15 +22,36 @@ class LandingController extends Controller
     protected $trendingSearchService;
     protected $recommendationService;
     protected $notificationService;
+    protected $iotDeviceService;
+    protected $nftService;
+    protected $metaverseService;
+    protected $droneDeliveryService;
+    protected $aiCustomerServiceAvatar;
+    protected $predictiveMaintenanceService;
+    protected $smartContractService;
 
     public function __construct(
         TrendingSearchService $trendingSearchService,
         RecommendationService $recommendationService,
-        NotificationPreferenceService $notificationService
+        NotificationPreferenceService $notificationService,
+        IoTDeviceService $iotDeviceService,
+        NftService $nftService,
+        MetaverseService $metaverseService,
+        DroneDeliveryService $droneDeliveryService,
+        AICustomerServiceAvatar $aiCustomerServiceAvatar,
+        PredictiveMaintenanceService $predictiveMaintenanceService,
+        SmartContractService $smartContractService
     ) {
         $this->trendingSearchService = $trendingSearchService;
         $this->recommendationService = $recommendationService;
         $this->notificationService = $notificationService;
+        $this->iotDeviceService = $iotDeviceService;
+        $this->nftService = $nftService;
+        $this->metaverseService = $metaverseService;
+        $this->droneDeliveryService = $droneDeliveryService;
+        $this->aiCustomerServiceAvatar = $aiCustomerServiceAvatar;
+        $this->predictiveMaintenanceService = $predictiveMaintenanceService;
+        $this->smartContractService = $smartContractService;
     }
 
     public function index()
@@ -117,6 +145,38 @@ class LandingController extends Controller
         // Get how it works steps for display
         $howItWorksSteps = \App\Models\HowItWorksStep::active()->ordered()->get();
 
+        // Get innovative features data
+        $innovativeFeatures = [
+            'iot_smart_home' => [
+                'count' => $user ? $this->iotDeviceService->getSmartHomeDevices()->count() : 0,
+                'active_count' => $user ? $this->iotDeviceService->getConnectedDevices()->count() : 0,
+            ],
+            'nft_marketplace' => [
+                'collections_count' => $this->nftService->getMarketplaceNfts(['per_page' => 1])->total(),
+                'featured_nfts' => $this->nftService->getMarketplaceNfts(['per_page' => 3, 'is_listed' => true]),
+            ],
+            'metaverse_showrooms' => [
+                'active_showrooms' => $this->metaverseService->getTrendingShowrooms(3),
+                'featured_showrooms' => $this->metaverseService->getFeaturedShowrooms(3),
+            ],
+            'drone_delivery' => [
+                'active_missions' => $user ? $this->droneDeliveryService->getActiveMissions()->count() : 0,
+                'available_drones' => $this->droneDeliveryService->getAvailableDrones()->count(),
+            ],
+            'ai_customer_service' => [
+                'capabilities' => $this->aiCustomerServiceAvatar->getAvatarCapabilities(),
+                'personality' => $this->aiCustomerServiceAvatar->getAvatarPersonality(),
+            ],
+            'predictive_maintenance' => [
+                'urgent_maintenance' => $user ? $this->predictiveMaintenanceService->getUrgentMaintenanceNeeds()->count() : 0,
+                'predicted_maintenance' => $user ? $this->predictiveMaintenanceService->getMaintenanceAlerts()->count() : 0,
+            ],
+            'smart_contracts' => [
+                'active_contracts' => $this->smartContractService->getActiveContracts()->count(),
+                'recent_transactions' => $user ? $this->smartContractService->getRecentTransactions(null, 3) : collect(),
+            ],
+        ];
+
         return view('landing.index', compact(
             'featuredAds',
             'latestAds',
@@ -124,7 +184,56 @@ class LandingController extends Controller
             'trendingByCategory',
             'howItWorksSteps',
             'personalizedAds',
-            'moodState'
+            'moodState',
+            'innovativeFeatures'
         ));
+    }
+
+    public function innovativeFeatures()
+    {
+        $user = Auth::user();
+
+        // Get comprehensive data for all innovative features
+        $innovativeFeaturesData = [
+            'iot_smart_home' => [
+                'count' => $user ? $this->iotDeviceService->getSmartHomeDevices($user->id)->count() : 0,
+                'active_count' => $user ? $this->iotDeviceService->getConnectedDevices($user->id)->count() : 0,
+                'devices' => $user ? $this->iotDeviceService->getSmartHomeDevices($user->id) : collect(),
+            ],
+            'nft_marketplace' => [
+                'collections_count' => $this->nftService->getMarketplaceNfts(['per_page' => 1])->total(),
+                'featured_nfts' => $this->nftService->getMarketplaceNfts(['per_page' => 6, 'is_listed' => true]),
+                'user_collections' => $user ? $this->nftService->getUserCollections($user->id) : collect(),
+                'user_nfts' => $user ? $this->nftService->getUserNfts($user->id) : collect(),
+            ],
+            'metaverse_showrooms' => [
+                'active_showrooms' => $this->metaverseService->getTrendingShowrooms(6),
+                'featured_showrooms' => $this->metaverseService->getFeaturedShowrooms(6),
+                'user_showrooms' => $user ? $this->metaverseService->getActiveShowrooms(['owner_id' => $user->id]) : collect(),
+            ],
+            'drone_delivery' => [
+                'active_missions' => $user ? $this->droneDeliveryService->getActiveMissions()->count() : 0,
+                'available_drones' => $this->droneDeliveryService->getAvailableDrones()->count(),
+                'active_missions_list' => $user ? $this->droneDeliveryService->getActiveMissions() : collect(),
+            ],
+            'ai_customer_service' => [
+                'capabilities' => $this->aiCustomerServiceAvatar->getAvatarCapabilities(),
+                'personality' => $this->aiCustomerServiceAvatar->getAvatarPersonality(),
+                'session_token' => $user ? $this->aiCustomerServiceAvatar->createAvatarSession($user->id)->session_token ?? null : null,
+            ],
+            'predictive_maintenance' => [
+                'urgent_maintenance' => $user ? $this->predictiveMaintenanceService->getUrgentMaintenanceNeeds($user->id)->count() : 0,
+                'predicted_maintenance' => $user ? $this->predictiveMaintenanceService->getMaintenanceAlerts($user->id)->count() : 0,
+                'maintenance_recommendations' => $user ? $this->predictiveMaintenanceService->getMaintenanceRecommendations($user->id) : collect(),
+                'maintenance_insights' => $user ? $this->predictiveMaintenanceService->getPredictiveInsights($user->id) : [],
+            ],
+            'smart_contracts' => [
+                'active_contracts' => $this->smartContractService->getActiveContracts()->count(),
+                'recent_transactions' => $user ? $this->smartContractService->getRecentTransactions($user->id, 6) : collect(),
+                'user_contracts' => $user ? $this->smartContractService->getActiveContracts($user->id) : collect(),
+            ],
+        ];
+
+        return view('landing.innovative-features', compact('innovativeFeaturesData'));
     }
 }
