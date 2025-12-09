@@ -29,6 +29,8 @@ class PricingRecommendation extends Model
         'generated_at',
     ];
 
+    protected $table = 'pricing_recommendations';
+
     protected $casts = [
         'current_price' => 'decimal:2',
         'recommended_price' => 'decimal:2',

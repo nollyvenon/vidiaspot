@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use PragmaRX\Google2FALaravel\Support\Authenticator;
 
 class User extends Authenticatable
 {
@@ -41,6 +42,10 @@ class User extends Authenticatable
         'featured_ads_limit',
         'has_priority_support',
         'subscription_features',
+        'reputation_score',
+        'google2fa_secret',
+        'google2fa_enabled',
+        'backup_codes',
     ];
 
     protected $attributes = [
@@ -74,6 +79,8 @@ class User extends Authenticatable
             'ad_limit' => 'integer',
             'featured_ads_limit' => 'integer',
             'subscription_features' => 'array',
+            'google2fa_enabled' => 'boolean',
+            'backup_codes' => 'array',
         ];
     }
 
@@ -99,6 +106,14 @@ class User extends Authenticatable
     public function vendor(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Vendor::class);
+    }
+
+    /**
+     * Get the food vendor associated with this user.
+     */
+    public function foodVendor(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(FoodVendor::class);
     }
 
     /**
@@ -198,6 +213,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the vendor store associated with this user.
+     */
+    public function vendorStore(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(VendorStore::class);
+    }
+
+    /**
      * Get the featured ads created by this user.
      */
     public function featuredAds(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -249,5 +272,22 @@ class User extends Authenticatable
                 $this->roles()->detach($role);
             }
         }
+    }
+
+    /**
+     * Determine if the user has enabled two-factor authentication.
+     */
+    public function hasGoogle2faEnabled(): bool
+    {
+        return $this->google2fa_enabled;
+    }
+
+    /**
+     * Get the QR code URL for the user's Google 2FA.
+     */
+    public function getGoogle2faQrCodeUrl(): string
+    {
+        $authenticator = new Authenticator($this);
+        return $authenticator->getQRCodeUrl();
     }
 }

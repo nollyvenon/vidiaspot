@@ -14,12 +14,11 @@
 
 ## Overview
 
-Vidiaspot Marketplace is designed with SQLite as the default primary database for local development, with MySQL as the option for production. SQLite can also be used as a local cache layer to reduce operations from the main database. This architecture provides high performance and scalability while maintaining cost efficiency.
+Vidiaspot Marketplace is designed with MySQL as the primary database for both development and production environments. SQLite is used as a local cache layer to reduce read operations from the main MySQL database. This architecture provides high performance and scalability while maintaining cost efficiency.
 
 ### Database Strategy
-- **Default (Development)**: SQLite for all application data
-- **Production Option**: MySQL as primary, SQLite for caching
-- **Local Cache**: Can use SQLite for reducing read load from main database
+- **Primary Database**: MySQL for all application data in both development and production
+- **Local Cache**: SQLite used as a caching layer to reduce read operations from MySQL
 - **Feature Parity**: Same functionality across environments
 
 ## Database Architecture

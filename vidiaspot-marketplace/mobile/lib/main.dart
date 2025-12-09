@@ -8,17 +8,28 @@ import 'screens/search_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/post_ad_screen.dart';
 import 'screens/messages_screen.dart';
+
 // Crypto P2P screens
 import 'screens/crypto_p2p/crypto_p2p_home_screen.dart';
 import 'screens/crypto_p2p/create_crypto_listing_screen.dart';
 import 'screens/crypto_p2p/initiate_crypto_trade_screen.dart';
 import 'screens/crypto_p2p/crypto_trade_details_screen.dart';
+// E-commerce screens
+import 'screens/ecommerce/ecommerce_home_screen.dart';
+// Food Vending screens
+import 'screens/food_vending/food_vending_home_screen.dart';
+// Logistics screens
+import 'screens/logistics/logistics_home_screen.dart';
+// Marketplace modules screen
+import 'screens/marketplace_modules_screen.dart';
 // IoT screens
 import 'screens/iot/iot_home_screen.dart';
 // NFT screens
 import 'screens/nft/nft_marketplace_home_screen.dart';
 import 'models/crypto_p2p/crypto_listing_model.dart';
 import 'models/crypto_p2p/crypto_trade_model.dart';
+
+import 'screens/comprehensive_messaging_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,6 +83,10 @@ class VidiaSpotApp extends StatelessWidget {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return CryptoTradeDetailsScreen(trade: args['trade'] as CryptoTrade);
         },
+        '/ecommerce': (context) => const EcommerceHomeScreen(),
+        '/food-vending': (context) => const FoodVendingHomeScreen(),
+        '/logistics': (context) => const LogisticsHomeScreen(),
+        '/marketplace-modules': (context) => const MarketplaceModulesScreen(),
         '/iot': (context) => const IoTHomeScreen(),
       },
       debugShowCheckedModeBanner: false,
@@ -93,7 +108,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const SearchScreen(),
     const PostAdScreen(),
-    const MessagesScreen(),
+    const ComprehensiveMessagingScreen(), // Changed to comprehensive messaging screen
     const ProfileScreen(),
   ];
 
@@ -103,6 +118,13 @@ class _MainScreenState extends State<MainScreen> {
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/marketplace-modules');
+        },
+        child: const Icon(Icons.apps),
+        backgroundColor: Colors.blue,
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[

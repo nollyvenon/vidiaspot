@@ -2,140 +2,66 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ElasticsearchService;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use App\Services\TrendingSearchService;
+use Illuminate\Support\Facades\DB;
 
 class SearchController extends Controller
 {
-    protected ElasticsearchService $elasticsearch;
+    protected $trendingSearchService;
 
-    public function __construct(ElasticsearchService $elasticsearch)
+    public function __construct(TrendingSearchService $trendingSearchService)
     {
-        $this->elasticsearch = $elasticsearch;
+        $this->trendingSearchService = $trendingSearchService;
     }
 
-    /**
-     * Perform advanced search
-     */
-    public function search(Request $request): JsonResponse
+    public function search(Request $request)
     {
-        $criteria = [
-            'search' => $request->input('q'),
-            'category' => $request->input('category'),
-            'location' => $request->input('location'),
-            'min_price' => $request->input('min_price'),
-            'max_price' => $request->input('max_price'),
-            'condition' => $request->input('condition'),
-            'user_id' => $request->input('user_id'),
-        ];
+        $query = $request->get('q');
+        $location = $request->get('location');
+        $categoryId = $request->get('category');
+        $minPrice = $request->get('min_price');
+        $maxPrice = $request->get('max_price');
 
-        $from = ($request->input('page', 1) - 1) * $request->input('per_page', 10);
-        $size = $request->input('per_page', 10);
-
-        $results = $this->elasticsearch->search($criteria, $from, $size);
-
-        return response()->json([
-            'data' => $results['hits']['hits'] ?? [],
-            'total' => $results['hits']['total']['value'] ?? 0,
-            'aggregations' => $results['aggregations'] ?? [],
-        ]);
-    }
-
-    /**
-     * Search with aggregations (faceted search)
-     */
-    public function searchWithFacets(Request $request): JsonResponse
-    {
-        $criteria = [
-            'search' => $request->input('q'),
-            'category' => $request->input('category'),
-            'location' => $request->input('location'),
-            'min_price' => $request->input('min_price'),
-            'max_price' => $request->input('max_price'),
-            'condition' => $request->input('condition'),
-        ];
-
-        $results = $this->elasticsearch->searchWithAggregations($criteria);
-
-        return response()->json([
-            'data' => $results['hits']['hits'] ?? [],
-            'total' => $results['hits']['total']['value'] ?? 0,
-            'aggregations' => $results['aggregations'] ?? [],
-        ]);
-    }
-
-    /**
-     * Simple search endpoint
-     */
-    public function simpleSearch(Request $request): JsonResponse
-    {
-        $query = $request->input('q', '');
-        if (empty($query)) {
-            return response()->json(['data' => [], 'total' => 0]);
+        // Log the search
+        if ($query) {
+            $userId = auth()->check() ? auth()->id() : null;
+            $this->trendingSearchService->addSearchLog($query, $location, $userId);
         }
 
-        $results = $this->elasticsearch->simpleSearch($query);
+        // Perform the search
+        $adsQuery = DB::table('ads')
+            ->select('ads.*', 'users.name as user_name', 'categories.name as category_name')
+            ->leftJoin('users', 'ads.user_id', '=', 'users.id')
+            ->leftJoin('categories', 'ads.category_id', '=', 'categories.id')
+            ->where('ads.status', 'active');
 
-        return response()->json([
-            'data' => $results['hits']['hits'] ?? [],
-            'total' => $results['hits']['total']['value'] ?? 0,
-        ]);
-    }
-
-    /**
-     * Get related products
-     */
-    public function getRelatedProducts(Request $request, int $productId): JsonResponse
-    {
-        $size = $request->input('size', 5);
-        $results = $this->elasticsearch->getRelatedProducts($productId, $size);
-
-        return response()->json([
-            'data' => $results['hits']['hits'] ?? [],
-            'total' => count($results['hits']['hits'] ?? []),
-        ]);
-    }
-
-    /**
-     * Index a single ad document
-     */
-    public function indexAd(Request $request): JsonResponse
-    {
-        $ad = $request->all();
-        $result = $this->elasticsearch->indexDocument($ad);
-
-        return response()->json($result);
-    }
-
-    /**
-     * Bulk index ads
-     */
-    public function bulkIndexAds(Request $request): JsonResponse
-    {
-        $ads = $request->input('ads', []);
-        $result = $this->elasticsearch->bulkIndexDocuments($ads);
-
-        return response()->json($result);
-    }
-
-    /**
-     * Check if Elasticsearch is available
-     */
-    public function healthCheck(): JsonResponse
-    {
-        try {
-            $stats = $this->elasticsearch->getIndexStats();
-            return response()->json([
-                'status' => 'healthy',
-                'index_exists' => $this->elasticsearch->indexExists(),
-                'document_count' => $stats['_all']['primaries']['docs']['count'] ?? 0,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'unhealthy',
-                'error' => $e->getMessage(),
-            ], 500);
+        if ($query) {
+            $adsQuery->where(function($q) use ($query) {
+                $q->where('ads.title', 'LIKE', "%{$query}%")
+                  ->orWhere('ads.description', 'LIKE', "%{$query}%")
+                  ->orWhere('categories.name', 'LIKE', "%{$query}%");
+            });
         }
+
+        if ($location) {
+            $adsQuery->where('ads.location', 'LIKE', "%{$location}%");
+        }
+
+        if ($categoryId) {
+            $adsQuery->where('ads.category_id', $categoryId);
+        }
+
+        if ($minPrice) {
+            $adsQuery->where('ads.price', '>=', $minPrice);
+        }
+
+        if ($maxPrice) {
+            $adsQuery->where('ads.price', '<=', $maxPrice);
+        }
+
+        $ads = $adsQuery->paginate(20);
+
+        return view('search-results', compact('ads', 'query', 'location'));
     }
 }

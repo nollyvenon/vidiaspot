@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AdController;
@@ -8,8 +7,10 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\RecommendationController;
 use App\Http\Controllers\Api\PaymentController;
+
 use App\Http\Controllers\P2pCryptoController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\Api\SubscriptionController;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -98,6 +99,9 @@ Route::prefix('p2p-crypto')->group(function () {
         // Payment and escrow management
         Route::post('/orders/{orderId}/payment', [P2pCryptoController::class, 'processPayment']);
         Route::post('/orders/{orderId}/release-escrow', [P2pCryptoController::class, 'releaseEscrow']);
+
+        // Get specific order
+        Route::get('/orders/{orderId}', [P2pCryptoController::class, 'show']);
     });
 });
 
@@ -105,6 +109,83 @@ Route::prefix('p2p-crypto')->group(function () {
 Route::get('/landing', [LandingController::class, 'index']);
 Route::get('/p2p-crypto-marketplace', [LandingController::class, 'p2pCryptoMarketplace']);
 Route::get('/marketplace-modules', [LandingController::class, 'marketplaceModules']);
+
+// AI-powered features routes
+Route::prefix('ai')->middleware(['auth:sanctum'])->group(function () {
+    // Pricing recommendations
+    Route::post('/pricing-recommendation', [AIController::class, 'getPricingRecommendation']);
+
+    // Demand forecasting
+    Route::get('/demand-forecast', [AIController::class, 'getDemandForecast']);
+
+    // Success prediction
+    Route::post('/success-prediction', [AIController::class, 'getSuccessPrediction']);
+
+    // Duplicate detection
+    Route::get('/check-duplicates/{ad_id}', [AIController::class, 'checkDuplicates']);
+
+    // Fraud analysis
+    Route::get('/fraud-analysis', [AIController::class, 'getFraudAnalysis']);
+    Route::post('/fraud-analysis', [AIController::class, 'getFraudAnalysis']);
+
+    // Smart recommendations
+    Route::get('/recommendations', [AIController::class, 'getRecommendations']);
+
+    // Seasonal trends
+    Route::get('/seasonal-trends/{category_id}', [AIController::class, 'getSeasonalTrends']);
+
+    // NEW: AI-Powered Image and Computer Vision Features
+    // Product description generation from images
+    Route::post('/generate-description', [AIServicesController::class, 'generateDescription']);
+
+    // Image enhancement and background removal
+    Route::post('/enhance-image', [AIServicesController::class, 'enhanceImage']);
+    Route::post('/remove-background', [AIServicesController::class, 'removeBackground']);
+
+    // Computer vision categorization
+    Route::post('/categorize-item', [AIServicesController::class, 'categorizeItem']);
+    Route::post('/batch-categorize', [AIServicesController::class, 'batchCategorize']);
+
+    // NEW: Advanced Search & Discovery Features
+    // Voice search with natural language processing
+    Route::post('/voice-search', [AdvancedSearchDiscoveryController::class, 'voiceSearch']);
+
+    // Visual search using image recognition
+    Route::post('/visual-search', [AdvancedSearchDiscoveryController::class, 'visualSearch']);
+
+    // Augmented Reality (AR) view for products
+    Route::get('/ar-view/{adId}', [AdvancedSearchDiscoveryController::class, 'getARViewData']);
+    Route::post('/ar-session/{adId}', [AdvancedSearchDiscoveryController::class, 'getARSessionData']);
+
+    // Social search - find listings from friends' networks
+    Route::post('/social-search', [AdvancedSearchDiscoveryController::class, 'socialSearch']);
+    Route::get('/friend-recommendations', [AdvancedSearchDiscoveryController::class, 'getFriendRecommendations']);
+    Route::get('/social-activity-feed', [AdvancedSearchDiscoveryController::class, 'getSocialActivityFeed']);
+
+    // Trending and seasonal item recommendations
+    Route::get('/trending-items', [AdvancedSearchDiscoveryController::class, 'getTrendingItems']);
+    Route::get('/seasonal-recommendations', [AdvancedSearchDiscoveryController::class, 'getSeasonalRecommendations']);
+    Route::get('/personalized-seasonal-recommendations', [AdvancedSearchDiscoveryController::class, 'getPersonalizedSeasonalRecommendations']);
+    Route::get('/trend-forecast', [AdvancedSearchDiscoveryController::class, 'getTrendForecast']);
+
+    // Price drop alerts for saved items
+    Route::post('/price-alert', [AdvancedSearchDiscoveryController::class, 'createPriceAlert']);
+    Route::get('/user-price-alerts/{userId}', [AdvancedSearchDiscoveryController::class, 'getUserPriceAlerts']);
+
+    // Geographic heat maps for high-demand areas
+    Route::get('/geographic-heat-map', [AdvancedSearchDiscoveryController::class, 'getGeographicHeatMap']);
+    Route::get('/trending-locations/{categoryId}', [AdvancedSearchDiscoveryController::class, 'getTrendingLocationsForCategory']);
+    Route::get('/seasonal-location-patterns', [AdvancedSearchDiscoveryController::class, 'getSeasonalLocationPatterns']);
+    Route::get('/demand-forecast-locations', [AdvancedSearchDiscoveryController::class, 'getDemandForecastForLocations']);
+});
+
+// Personalization API routes
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/personalization/feed', [App\Http\Controllers\Api\PersonalizationController::class, 'getPersonalizedFeed']);
+    Route::post('/personalization/behavior', [App\Http\Controllers\Api\PersonalizationController::class, 'trackBehavior']);
+    Route::get('/personalization/preferences', [App\Http\Controllers\Api\PersonalizationController::class, 'getUserPreferences']);
+    Route::put('/personalization/preferences', [App\Http\Controllers\Api\PersonalizationController::class, 'updateUserPreferences']);
+});
 
 // Recommendation routes (both public and protected)
 Route::get('/recommendations/trending', [RecommendationController::class, 'getTrendingAds']);
@@ -229,4 +310,584 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     // Admin content pages management routes
     Route::apiResource('content-pages', \App\Http\Controllers\Api\Admin\ContentPagesController::class);
     Route::patch('/content-pages/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\ContentPagesController::class, 'toggleStatus']);
+
+    // Feature flags management routes (Admin)
+    Route::apiResource('feature-flags', \App\Http\Controllers\Api\Admin\FeatureFlagsController::class);
+    Route::patch('/feature-flags/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\FeatureFlagsController::class, 'toggleStatus']);
+    Route::put('/feature-flags/{id}/region', [\App\Http\Controllers\Api\Admin\FeatureFlagsController::class, 'updateRegion']);
+    Route::post('/feature-flags/check-availability', [\App\Http\Controllers\Api\Admin\FeatureFlagsController::class, 'checkAvailability']);
+
+    // Insurance providers management routes (Admin)
+    Route::apiResource('insurance-providers', \App\Http\Controllers\Api\Admin\InsuranceProvidersController::class);
+    Route::patch('/insurance-providers/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\InsuranceProvidersController::class, 'toggleStatus']);
+
+    // Store template management routes (Admin)
+    Route::apiResource('store-templates', \App\Http\Controllers\Api\Admin\StoreTemplatesController::class);
+    Route::patch('/store-templates/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\StoreTemplatesController::class, 'toggleStatus']);
+    Route::get('/store-templates/active', [\App\Http\Controllers\Api\Admin\StoreTemplatesController::class, 'getActiveTemplates']);
+
+    // Vendor store management routes
+    Route::post('/vendor-store/custom-field-templates', [\App\Http\Controllers\VendorStoreController::class, 'getCustomFieldTemplates']);
+    Route::post('/ads/{adId}/custom-fields', [\App\Http\Controllers\VendorStoreController::class, 'addCustomAdFields']);
+    Route::get('/ads/{adId}/custom-fields', [\App\Http\Controllers\VendorStoreController::class, 'getCustomAdFields']);
+    Route::post('/insurance-policies', [\App\Http\Controllers\VendorStoreController::class, 'createInsurancePolicy']);
+    Route::get('/insurance-policies', [\App\Http\Controllers\VendorStoreController::class, 'getUserInsurancePolicies']);
+    Route::post('/ads/{adId}/insurance', [\App\Http\Controllers\VendorStoreController::class, 'processAdInsurance']);
+    Route::post('/insurance-policies/{policyId}/claim', [\App\Http\Controllers\VendorStoreController::class, 'submitInsuranceClaim']);
+
+    // Social commerce routes
+    Route::post('/social-posts', [\App\Http\Controllers\SocialCommerceController::class, 'createPost']);
+    Route::get('/social-feed', [\App\Http\Controllers\SocialCommerceController::class, 'getFeed']);
+    Route::get('/social-trending', [\App\Http\Controllers\SocialCommerceController::class, 'getTrending']);
+    Route::post('/social-posts/{postId}/like', [\App\Http\Controllers\SocialCommerceController::class, 'likePost']);
+    Route::post('/social-posts/{postId}/unlike', [\App\Http\Controllers\SocialCommerceController::class, 'unlikePost']);
+    Route::post('/social-posts/{postId}/comment', [\App\Http\Controllers\SocialCommerceController::class, 'commentOnPost']);
+    Route::post('/social-posts/{postId}/share', [\App\Http\Controllers\SocialCommerceController::class, 'sharePost']);
+    Route::post('/social-follow', [\App\Http\Controllers\SocialCommerceController::class, 'followEntity']);
+    Route::post('/social-unfollow', [\App\Http\Controllers\SocialCommerceController::class, 'unfollowEntity']);
+    Route::get('/social-followers/{userId}', [\App\Http\Controllers\SocialCommerceController::class, 'getFollowers']);
+    Route::get('/social-following/{userId}', [\App\Http\Controllers\SocialCommerceController::class, 'getFollowing']);
+    Route::get('/social-proof/{productId}/{productType}', [\App\Http\Controllers\SocialCommerceController::class, 'getSocialProof']);
+    Route::get('/group-buying', [\App\Http\Controllers\SocialCommerceController::class, 'getGroupBuying']);
+    Route::get('/community/{categoryId}', [\App\Http\Controllers\SocialCommerceController::class, 'getCategoryCommunity']);
+    Route::get('/reputation/{userId?}', [\App\Http\Controllers\SocialCommerceController::class, 'getUserReputation']);
+    Route::get('/influencers', [\App\Http\Controllers\SocialCommerceController::class, 'getInfluencers']);
+    Route::get('/live-shopping-events', [\App\Http\Controllers\SocialCommerceController::class, 'getLiveShoppingEvents']);
+    Route::get('/ugc-campaigns', [\App\Http\Controllers\SocialCommerceController::class, 'getUserGeneratedContentCampaigns']);
+
+    // Trust & Safety routes
+    Route::post('/verifications/biometric/initiate', [\App\Http\Controllers\TrustSafetyController::class, 'initiateBiometricVerification']);
+    Route::post('/verifications/biometric/{verificationId}/process', [\App\Http\Controllers\TrustSafetyController::class, 'processBiometricVerification']);
+    Route::post('/verifications/video/initiate', [\App\Http\Controllers\TrustSafetyController::class, 'initiateVideoVerification']);
+    Route::post('/verifications/video/{verificationId}/process', [\App\Http\Controllers\TrustSafetyController::class, 'processVideoVerification']);
+    Route::post('/reports', [\App\Http\Controllers\TrustSafetyController::class, 'createReport']);
+    Route::get('/reports', [\App\Http\Controllers\TrustSafetyController::class, 'getUserReports']);
+    Route::get('/trust-scores/{userId?}', [\App\Http\Controllers\TrustSafetyController::class, 'getUserTrustScore']);
+    Route::get('/verification-status/{userId?}', [\App\Http\Controllers\TrustSafetyController::class, 'getUserVerificationStatus']);
+    Route::get('/seller-dashboard/{userId?}', [\App\Http\Controllers\TrustSafetyController::class, 'getSellerPerformanceDashboard']);
+    Route::post('/buyer-protection/purchase', [\App\Http\Controllers\TrustSafetyController::class, 'purchaseBuyerProtection']);
+    Route::post('/buyer-protection/{protectionId}/claim', [\App\Http\Controllers\TrustSafetyController::class, 'fileProtectionClaim']);
+    Route::get('/buyer-protection', [\App\Http\Controllers\TrustSafetyController::class, 'getUserProtections']);
+    Route::post('/background-check', [\App\Http\Controllers\TrustSafetyController::class, 'performBackgroundCheck']);
+
+    // Admin Trust & Safety routes
+    Route::get('/admin/reports', [\App\Http\Controllers\TrustSafetyController::class, 'getReportsForModeration']);
+    Route::put('/admin/reports/{reportId}', [\App\Http\Controllers\TrustSafetyController::class, 'updateReportStatus']);
+
+    // Food vendor routes
+    Route::get('/food-vendors', [\App\Http\Controllers\FoodVendorController::class, 'index']);
+    Route::get('/food-vendors/{vendorId}', [\App\Http\Controllers\FoodVendorController::class, 'show']);
+    Route::get('/food-vendors/search', [\App\Http\Controllers\FoodVendorController::class, 'search']);
+    Route::get('/food-vendors/cuisine/{cuisineType}', [\App\Http\Controllers\FoodVendorController::class, 'byCuisine']);
+    Route::get('/food-vendors/{vendorId}/menu', [\App\Http\Controllers\FoodVendorController::class, 'getMenu']);
+    Route::get('/food-vendors/{vendorId}/menu/category/{category}', [\App\Http\Controllers\FoodVendorController::class, 'getMenuByCategory']);
+    Route::get('/food-vendors/{vendorId}/menu/popular', [\App\Http\Controllers\FoodVendorController::class, 'getPopularMenuItems']);
+    Route::get('/food-vendors/{vendorId}/menu/new', [\App\Http\Controllers\FoodVendorController::class, 'getNewMenuItems']);
+    Route::get('/food-vendors/{vendorId}/menu/dietary/{dietaryOption}', [\App\Http\Controllers\FoodVendorController::class, 'getMenuByDietary']);
+    Route::post('/food-orders', [\App\Http\Controllers\FoodVendorController::class, 'placeOrder']);
+    Route::get('/food-orders', [\App\Http\Controllers\FoodVendorController::class, 'getOrderHistory']);
+    Route::get('/food-orders/{orderNumber}', [\App\Http\Controllers\FoodVendorController::class, 'getOrder']);
+    Route::get('/food-vendors/{vendorId}/stats', [\App\Http\Controllers\FoodVendorController::class, 'getVendorStats']);
+    Route::put('/food-orders/{orderNumber}/status', [\App\Http\Controllers\FoodVendorController::class, 'updateOrderStatus']);
+
+    // Shopping cart routes
+    Route::post('/cart/add', [\App\Http\Controllers\ShoppingCartController::class, 'addToCart']);
+    Route::get('/cart', [\App\Http\Controllers\ShoppingCartController::class, 'getCart']);
+    Route::put('/cart/{adId}', [\App\Http\Controllers\ShoppingCartController::class, 'updateCartItem']);
+    Route::delete('/cart/{adId}', [\App\Http\Controllers\ShoppingCartController::class, 'removeFromCart']);
+    Route::delete('/cart', [\App\Http\Controllers\ShoppingCartController::class, 'clearCart']);
+    Route::post('/cart/checkout', [\App\Http\Controllers\ShoppingCartController::class, 'createOrder']);
+    Route::get('/orders', [\App\Http\Controllers\ShoppingCartController::class, 'getOrderHistory']);
+    Route::get('/orders/{orderNumber}', [\App\Http\Controllers\ShoppingCartController::class, 'getOrder']);
+
+    // Advanced listing features
+    Route::post('/advanced-listings/upload-360-photos', [\App\Http\Controllers\AdvancedListingController::class, 'upload360Photos']);
+    Route::post('/advanced-listings/upload-video', [\App\Http\Controllers\AdvancedListingController::class, 'uploadVideo']);
+    Route::post('/advanced-listings/create-vr-tour', [\App\Http\Controllers\AdvancedListingController::class, 'createVRTour']);
+    Route::post('/advanced-listings/create-interactive-demo', [\App\Http\Controllers\AdvancedListingController::class, 'createInteractiveDemo']);
+    Route::get('/advanced-listings/{adId}/inventory', [\App\Http\Controllers\AdvancedListingController::class, 'getLiveInventory']);
+    Route::post('/advanced-listings/{adId}/inventory', [\App\Http\Controllers\AdvancedListingController::class, 'updateInventory']);
+    Route::post('/advanced-listings/setup-renew-optimization', [\App\Http\Controllers\AdvancedListingController::class, 'setupAutoRenewOptimization']);
+    Route::post('/advanced-listings/run-optimization/{optimizerId}', [\App\Http\Controllers\AdvancedListingController::class, 'runOptimization']);
+    Route::post('/advanced-listings/create-ab-test', [\App\Http\Controllers\AdvancedListingController::class, 'createABTest']);
+    Route::get('/advanced-listings/ab-test-results/{testId}', [\App\Http\Controllers\AdvancedListingController::class, 'getABTestResults']);
+    Route::post('/advanced-listings/book-photography-service', [\App\Http\Controllers\AdvancedListingController::class, 'bookPhotographyService']);
+    Route::get('/advanced-listings/features/{adId}', [\App\Http\Controllers\AdvancedListingController::class, 'getAdvancedListingFeatures']);
+
+    // Hero banner management routes (Admin)
+    Route::apiResource('hero-banners', \App\Http\Controllers\Api\Admin\HeroBannersController::class);
+    Route::patch('/hero-banners/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\HeroBannersController::class, 'toggleStatus']);
+    Route::post('/hero-banners/reorder', [\App\Http\Controllers\Api\Admin\HeroBannersController::class, 'reorder']);
+    Route::get('/hero-banners/active', [\App\Http\Controllers\Api\Admin\HeroBannersController::class, 'getActiveBanners']);
+
+    // Frontend hero banner routes
+    Route::get('/hero-banners/frontend', [\App\Http\Controllers\HeroBannerController::class, 'getActiveBanners']);
+    Route::get('/hero-banners/featured', [\App\Http\Controllers\HeroBannerController::class, 'getFeaturedBanners']);
+    Route::post('/hero-banners/{id}/click', [\App\Http\Controllers\HeroBannerController::class, 'recordClick']);
+    Route::post('/hero-banners/{id}/conversion', [\App\Http\Controllers\HeroBannerController::class, 'recordConversion']);
+    Route::get('/hero-banners/{id}', [\App\Http\Controllers\HeroBannerController::class, 'getBanner']);
+    Route::get('/hero-section', [\App\Http\Controllers\HeroBannerController::class, 'renderHeroSection']);
+
+    // Advanced listing features
+    Route::get('/advanced-listings/active-banners', [\App\Http\Controllers\AdvancedListingController::class, 'getActiveBanners']);
+    Route::post('/advanced-listings/360-photos', [\App\Http\Controllers\AdvancedListingController::class, 'upload360Photos']);
+    Route::post('/advanced-listings/video', [\App\Http\Controllers\AdvancedListingController::class, 'uploadVideo']);
+    Route::post('/advanced-listings/vr-tour', [\App\Http\Controllers\AdvancedListingController::class, 'createVRTour']);
+    Route::post('/advanced-listings/interactive-demo', [\App\Http\Controllers\AdvancedListingController::class, 'createInteractiveDemo']);
+    Route::get('/advanced-listings/{adId}/inventory', [\App\Http\Controllers\AdvancedListingController::class, 'getLiveInventory']);
+    Route::post('/advanced-listings/{adId}/inventory', [\App\Http\Controllers\AdvancedListingController::class, 'updateInventory']);
+    Route::post('/advanced-listings/optimization', [\App\Http\Controllers\AdvancedListingController::class, 'setupAutoRenewOptimization']);
+    Route::post('/advanced-listings/{optimizerId}/run', [\App\Http\Controllers\AdvancedListingController::class, 'runOptimization']);
+    Route::post('/advanced-listings/ab-test', [\App\Http\Controllers\AdvancedListingController::class, 'createABTest']);
+    Route::get('/advanced-listings/ab-test/{testId}/results', [\App\Http\Controllers\AdvancedListingController::class, 'getABTestResults']);
+    Route::post('/advanced-listings/book-photography', [\App\Http\Controllers\AdvancedListingController::class, 'bookPhotographyService']);
+    Route::get('/advanced-listings/features/{adId}', [\App\Http\Controllers\AdvancedListingController::class, 'getAdvancedListingFeatures']);
+
+    // Logistics integration routes
+    Route::get('/logistics/partners', [\App\Http\Controllers\LogisticsController::class, 'getLogisticsPartners']);
+    Route::post('/logistics/shipping-label', [\App\Http\Controllers\LogisticsController::class, 'generateShippingLabel']);
+    Route::post('/logistics/returns', [\App\Http\Controllers\LogisticsController::class, 'processReturnRequest']);
+    Route::get('/logistics/returns/dashboard', [\App\Http\Controllers\LogisticsController::class, 'getReturnManagementDashboard']);
+    Route::post('/logistics/protection', [\App\Http\Controllers\LogisticsController::class, 'generatePackageInsurance']);
+    Route::post('/logistics/warehouse-integration', [\App\Http\Controllers\LogisticsController::class, 'warehouseIntegration']);
+    Route::post('/logistics/sync-inventory', [\App\Http\Controllers\LogisticsController::class, 'synchronizeInventory']);
+    Route::get('/logistics/user-protections', [\App\Http\Controllers\LogisticsController::class, 'getUserProtections']);
+    Route::post('/logistics/protection/{id}/claim', [\App\Http\Controllers\LogisticsController::class, 'fileProtectionClaim']);
+    Route::get('/logistics/verification-status/{userId?}', [\App\Http\Controllers\LogisticsController::class, 'getUserVerificationStatus']);
+    Route::get('/logistics/trust-score/{userId?}', [\App\Http\Controllers\LogisticsController::class, 'getUserTrustScore']);
+
+    // Admin logistics management routes
+    Route::get('/admin/reports/moderation', [\App\Http\Controllers\LogisticsController::class, 'getReportsForModeration']);
+    Route::patch('/admin/reports/{id}/status', [\App\Http\Controllers\LogisticsController::class, 'updateReportStatus']);
+
+    // Enhanced insurance features
+    Route::post('/insurance/calculate-premium', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsurancePremium']);
+    Route::post('/insurance/calculate-emi', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsuranceEMI']);
+    Route::post('/insurance/compare', [\App\Http\Controllers\VendorStoreController::class, 'compareInsurancePolicies']);
+    Route::get('/insurance/providers', [\App\Http\Controllers\VendorStoreController::class, 'getInsuranceProviders']);
+    Route::get('/insurance/dashboard', [\App\Http\Controllers\VendorStoreController::class, 'getUserInsuranceDashboard']);
+    Route::get('/insurance/documents', [\App\Http\Controllers\VendorStoreController::class, 'getPolicyDocuments']);
+    Route::post('/insurance/term', [\App\Http\Controllers\VendorStoreController::class, 'createTermInsurancePolicy']);
+
+    // Professional seller tools
+    Route::get('/seller-tools/inventory-locations', [\App\Http\Controllers\SellerToolsController::class, 'getInventoryLocations']);
+    Route::post('/seller-tools/inventory-locations', [\App\Http\Controllers\SellerToolsController::class, 'createInventoryLocation']);
+    Route::put('/seller-tools/inventory-locations/{locationId}', [\App\Http\Controllers\SellerToolsController::class, 'updateInventoryLocation']);
+    Route::delete('/seller-tools/inventory-locations/{locationId}', [\App\Http\Controllers\SellerToolsController::class, 'deleteInventoryLocation']);
+    Route::get('/seller-tools/inventory-items/{locationId}', [\App\Http\Controllers\SellerToolsController::class, 'getInventoryItems']);
+    Route::post('/seller-tools/inventory-bulk-update', [\App\Http\Controllers\SellerToolsController::class, 'bulkUpdateInventory']);
+    Route::get('/seller-tools/dashboard', [\App\Http\Controllers\SellerToolsController::class, 'getSellerDashboard']);
+    Route::get('/seller-tools/seasonal-planning', [\App\Http\Controllers\SellerToolsController::class, 'getSeasonalPlanning']);
+    Route::post('/seller-tools/automated-repricing', [\App\Http\Controllers\SellerToolsController::class, 'setupAutomatedRepricing']);
+    Route::get('/seller-tools/repricing-recommendations', [\App\Http\Controllers\SellerToolsController::class, 'getRepricingRecommendations']);
+    Route::get('/seller-tools/cross-platform-opportunities', [\App\Http\Controllers\SellerToolsController::class, 'getCrossPlatformOpportunities']);
+    Route::get('/seller-tools/customer-management', [\App\Http\Controllers\SellerToolsController::class, 'getCustomerManagementData']);
+    Route::post('/seller-tools/loyalty-program', [\App\Http\Controllers\SellerToolsController::class, 'setupLoyaltyProgram']);
+    Route::get('/seller-tools/customer-segmentation', [\App\Http\Controllers\SellerToolsController::class, 'getCustomerSegmentation']);
+    Route::get('/seller-tools/inventory-report', [\App\Http\Controllers\SellerToolsController::class, 'getInventoryPerformanceReport']);
+    Route::get('/seller-tools/sales-forecast', [\App\Http\Controllers\SellerToolsController::class, 'getSalesForecast']);
+
+    // Admin category import routes
+    Route::post('/categories/import/jiji', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importFromJiji']);
+    Route::get('/categories/import/status', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importStatus']);
+
+    // Admin product import routes
+    Route::post('/products/import/latest', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'importLatestProducts']);
+    Route::get('/products/import/settings', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'getImportSettings']);
+    Route::put('/products/import/settings', [\App\Http\Controllers\Api\Admin\CategoryImportController::class, 'updateImportSettings']);
+});
+
+// Advanced Payment Solutions routes
+Route::middleware(['auth:sanctum'])->prefix('advanced-payments')->group(function () {
+    Route::post('/methods', [App\Http\Controllers\AdvancedPaymentController::class, 'addPaymentMethod']);
+    Route::get('/methods', [App\Http\Controllers\AdvancedPaymentController::class, 'getUserPaymentMethods']);
+    Route::put('/methods/{id}/default', [App\Http\Controllers\AdvancedPaymentController::class, 'setDefaultPaymentMethod']);
+
+    // Cryptocurrency payments
+    Route::post('/cryptocurrency', [App\Http\Controllers\AdvancedPaymentController::class, 'processCryptocurrencyPayment']);
+    Route::get('/cryptocurrency/supported', [App\Http\Controllers\AdvancedPaymentController::class, 'getSupportedCryptocurrencies']);
+
+    // Buy-now-pay-later
+    Route::post('/bnpl', [App\Http\Controllers\AdvancedPaymentController::class, 'processBuyNowPayLater']);
+
+    // Split payments
+    Route::post('/split', [App\Http\Controllers\AdvancedPaymentController::class, 'processSplitPayment']);
+    Route::post('/split/{id}/join', [App\Http\Controllers\AdvancedPaymentController::class, 'joinSplitPayment']);
+
+    // Insurance
+    Route::post('/insurance', [App\Http\Controllers\AdvancedPaymentController::class, 'processInsurance']);
+
+    // Tax calculation
+    Route::post('/tax/calculate', [App\Http\Controllers\AdvancedPaymentController::class, 'calculateTax']);
+
+    // Mobile money
+    Route::post('/mobile-money', [App\Http\Controllers\AdvancedPaymentController::class, 'processMobileMoneyPayment']);
+});
+
+// Payment Transactions routes
+Route::middleware(['auth:sanctum'])->prefix('payment-transactions')->group(function () {
+    Route::get('/', [App\Http\Controllers\PaymentTransactionController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\PaymentTransactionController::class, 'store']);
+    Route::get('/{id}', [App\Http\Controllers\PaymentTransactionController::class, 'show']);
+    Route::put('/{id}', [App\Http\Controllers\PaymentTransactionController::class, 'update']);
+    Route::delete('/{id}', [App\Http\Controllers\PaymentTransactionController::class, 'destroy']);
+    Route::get('/ad/{adId}', [App\Http\Controllers\PaymentTransactionController::class, 'forAd']);
+    Route::post('/webhook', [App\Http\Controllers\PaymentTransactionController::class, 'webhook'])->withoutMiddleware(['auth:sanctum']);
+});
+
+// Two-Factor Authentication routes
+Route::middleware(['auth:sanctum'])->prefix('2fa')->group(function () {
+    // TOTP (Google Authenticator) routes
+    Route::post('/enable', [App\Http\Controllers\TwoFactorAuthController::class, 'enable2FA']);
+    Route::post('/confirm', [App\Http\Controllers\TwoFactorAuthController::class, 'confirm2FA']);
+    Route::post('/disable', [App\Http\Controllers\TwoFactorAuthController::class, 'disable2FA']);
+    Route::post('/verify', [App\Http\Controllers\TwoFactorAuthController::class, 'verify2FA']);
+
+    // SMS 2FA routes
+    Route::post('/sms/request', [App\Http\Controllers\TwoFactorAuthController::class, 'requestSmsCode']);
+
+    // Email 2FA routes
+    Route::post('/email/request', [App\Http\Controllers\TwoFactorAuthController::class, 'requestEmailCode']);
+
+    // Backup codes routes
+    Route::post('/backup/generate', [App\Http\Controllers\TwoFactorAuthController::class, 'generateBackupCodes']);
+    Route::post('/backup/verify', [App\Http\Controllers\TwoFactorAuthController::class, 'verifyBackupCode']);
+
+    // Status and info routes
+    Route::get('/status', [App\Http\Controllers\TwoFactorAuthController::class, 'getStatus']);
+});
+
+// Blockchain Identity Verification routes
+Route::middleware(['auth:sanctum'])->prefix('blockchain-verification')->group(function () {
+    Route::post('/initiate', [App\Http\Controllers\BlockchainVerificationController::class, 'initiateVerification']);
+    Route::get('/status', [App\Http\Controllers\BlockchainVerificationController::class, 'getStatus']);
+    Route::get('/verifications', [App\Http\Controllers\BlockchainVerificationController::class, 'getUserVerifications']);
+    Route::post('/verify-transaction', [App\Http\Controllers\BlockchainVerificationController::class, 'verifyTransaction']);
+    Route::post('/upload-documents', [App\Http\Controllers\BlockchainVerificationController::class, 'uploadDocuments']);
+});
+
+// Payment Tokenization routes
+Route::middleware(['auth:sanctum'])->prefix('payment-tokenization')->group(function () {
+    Route::post('/create', [App\Http\Controllers\PaymentTokenizationController::class, 'createToken']);
+    Route::post('/create-single-use', [App\Http\Controllers\PaymentTokenizationController::class, 'createSingleUseToken']);
+    Route::post('/retrieve', [App\Http\Controllers\PaymentTokenizationController::class, 'retrievePaymentData']);
+    Route::delete('/delete', [App\Http\Controllers\PaymentTokenizationController::class, 'deleteToken']);
+    Route::post('/tokenize-card', [App\Http\Controllers\PaymentTokenizationController::class, 'tokenizeCard']);
+});
+
+// Device Fingerprinting routes
+Route::middleware(['auth:sanctum'])->prefix('device-fingerprint')->group(function () {
+    Route::get('/current', [App\Http\Controllers\DeviceFingerprintController::class, 'getCurrentFingerprint']);
+    Route::get('/check-suspicious', [App\Http\Controllers\DeviceFingerprintController::class, 'checkSuspiciousDevice']);
+    Route::get('/trusted-devices', [App\Http\Controllers\DeviceFingerprintController::class, 'getUserDevices']);
+    Route::delete('/trusted-devices/{deviceId}', [App\Http\Controllers\DeviceFingerprintController::class, 'removeDevice']);
+    Route::post('/validate', [App\Http\Controllers\DeviceFingerprintController::class, 'validateDeviceToken']);
+});
+
+// Biometric Authorization routes
+Route::middleware(['auth:sanctum'])->prefix('biometric-auth')->group(function () {
+    Route::post('/register', [App\Http\Controllers\BiometricAuthorizationController::class, 'registerTemplate']);
+    Route::post('/verify', [App\Http\Controllers\BiometricAuthorizationController::class, 'verifyBiometric']);
+    Route::post('/authorize-transaction', [App\Http\Controllers\BiometricAuthorizationController::class, 'authorizeTransaction']);
+    Route::get('/templates', [App\Http\Controllers\BiometricAuthorizationController::class, 'getUserTemplates']);
+    Route::put('/templates/{templateId}/status', [App\Http\Controllers\BiometricAuthorizationController::class, 'updateTemplateStatus']);
+    Route::delete('/templates/{templateId}', [App\Http\Controllers\BiometricAuthorizationController::class, 'deleteTemplate']);
+    Route::get('/verification-history', [App\Http\Controllers\BiometricAuthorizationController::class, 'getVerificationHistory']);
+});
+
+// Carbon Footprint Calculator routes
+Route::middleware(['auth:sanctum'])->prefix('carbon-footprint')->group(function () {
+    Route::post('/shipping', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'calculateShippingFootprint']);
+    Route::post('/distance', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'calculateDistance']);
+    Route::get('/shipping-methods', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'getShippingMethods']);
+    Route::get('/package-sizes', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'getPackageSizes']);
+    Route::post('/suggest-eco-options', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'suggestEcoOptions']);
+    Route::post('/multiple-shipments', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'calculateMultipleShipments']);
+    Route::get('/equivalents-info', [App\Http\Controllers\CarbonFootprintCalculatorController::class, 'getEquivalentsInfo']);
+});
+
+// Eco-Friendly Packaging routes
+Route::middleware(['auth:sanctum'])->prefix('eco-packaging')->group(function () {
+    Route::get('/options', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'getPackagingOptions']);
+    Route::get('/sizes', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'getPackagingSizes']);
+    Route::get('/options/{type}', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'getPackagingOption']);
+    Route::post('/calculate', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'calculateBestPackaging']);
+    Route::post('/calculate-multiple', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'calculateMultipleItemPackaging']);
+    Route::post('/carbon-reduction', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'getCarbonFootprintReduction']);
+    Route::post('/sustainability-report', [App\Http\Controllers\EcoFriendlyPackagingController::class, 'generateSustainabilityReport']);
+});
+
+// Second-Hand & Refurbishment Marketplace routes
+Route::middleware(['auth:sanctum'])->prefix('second-hand')->group(function () {
+    Route::get('/condition-ratings', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'getConditionRatings']);
+    Route::post('/validate-item', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'validateItem']);
+    Route::post('/list-item', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'listItem']);
+    Route::post('/inspect/{itemId}', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'inspectItem']);
+    Route::get('/my-items', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'getUserItems']);
+    Route::get('/category/{category}', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'getItemsByCategory']);
+    Route::get('/refurbished', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'getRefurbishedItems']);
+    Route::get('/quality-standards/{category}', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'getQualityStandards']);
+    Route::post('/environmental-impact', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'calculateEnvironmentalImpact']);
+    Route::get('/all-items', [App\Http\Controllers\SecondHandRefurbishmentController::class, 'getAllItems']);
+});
+
+// Recycling Program Integration routes
+Route::middleware(['auth:sanctum'])->prefix('recycling')->group(function () {
+    Route::get('/programs', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'getRecyclingPrograms']);
+    Route::get('/materials', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'getMaterialRecyclingInfo']);
+    Route::get('/programs-for-material/{material}', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'findProgramsForMaterial']);
+    Route::post('/nearby-collection-points', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'findNearbyCollectionPoints']);
+    Route::post('/schedule-pickup', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'schedulePickup']);
+    Route::get('/program-status/{programId}', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'getProgramCredentialsStatus']);
+    Route::post('/register/{programId}', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'registerWithProgram']);
+    Route::post('/statistics', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'getRecyclingStatistics']);
+    Route::post('/impact', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'calculateRecyclingImpact']);
+    Route::get('/program-info/{programId}', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'getProgramInfo']);
+    Route::post('/generate-report', [App\Http\Controllers\RecyclingProgramIntegrationController::class, 'generateRecyclingReport']);
+});
+
+// Sustainable Product Certifications routes
+Route::middleware(['auth:sanctum'])->prefix('certifications')->group(function () {
+    Route::get('/', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getCertifications']);
+    Route::get('/{certId}', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getCertification']);
+    Route::get('/{certId}/levels', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getCertificationLevels']);
+    Route::post('/{certId}/validate', [App\Http\Controllers\SustainableProductCertificationsController::class, 'validateProductForCertification']);
+    Route::post('/{certId}/apply', [App\Http\Controllers\SustainableProductCertificationsController::class, 'applyForCertification']);
+    Route::get('/user-applications', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getUserApplications']);
+    Route::get('/{certId}/certified-products', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getCertifiedProducts']);
+    Route::post('/verify', [App\Http\Controllers\SustainableProductCertificationsController::class, 'verifyCertification']);
+    Route::post('/impact', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getSustainabilityImpact']);
+    Route::get('/guide/{category}', [App\Http\Controllers\SustainableProductCertificationsController::class, 'getCertificationGuide']);
+});
+
+// Environmental Impact Ratings routes
+Route::middleware(['auth:sanctum'])->prefix('environmental-rating')->group(function () {
+    Route::post('/calculate', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'calculateProductRating']);
+    Route::get('/criteria', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'getImpactCriteria']);
+    Route::post('/compare', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'getProductComparison']);
+    Route::get('/benchmarks/{category}', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'getIndustryBenchmarks']);
+    Route::post('/vendor-sustainability', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'calculateVendorSustainabilityScore']);
+    Route::get('/history/{productId}', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'getRatingHistory']);
+    Route::get('/leaderboard', [App\Http\Controllers\EnvironmentalImpactRatingsController::class, 'getLeaderboard']);
+});
+
+// Green Delivery Options routes
+Route::middleware(['auth:sanctum'])->prefix('green-delivery')->group(function () {
+    Route::post('/calculate-options', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'calculateGreenOptions']);
+    Route::get('/methods', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'getDeliveryMethods']);
+    Route::get('/eco-packaging', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'getEcoPackagingOptions']);
+    Route::get('/zone-recommendations', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'getZoneRecommendations']);
+    Route::post('/environmental-benefit', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'calculateEnvironmentalBenefit']);
+    Route::post('/carbon-offsets', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'getCarbonOffsetOptions']);
+    Route::post('/delivery-promise', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'createDeliveryPromise']);
+    Route::get('/methods/{methodId}', [App\Http\Controllers\GreenDeliveryOptionsController::class, 'getDeliveryMethod']);
+});
+
+// Charity Donation routes
+Route::middleware(['auth:sanctum'])->prefix('charity-donation')->group(function () {
+    Route::get('/charities', [App\Http\Controllers\CharityDonationController::class, 'getCharityPartners']);
+    Route::get('/charities/{charityId}', [App\Http\Controllers\CharityDonationController::class, 'getCharityPartner']);
+    Route::get('/options', [App\Http\Controllers\CharityDonationController::class, 'getDonationOptions']);
+    Route::post('/process', [App\Http\Controllers\CharityDonationController::class, 'processDonation']);
+    Route::post('/suggested-amounts', [App\Http\Controllers\CharityDonationController::class, 'calculateSuggestedDonationAmounts']);
+    Route::get('/history', [App\Http\Controllers\CharityDonationController::class, 'getUserDonationHistory']);
+    Route::get('/stats/{charityId}', [App\Http\Controllers\CharityDonationController::class, 'getCharityDonationStats']);
+    Route::post('/validate-eligibility', [App\Http\Controllers\CharityDonationController::class, 'validateDonationEligibility']);
+    Route::get('/recommended', [App\Http\Controllers\CharityDonationController::class, 'getRecommendedCharities']);
+    Route::get('/receipt/{donationId}', [App\Http\Controllers\CharityDonationController::class, 'getDonationReceipt']);
+});
+
+// Local Community Support routes
+Route::middleware(['auth:sanctum'])->prefix('community-support')->group(function () {
+    Route::get('/initiatives', [App\Http\Controllers\LocalCommunitySupportController::class, 'getSupportInitiatives']);
+    Route::get('/local-businesses', [App\Http\Controllers\LocalCommunitySupportController::class, 'getLocalBusinesses']);
+    Route::get('/upcoming-events', [App\Http\Controllers\LocalCommunitySupportController::class, 'getUpcomingCommunityEvents']);
+    Route::post('/register-engagement', [App\Http\Controllers\LocalCommunitySupportController::class, 'registerForCommunityEngagement']);
+    Route::get('/engagement-score', [App\Http\Controllers\LocalCommunitySupportController::class, 'getCommunityEngagementScore']);
+    Route::get('/recommendations', [App\Http\Controllers\LocalCommunitySupportController::class, 'getLocalImpactRecommendations']);
+    Route::post('/record-activity', [App\Http\Controllers\LocalCommunitySupportController::class, 'recordCommunityActivity']);
+    Route::get('/challenges', [App\Http\Controllers\LocalCommunitySupportController::class, 'getCommunityChallenges']);
+    Route::get('/economic-impact', [App\Http\Controllers\LocalCommunitySupportController::class, 'getLocalEconomicImpact']);
+    Route::get('/volunteer-opportunities', [App\Http\Controllers\LocalCommunitySupportController::class, 'getVolunteerOpportunities']);
+    Route::post('/challenges/{challengeId}/join', [App\Http\Controllers\LocalCommunitySupportController::class, 'joinCommunityChallenge']);
+});
+
+// Educational Content About Sustainability routes
+Route::middleware(['auth:sanctum'])->prefix('sustainability-education')->group(function () {
+    Route::get('/topics', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getEducationTopics']);
+    Route::get('/topics/{topicId}', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getEducationTopic']);
+    Route::get('/difficulty-levels', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getDifficultyLevels']);
+    Route::get('/categories', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getContentCategories']);
+    Route::get('/filtered-content', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getFilteredContent']);
+    Route::get('/progress', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getUserProgress']);
+    Route::get('/learning-pathway', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getLearningPathway']);
+    Route::post('/topics/{topicId}/complete', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'markTopicCompleted']);
+    Route::post('/topics/{topicId}/save', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'saveTopicForLater']);
+    Route::get('/resources', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getSustainabilityResources']);
+    Route::get('/quiz/{topicId}', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getSustainabilityQuiz']);
+    Route::get('/category/{category}', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getContentByCategory']);
+    Route::get('/engagement-metrics', [App\Http\Controllers\EducationalContentAboutSustainabilityController::class, 'getUserEngagementMetrics']);
+});
+
+// Intelligent Bandwidth Management routes
+Route::middleware(['auth:sanctum'])->prefix('bandwidth-management')->group(function () {
+    Route::get('/strategies', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getOptimizationStrategies']);
+    Route::get('/connection-qualities', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getConnectionQualities']);
+    Route::get('/profiles', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getBandwidthProfiles']);
+    Route::get('/content-options', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getContentOptimizationOptions']);
+    Route::post('/assess-connection', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'assessConnectionQuality']);
+    Route::get('/settings', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getBandwidthOptimizationSettings']);
+    Route::post('/optimize-content', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'optimizeContentForBandwidth']);
+    Route::post('/calculate-savings', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'calculateBandwidthSavings']);
+    Route::post('/recommendations', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getOptimizationRecommendations']);
+    Route::get('/dynamic-quality-settings', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getDynamicQualitySettings']);
+    Route::post('/optimize-api-response', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'optimizeApiResponse']);
+    Route::get('/usage-report', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getBandwidthUsageReport']);
+    Route::get('/recommendations/network-aware', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getNetworkAwareRecommendations']);
+    Route::get('/user-settings', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'getUserBandwidthSettings']);
+    Route::put('/user-settings', [App\Http\Controllers\IntelligentBandwidthManagementController::class, 'updateUserBandwidthSettings']);
+});
+
+// Serverless Functions routes
+Route::middleware(['auth:sanctum'])->prefix('serverless-functions')->group(function () {
+    Route::get('/available', [App\Http\Controllers\ServerlessFunctionsController::class, 'getAvailableFunctions']);
+    Route::get('/environments', [App\Http\Controllers\ServerlessFunctionsController::class, 'getExecutionEnvironments']);
+    Route::post('/execute', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeFunction']);
+    Route::get('/statistics/{functionName?}', [App\Http\Controllers\ServerlessFunctionsController::class, 'getFunctionStatistics']);
+    Route::post('/schedule', [App\Http\Controllers\ServerlessFunctionsController::class, 'scheduleFunctionExecution']);
+    Route::get('/scheduled', [App\Http\Controllers\ServerlessFunctionsController::class, 'getScheduledFunctionExecutions']);
+    Route::delete('/scheduled/{jobId}/cancel', [App\Http\Controllers\ServerlessFunctionsController::class, 'cancelScheduledFunctionExecution']);
+
+    // Specific function endpoints
+    Route::post('/image-resize', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeImageResize']);
+    Route::post('/text-summarize', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeTextSummarization']);
+    Route::post('/pdf-generate', [App\Http\Controllers\ServerlessFunctionsController::class, 'executePdfGeneration']);
+    Route::post('/data-validate', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeDataValidation']);
+    Route::post('/content-enhance', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeContentEnhancement']);
+    Route::post('/geolocation-resolve', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeGeolocationResolver']);
+    Route::post('/currency-convert', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeCurrencyConverter']);
+    Route::post('/rate-limit', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeRateLimiter']);
+    Route::post('/data-aggregate', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeDataAggregator']);
+    Route::post('/send-notification', [App\Http\Controllers\ServerlessFunctionsController::class, 'executeNotificationSender']);
+    Route::post('/process-payment', [App\Http\Controllers\ServerlessFunctionsController::class, 'executePaymentProcessor']);
+});
+
+// Local Artisans and Small Businesses Support routes
+Route::middleware(['auth:sanctum'])->prefix('local-artisans')->group(function () {
+    Route::get('/support-types', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getSupportTypes']);
+    Route::get('/categories', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getArtisanCategories']);
+    Route::get('/certification-levels', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getCertificationLevels']);
+    Route::post('/register-business', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'registerBusiness']);
+    Route::get('/business/{businessId}', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getBusinessProfile']);
+    Route::get('/category/{category}', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getBusinessesByCategory']);
+    Route::get('/find-nearby', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'findArtisansNearbyLocation']);
+    Route::post('/business/{businessId}/certification', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'applyForCertification']);
+    Route::get('/business/{businessId}/eligible-programs', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getEligibleSupportPrograms']);
+    Route::post('/business/{businessId}/apply-support', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'applyForSupportProgram']);
+    Route::get('/business/{businessId}/dashboard', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getBusinessDashboardMetrics']);
+    Route::get('/directory', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getArtisanDirectory']);
+    Route::get('/resource-center', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getResourceCenterContent']);
+    Route::get('/community-impact', [App\Http\Controllers\LocalArtisansAndSmallBusinessesSupportController::class, 'getCommunityImpactMetrics']);
+});
+
+// Women and Minority Entrepreneur Support routes
+Route::middleware(['auth:sanctum'])->prefix('wmep-support')->group(function () {
+    Route::get('/programs', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getSupportPrograms']);
+    Route::get('/certifications', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getCertificationRequirements']);
+    Route::get('/resources', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getResources']);
+    Route::post('/register', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'registerForSupport']);
+    Route::post('/{profileId}/apply-program', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'applyForSupportProgram']);
+    Route::get('/certifications/available/{demographic?}', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getAvailableCertifications']);
+    Route::post('/{profileId}/certification', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'applyForCertification']);
+    Route::get('/{profileId}/recommendations', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getPersonalizedRecommendations']);
+    Route::get('/success-stories', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getSuccessStories']);
+    Route::get('/community-metrics', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getCommunitySupportMetrics']);
+    Route::get('/legal-guides/{category?}', [App\Http\Controllers\WomenAndMinorityEntrepreneurSupportController::class, 'getLegalResourceGuides']);
+});
+
+// Edge Computing Optimization routes
+Route::middleware(['auth:sanctum'])->prefix('edge-computing')->group(function () {
+    Route::get('/optimal-server', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getOptimalEdgeServer']);
+    Route::post('/pre-cache-content', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'preCacheContent']);
+    Route::get('/content/{contentId}', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getContentFromEdge']);
+    Route::post('/warm-cache', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'warmEdgeCache']);
+    Route::get('/performance-metrics', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getPerformanceMetrics']);
+    Route::post('/optimization-recommendations', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getContentOptimizationRecommendations']);
+    Route::post('/invalidate-cache', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'invalidateEdgeCache']);
+    Route::get('/server-status', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getEdgeServerStatus']);
+    Route::get('/locations', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getEdgeLocationOptions']);
+    Route::get('/cache-options', [App\Http\Controllers\EdgeComputingOptimizationController::class, 'getCacheConfigurationOptions']);
+});
+
+// Predictive Caching routes
+Route::middleware(['auth:sanctum'])->prefix('predictive-caching')->group(function () {
+    Route::get('/user-patterns', [App\Http\Controllers\PredictiveCachingController::class, 'getUserBehaviorPatterns']);
+    Route::post('/record-activity', [App\Http\Controllers\PredictiveCachingController::class, 'recordActivity']);
+    Route::get('/recommendations', [App\Http\Controllers\PredictiveCachingController::class, 'getPredictiveRecommendations']);
+    Route::post('/pre-cache', [App\Http\Controllers\PredictiveCachingController::class, 'preCachePredictedContent']);
+    Route::get('/likely-content', [App\Http\Controllers\PredictiveCachingController::class, 'getLikelyToBeAccessedContent']);
+    Route::get('/system-predictions', [App\Http\Controllers\PredictiveCachingController::class, 'getSystemWideContentPredictions']);
+    Route::get('/optimization-recommendations', [App\Http\Controllers\PredictiveCachingController::class, 'getCacheOptimizationRecommendations']);
+    Route::get('/warming-schedule', [App\Http\Controllers\PredictiveCachingController::class, 'getUserCacheWarmingSchedule']);
+    Route::post('/model-feedback', [App\Http\Controllers\PredictiveCachingController::class, 'updateModelWithFeedback']);
+    Route::get('/model-accuracy', [App\Http\Controllers\PredictiveCachingController::class, 'getModelAccuracy']);
+    Route::get('/performance-metrics', [App\Http\Controllers\PredictiveCachingController::class, 'getPerformanceMetrics']);
+});
+
+// Progressive Web App routes
+Route::prefix('pwa')->group(function () {
+    Route::get('/manifest.json', [App\Http\Controllers\ProgressiveWebAppController::class, 'getManifest']);
+    Route::get('/sw.js', [App\Http\Controllers\ProgressiveWebAppController::class, 'getServiceWorker']);
+    Route::get('/features', [App\Http\Controllers\ProgressiveWebAppController::class, 'getPwaFeatures']);
+
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/installation-status', [App\Http\Controllers\ProgressiveWebAppController::class, 'getInstallationStatus']);
+        Route::put('/installation-status', [App\Http\Controllers\ProgressiveWebAppController::class, 'updateInstallationStatus']);
+        Route::get('/offline-content', [App\Http\Controllers\ProgressiveWebAppController::class, 'getOfflineContent']);
+        Route::post('/preload-content', [App\Http\Controllers\ProgressiveWebAppController::class, 'preloadContent']);
+        Route::post('/sync-offline-data', [App\Http\Controllers\ProgressiveWebAppController::class, 'syncOfflineData']);
+        Route::get('/offline-queue', [App\Http\Controllers\ProgressiveWebAppController::class, 'getOfflineDataQueue']);
+        Route::post('/offline-queue', [App\Http\Controllers\ProgressiveWebAppController::class, 'addToOfflineQueue']);
+        Route::get('/performance-metrics', [App\Http\Controllers\ProgressiveWebAppController::class, 'getPerformanceMetrics']);
+        Route::get('/user-preferences', [App\Http\Controllers\ProgressiveWebAppController::class, 'getUserPwaPreferences']);
+        Route::put('/user-preferences', [App\Http\Controllers\ProgressiveWebAppController::class, 'updateUserPwaPreferences']);
+    });
+
+    Route::get('/update-info', [App\Http\Controllers\ProgressiveWebAppController::class, 'getUpdateInfo']);
+    Route::get('/troubleshooting', [App\Http\Controllers\ProgressiveWebAppController::class, 'getTroubleshootingInfo']);
+    Route::post('/check-support', [App\Http\Controllers\ProgressiveWebAppController::class, 'checkPwaSupport']);
+});
+
+// Real-Time Data Synchronization routes
+Route::middleware(['auth:sanctum'])->prefix('realtime-sync')->group(function () {
+    Route::post('/start', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'startRealTimeSync']);
+    Route::post('/{sessionId}/sync-data', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'synchronizeData']);
+    Route::get('/syncable-data-types', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getSyncableDataTypes']);
+    Route::get('/channels', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getSyncChannels']);
+    Route::get('/conflict-strategies', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getConflictResolutionStrategies']);
+    Route::get('/user-sessions', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getUserSyncSessions']);
+    Route::post('/{sessionId}/stop', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'stopRealTimeSync']);
+    Route::get('/history', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getSyncHistory']);
+    Route::get('/performance-metrics', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getSyncPerformanceMetrics']);
+    Route::post('/sync-offline-data', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'syncOfflineData']);
+    Route::get('/recommended-strategy', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getRecommendedSyncStrategy']);
+    Route::get('/status/{dataType}', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'getSyncStatus']);
+    Route::post('/force-critical', [App\Http\Controllers\RealTimeDataSynchronizationController::class, 'forceSyncCriticalData']);
+});
+
+// Optimized Media Compression routes
+Route::middleware(['auth:sanctum'])->prefix('media-compression')->group(function () {
+    Route::post('/compress-image', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'compressImage']);
+    Route::post('/batch-compress-images', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'batchCompressImages']);
+    Route::post('/compress-video', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'compressVideo']);
+    Route::post('/compress-document', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'compressDocument']);
+    Route::post('/optimize-image-device', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'optimizeImageForDevice']);
+    Route::post('/optimized-media-url', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getOptimizedMediaUrl']);
+    Route::post('/bandwidth-suggestions', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getBandwidthOptimizationSuggestions']);
+    Route::get('/quality-recommendations', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getQualityRecommendations']);
+    Route::post('/auto-optimize-media', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'autoOptimizeMedia']);
+    Route::get('/bandwidth-report', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getBandwidthSavingsReport']);
+    Route::get('/supported-formats', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getSupportedFormats']);
+    Route::get('/bandwidth-profiles', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getBandwidthProfiles']);
+    Route::get('/compression-settings', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getCompressionSettings']);
 });

@@ -48,17 +48,24 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-### 5. Configure Database (SQLite Default with MySQL Option)
-The application uses SQLite as the default primary database for easy local development. For production, MySQL can be configured as the primary database with SQLite used as a cache layer:
+### 5. Configure Database (MySQL Primary with SQLite Cache)
+The application uses MySQL as the primary database for both development and production with SQLite used as a cache layer to reduce read operations:
 
-**For Local Development (Default - SQLite):**
+**For Local Development (MySQL Primary with SQLite Cache):**
 ```bash
-# SQLite is already configured as default
-DB_CONNECTION=sqlite
-# No additional configuration needed for SQLite
+# MySQL is configured as primary database
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_local_db
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+
+# SQLite cache for improved performance (reduces reads from MySQL)
+SQLITE_CACHE_DATABASE=database/cache.sqlite
 ```
 
-**For Production (MySQL with SQLite Cache Option):**
+**For Production (MySQL Primary with SQLite Cache):**
 ```bash
 # Update .env file to use MySQL as primary database
 DB_CONNECTION=mysql
@@ -68,7 +75,7 @@ DB_DATABASE=your_production_db
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
 
-# SQLite cache for improved performance
+# SQLite cache for improved performance (reduces reads from MySQL)
 SQLITE_CACHE_DATABASE=database/cache.sqlite
 ```
 

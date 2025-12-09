@@ -18,7 +18,12 @@ class DatabaseSeeder extends Seeder
         $this->call(LanguagesTableSeeder::class);
         $this->call(CurrenciesTableSeeder::class);
         $this->call(RolesTableSeeder::class);
+
         $this->call(CryptoCurrenciesSeeder::class);
+
+        $this->call(StoreTemplatesTableSeeder::class);
+        $this->call(InsuranceProvidersTableSeeder::class);
+        $this->call(FeatureFlagsTableSeeder::class);
 
         // Create an admin user
         $admin = User::factory()->create([

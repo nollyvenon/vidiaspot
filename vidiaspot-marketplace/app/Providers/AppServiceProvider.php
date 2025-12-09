@@ -2,9 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Schema;
+use App\Services\Search\ElasticsearchService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +12,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register Elasticsearch service
+        $this->app->singleton(ElasticsearchService::class, function ($app) {
+            return new ElasticsearchService();
+        });
     }
 
     /**
@@ -21,10 +23,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Schema::defaultStringLength(191);
-
-        ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
-            return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
-        });
+        //
     }
 }

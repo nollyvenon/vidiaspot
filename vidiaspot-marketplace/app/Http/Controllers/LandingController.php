@@ -2,185 +2,259 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CryptoCurrency;
-use App\Models\P2pCryptoOrder;
+use Illuminate\Http\Request;
 use App\Models\Ad;
 use App\Models\Category;
-use App\Models\Blog;
-use App\Models\Testimonial;
-use App\Models\ContentPage;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use App\Services\TrendingSearchService;
+use App\Services\RecommendationService;
+use App\Services\NotificationPreferenceService;
+use App\Services\IoTDeviceService;
+use App\Services\NftService;
+use App\Services\MetaverseService;
+use App\Services\DroneDeliveryService;
+use App\Services\AICustomerServiceAvatar;
+use App\Services\PredictiveMaintenanceService;
+use App\Services\SmartContractService;
+use App\Services\CryptoP2PService;
+use Illuminate\Support\Facades\Auth;
 
 class LandingController extends Controller
 {
-    /**
-     * Display the landing page data
-     */
-    public function index(Request $request): JsonResponse
+    protected $trendingSearchService;
+    protected $recommendationService;
+    protected $notificationService;
+    protected $iotDeviceService;
+    protected $nftService;
+    protected $metaverseService;
+    protected $droneDeliveryService;
+    protected $aiCustomerServiceAvatar;
+    protected $predictiveMaintenanceService;
+    protected $smartContractService;
+    protected $cryptoP2PService;
+
+    public function __construct(
+        TrendingSearchService $trendingSearchService,
+        RecommendationService $recommendationService,
+        NotificationPreferenceService $notificationService,
+        IoTDeviceService $iotDeviceService,
+        NftService $nftService,
+        MetaverseService $metaverseService,
+        DroneDeliveryService $droneDeliveryService,
+        AICustomerServiceAvatar $aiCustomerServiceAvatar,
+        PredictiveMaintenanceService $predictiveMaintenanceService,
+        SmartContractService $smartContractService,
+        CryptoP2PService $cryptoP2PService
+    ) {
+        $this->trendingSearchService = $trendingSearchService;
+        $this->recommendationService = $recommendationService;
+        $this->notificationService = $notificationService;
+        $this->iotDeviceService = $iotDeviceService;
+        $this->nftService = $nftService;
+        $this->metaverseService = $metaverseService;
+        $this->droneDeliveryService = $droneDeliveryService;
+        $this->aiCustomerServiceAvatar = $aiCustomerServiceAvatar;
+        $this->predictiveMaintenanceService = $predictiveMaintenanceService;
+        $this->smartContractService = $smartContractService;
+        $this->cryptoP2PService = $cryptoP2PService;
+    }
+
+    public function index()
     {
-        // Get featured crypto currencies for P2P marketplace
-        $featuredCryptoCurrencies = CryptoCurrency::where('is_active', true)
-            ->orderBy('market_cap', 'desc')
-            ->limit(5)
-            ->get(['id', 'name', 'symbol', 'price', 'logo_url']);
+        $user = Auth::user();
+        $moodState = null;
 
-        // Get latest P2P crypto orders
-        $latestP2pOrders = P2pCryptoOrder::with(['cryptoCurrency', 'seller'])
-            ->whereIn('status', ['active', 'matched'])
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+        // Get personalized content for logged-in users
+        if ($user) {
+            $moodState = $this->notificationService->getMoodState($user);
 
-        // Get featured ads for other marketplace features
-        $featuredAds = Ad::with(['user', 'category'])
-            ->where('is_featured', true)
+            // Get personalized recommendations if user is logged in
+            $personalizedAds = $this->recommendationService->getMoodBasedRecommendations($user, $moodState, 8);
+        } else {
+            $personalizedAds = collect();
+        }
+
+        // Get featured ads (limited for performance)
+        $featuredAds = Ad::where('is_featured', true)
             ->where('status', 'active')
-            ->orderBy('created_at', 'desc')
-            ->limit(8)
+            ->with(['user', 'category', 'images'])
+            ->limit(4)
             ->get();
 
-        // Get categories for the marketplace
-        $categories = Category::where('is_active', true)
-            ->withCount('ads')
-            ->orderBy('name')
-            ->limit(10)
+        // Get latest ads
+        $latestAds = Ad::where('status', 'active')
+            ->with(['user', 'category', 'images'])
+            ->orderBy('created_at', 'desc')
+            ->limit(12)
             ->get();
 
-        // Get latest blog posts
-        $latestBlogs = Blog::where('status', 'published')
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get(['id', 'title', 'excerpt', 'created_at', 'author']);
-
-        // Get testimonials
-        $testimonials = Testimonial::where('is_approved', true)
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
+        // Get popular categories
+        $popularCategories = Category::where('status', 'active')
+            ->inRandomOrder()
+            ->limit(6)
             ->get();
 
-        // Get about us content if available
-        $aboutPage = ContentPage::where('slug', 'about-us')->first();
+        // Get trending searches from database
+        $trendingSearches = $this->trendingSearchService->getTrendingSearches(12, 7);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'featured_crypto_currencies' => $featuredCryptoCurrencies,
-                'latest_p2p_orders' => $latestP2pOrders,
-                'featured_ads' => $featuredAds,
-                'categories' => $categories,
-                'latest_blogs' => $latestBlogs,
-                'testimonials' => $testimonials,
-                'about_content' => $aboutPage ? $aboutPage->content : null,
-            ]
-        ]);
-    }
-
-    /**
-     * Display information about the P2P crypto marketplace
-     */
-    public function p2pCryptoMarketplace(): JsonResponse
-    {
-        // Get stats for P2P crypto marketplace
-        $totalActiveOrders = P2pCryptoOrder::where('status', 'active')->count();
-        $totalCompletedOrders = P2pCryptoOrder::where('status', 'completed')->count();
-        $totalTradeVolume = P2pCryptoOrder::where('status', 'completed')
-            ->sum('total_amount');
-
-        // Get top crypto currencies for P2P trading
-        $topCryptoCurrencies = CryptoCurrency::where('is_active', true)
-            ->orderBy('market_cap', 'desc')
-            ->limit(10)
-            ->get(['id', 'name', 'symbol', 'price', 'logo_url']);
-
-        // Get latest P2P orders
-        $recentOrders = P2pCryptoOrder::with(['cryptoCurrency', 'seller', 'buyer'])
-            ->whereIn('status', ['active', 'matched', 'completed'])
-            ->orderBy('created_at', 'desc')
-            ->limit(20)
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'marketplace_stats' => [
-                    'total_active_orders' => $totalActiveOrders,
-                    'total_completed_orders' => $totalCompletedOrders,
-                    'total_trade_volume' => $totalTradeVolume,
-                ],
-                'top_crypto_currencies' => $topCryptoCurrencies,
-                'recent_orders' => $recentOrders,
-            ],
-            'message' => 'P2P Crypto Marketplace information retrieved successfully'
-        ]);
-    }
-
-    /**
-     * Display information about all marketplace modules
-     */
-    public function marketplaceModules(): JsonResponse
-    {
-        $modules = [
-            [
-                'name' => 'P2P Crypto Marketplace',
-                'description' => 'Peer-to-peer cryptocurrency trading platform with escrow protection',
-                'features' => [
-                    'Secure escrow system',
-                    'Multi-cryptocurrency support',
-                    'Dispute resolution',
-                    'Real-time trading',
-                    'Advanced order matching'
-                ],
-                'status' => 'active',
-                'api_endpoint' => '/api/p2p-crypto'
-            ],
-            [
-                'name' => 'Shopify Clone',
-                'description' => 'Complete e-commerce solution with inventory management',
-                'features' => [
-                    'Product management',
-                    'Inventory tracking',
-                    'Order processing',
-                    'Payment integration',
-                    'Customer management'
-                ],
-                'status' => 'planned',
-                'api_endpoint' => '/api/ecommerce'
-            ],
-            [
-                'name' => 'Food Vending',
-                'description' => 'Food ordering and delivery system',
-                'features' => [
-                    'Restaurant listings',
-                    'Menu management',
-                    'Order tracking',
-                    'Delivery coordination',
-                    'Review system'
-                ],
-                'status' => 'planned',
-                'api_endpoint' => '/api/food'
-            ],
-            [
-                'name' => 'Logistics',
-                'description' => 'Supply chain and delivery management platform',
-                'features' => [
-                    'Shipment tracking',
-                    'Route optimization',
-                    'Inventory management',
-                    'Courier management',
-                    'Real-time updates'
-                ],
-                'status' => 'planned',
-                'api_endpoint' => '/api/logistics'
-            ]
+        // Group trending searches by categories for display
+        $trendingByCategory = [
+            'mobile_phones' => collect($trendingSearches)->filter(function($search) {
+                return stripos($search->query, 'iphone') !== false ||
+                       stripos($search->query, 'samsung') !== false ||
+                       stripos($search->query, 'android') !== false ||
+                       stripos($search->query, 'phone') !== false ||
+                       stripos($search->query, 'mobile') !== false;
+            })->take(3),
+            'laptops' => collect($trendingSearches)->filter(function($search) {
+                return stripos($search->query, 'laptop') !== false ||
+                       stripos($search->query, 'macbook') !== false ||
+                       stripos($search->query, 'computer') !== false ||
+                       stripos($search->query, 'desktop') !== false;
+            })->take(3),
+            'vehicles' => collect($trendingSearches)->filter(function($search) {
+                return stripos($search->query, 'toyota') !== false ||
+                       stripos($search->query, 'honda') !== false ||
+                       stripos($search->query, 'car') !== false ||
+                       stripos($search->query, 'vehicle') !== false ||
+                       stripos($search->query, 'nissan') !== false ||
+                       stripos($search->query, 'hundai') !== false;
+            })->take(3),
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'modules' => $modules,
+        // Add fallback trending searches if no data from database
+        if ($trendingByCategory['mobile_phones']->isEmpty()) {
+            $trendingByCategory['mobile_phones'] = collect([
+                (object)['query' => 'iPhone', 'count' => 10],
+                (object)['query' => 'Samsung', 'count' => 8],
+                (object)['query' => 'Android', 'count' => 6],
+            ]);
+        }
+
+        if ($trendingByCategory['laptops']->isEmpty()) {
+            $trendingByCategory['laptops'] = collect([
+                (object)['query' => 'Laptop', 'count' => 12],
+                (object)['query' => 'Desktop PC', 'count' => 7],
+                (object)['query' => 'MacBook', 'count' => 5],
+            ]);
+        }
+
+        if ($trendingByCategory['vehicles']->isEmpty()) {
+            $trendingByCategory['vehicles'] = collect([
+                (object)['query' => 'Toyota', 'count' => 15],
+                (object)['query' => 'Honda', 'count' => 9],
+                (object)['query' => 'Car', 'count' => 8],
+            ]);
+        }
+
+        // Get how it works steps for display
+        $howItWorksSteps = \App\Models\HowItWorksStep::active()->ordered()->get();
+
+        // Get innovative features data
+        $innovativeFeatures = [
+            'iot_smart_home' => [
+                'count' => $user ? $this->iotDeviceService->getSmartHomeDevices()->count() : 0,
+                'active_count' => $user ? $this->iotDeviceService->getConnectedDevices()->count() : 0,
             ],
-            'message' => 'Marketplace modules information retrieved successfully'
-        ]);
+            'nft_marketplace' => [
+                'collections_count' => $this->nftService->getMarketplaceNfts(['per_page' => 1])->total(),
+                'featured_nfts' => $this->nftService->getMarketplaceNfts(['per_page' => 3, 'is_listed' => true]),
+            ],
+            'metaverse_showrooms' => [
+                'active_showrooms' => $this->metaverseService->getTrendingShowrooms(3),
+                'featured_showrooms' => $this->metaverseService->getFeaturedShowrooms(3),
+            ],
+            'drone_delivery' => [
+                'active_missions' => $user ? $this->droneDeliveryService->getActiveMissions()->count() : 0,
+                'available_drones' => $this->droneDeliveryService->getAvailableDrones()->count(),
+            ],
+            'ai_customer_service' => [
+                'capabilities' => $this->aiCustomerServiceAvatar->getAvatarCapabilities(),
+                'personality' => $this->aiCustomerServiceAvatar->getAvatarPersonality(),
+            ],
+            'predictive_maintenance' => [
+                'urgent_maintenance' => $user ? $this->predictiveMaintenanceService->getUrgentMaintenanceNeeds()->count() : 0,
+                'predicted_maintenance' => $user ? $this->predictiveMaintenanceService->getMaintenanceAlerts()->count() : 0,
+            ],
+            'smart_contracts' => [
+                'active_contracts' => $this->smartContractService->getActiveContracts()->count(),
+                'recent_transactions' => $user ? $this->smartContractService->getRecentTransactions(null, 3) : collect(),
+            ],
+            'crypto_p2p_marketplace' => [
+                'total_listings' => $this->cryptoP2PService->getActiveListings(['per_page' => 1])->total(),
+                'active_trades' => $user ? $this->cryptoP2PService->getUserTrades($user->id)->count() : 0,
+                'featured_listings' => $this->cryptoP2PService->getActiveListings(['per_page' => 3]),
+                'trading_volume' => $user ? $this->cryptoP2PService->getTradeStatistics($user->id)['total_volume'] ?? 0 : 0,
+            ],
+        ];
+
+        return view('landing.index', compact(
+            'featuredAds',
+            'latestAds',
+            'popularCategories',
+            'trendingByCategory',
+            'howItWorksSteps',
+            'personalizedAds',
+            'moodState',
+            'innovativeFeatures'
+        ));
+    }
+
+    public function innovativeFeatures()
+    {
+        $user = Auth::user();
+
+        // Get comprehensive data for all innovative features
+        $innovativeFeaturesData = [
+            'iot_smart_home' => [
+                'count' => $user ? $this->iotDeviceService->getSmartHomeDevices($user->id)->count() : 0,
+                'active_count' => $user ? $this->iotDeviceService->getConnectedDevices($user->id)->count() : 0,
+                'devices' => $user ? $this->iotDeviceService->getSmartHomeDevices($user->id) : collect(),
+            ],
+            'nft_marketplace' => [
+                'collections_count' => $this->nftService->getMarketplaceNfts(['per_page' => 1])->total(),
+                'featured_nfts' => $this->nftService->getMarketplaceNfts(['per_page' => 6, 'is_listed' => true]),
+                'user_collections' => $user ? $this->nftService->getUserCollections($user->id) : collect(),
+                'user_nfts' => $user ? $this->nftService->getUserNfts($user->id) : collect(),
+            ],
+            'metaverse_showrooms' => [
+                'active_showrooms' => $this->metaverseService->getTrendingShowrooms(6),
+                'featured_showrooms' => $this->metaverseService->getFeaturedShowrooms(6),
+                'user_showrooms' => $user ? $this->metaverseService->getActiveShowrooms(['owner_id' => $user->id]) : collect(),
+            ],
+            'drone_delivery' => [
+                'active_missions' => $user ? $this->droneDeliveryService->getActiveMissions()->count() : 0,
+                'available_drones' => $this->droneDeliveryService->getAvailableDrones()->count(),
+                'active_missions_list' => $user ? $this->droneDeliveryService->getActiveMissions() : collect(),
+            ],
+            'ai_customer_service' => [
+                'capabilities' => $this->aiCustomerServiceAvatar->getAvatarCapabilities(),
+                'personality' => $this->aiCustomerServiceAvatar->getAvatarPersonality(),
+                'session_token' => $user ? $this->aiCustomerServiceAvatar->createAvatarSession($user->id)->session_token ?? null : null,
+            ],
+            'predictive_maintenance' => [
+                'urgent_maintenance' => $user ? $this->predictiveMaintenanceService->getUrgentMaintenanceNeeds($user->id)->count() : 0,
+                'predicted_maintenance' => $user ? $this->predictiveMaintenanceService->getMaintenanceAlerts($user->id)->count() : 0,
+                'maintenance_recommendations' => $user ? $this->predictiveMaintenanceService->getMaintenanceRecommendations($user->id) : collect(),
+                'maintenance_insights' => $user ? $this->predictiveMaintenanceService->getPredictiveInsights($user->id) : [],
+            ],
+            'smart_contracts' => [
+                'active_contracts' => $this->smartContractService->getActiveContracts()->count(),
+                'recent_transactions' => $user ? $this->smartContractService->getRecentTransactions($user->id, 6) : collect(),
+                'user_contracts' => $user ? $this->smartContractService->getActiveContracts($user->id) : collect(),
+            ],
+            'crypto_p2p_marketplace' => [
+                'total_listings' => $this->cryptoP2PService->getActiveListings(['per_page' => 1])->total(),
+                'active_trades' => $user ? $this->cryptoP2PService->getUserTrades($user->id)->count() : 0,
+                'featured_listings' => $this->cryptoP2PService->getActiveListings(['per_page' => 6]),
+                'trading_volume' => $user ? $this->cryptoP2PService->getTradeStatistics($user->id)['total_volume'] ?? 0 : 0,
+                'user_listings' => $user ? $this->cryptoP2PService->getUserListings($user->id) : collect(),
+            ],
+        ];
+
+        return view('landing.innovative-features', compact('innovativeFeaturesData'));
     }
 }
+
+
+
+    
