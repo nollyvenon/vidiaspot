@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call(RolesTableSeeder::class);
 
         $this->call(CryptoCurrenciesSeeder::class);
+        $this->call(P2pCryptoTradingPairsSeeder::class);
 
         $this->call(StoreTemplatesTableSeeder::class);
         $this->call(InsuranceProvidersTableSeeder::class);

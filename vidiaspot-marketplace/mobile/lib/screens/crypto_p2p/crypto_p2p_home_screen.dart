@@ -342,32 +342,66 @@ class _CryptoP2PHomeScreenState extends State<CryptoP2PHomeScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          Column(
             children: [
-              _buildQuickAction(
-                icon: Icons.add,
-                label: 'Create Listing',
-                color: Colors.blue,
-                onTap: () {
-                  Navigator.pushNamed(context, '/create-listing');
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildQuickAction(
+                    icon: Icons.add,
+                    label: 'Create Listing',
+                    color: Colors.blue,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/create-listing');
+                    },
+                  ),
+                  _buildQuickAction(
+                    icon: Icons.compare_arrows,
+                    label: 'Find Trade',
+                    color: Colors.green,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/find-trade');
+                    },
+                  ),
+                  _buildQuickAction(
+                    icon: Icons.account_balance_wallet,
+                    label: 'My Trades',
+                    color: Colors.orange,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/my-trades');
+                    },
+                  ),
+                ],
               ),
-              _buildQuickAction(
-                icon: Icons.compare_arrows,
-                label: 'Find Trade',
-                color: Colors.green,
-                onTap: () {
-                  Navigator.pushNamed(context, '/find-trade');
-                },
-              ),
-              _buildQuickAction(
-                icon: Icons.account_balance_wallet,
-                label: 'My Trades',
-                color: Colors.orange,
-                onTap: () {
-                  Navigator.pushNamed(context, '/my-trades');
-                },
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildQuickAction(
+                    icon: Icons.auto_graph,
+                    label: 'Trading',
+                    color: Colors.purple,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/trading-pairs');
+                    },
+                  ),
+                  _buildQuickAction(
+                    icon: Icons.payment,
+                    label: 'Payments',
+                    color: Colors.teal,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/payment-methods');
+                    },
+                  ),
+                  _buildQuickAction(
+                    icon: Icons.verified_user,
+                    label: 'Verify',
+                    color: Colors.amber,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/verification-status');
+                    },
+                  ),
+                ],
               ),
             ],
           ),

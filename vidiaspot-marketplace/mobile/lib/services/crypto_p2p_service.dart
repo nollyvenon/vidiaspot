@@ -86,6 +86,235 @@ class CryptoP2PService {
     }
   }
 
+  // Get available trading pairs
+  Future<List<Map<String, dynamic>>> getTradingPairs() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/p2p-crypto/trading-pairs'),
+      headers: getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] ?? false) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Failed to load trading pairs');
+      }
+    } else {
+      throw Exception('Failed to load trading pairs: ${response.statusCode}');
+    }
+  }
+
+  // Get order book for a trading pair
+  Future<Map<String, dynamic>> getOrderBook(int pairId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/p2p-crypto/trading-pairs/$pairId/orderbook'),
+      headers: getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        return Map<String, dynamic>.from(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Failed to load order book');
+      }
+    } else {
+      throw Exception('Failed to load order book: ${response.statusCode}');
+    }
+  }
+
+  // Create a new trading order
+  Future<Map<String, dynamic>> createTradingOrder({
+    required int tradingPairId,
+    required String orderType,
+    required String side,
+    required double quantity,
+    double? price,
+    double? stopPrice,
+    String? timeInForce,
+    String? goodTillDate,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/p2p-crypto/trading-orders'),
+      headers: getHeaders(),
+      body: jsonEncode({
+        'trading_pair_id': tradingPairId,
+        'order_type': orderType,
+        'side': side,
+        'quantity': quantity,
+        'price': price,
+        'stop_price': stopPrice,
+        'time_in_force': timeInForce,
+        'good_till_date': goodTillDate,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        return Map<String, dynamic>.from(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Failed to create trading order');
+      }
+    } else {
+      throw Exception('Failed to create trading order: ${response.statusCode}');
+    }
+  }
+
+  // Get user's trading orders
+  Future<List<Map<String, dynamic>>> getUserTradingOrders({
+    String? status,
+    int? tradingPairId,
+    String? orderType,
+  }) async {
+    String url = '$baseUrl/p2p-crypto/trading-orders';
+
+    List<String> queryParams = [];
+    if (status != null) queryParams.add('status=$status');
+    if (tradingPairId != null) queryParams.add('trading_pair_id=$tradingPairId');
+    if (orderType != null) queryParams.add('order_type=$orderType');
+
+    if (queryParams.isNotEmpty) {
+      url += '?' + queryParams.join('&');
+    }
+
+    final response = await http.get(Uri.parse(url), headers: getHeaders());
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] ?? false) {
+        // Extract the 'data' list from the paginated response
+        Map<String, dynamic> paginatedData = Map<String, dynamic>.from(data);
+        List<dynamic> orders = paginatedData['data'] is List
+            ? paginatedData['data']
+            : [];
+        return orders.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception(data['message'] ?? 'Failed to load trading orders');
+      }
+    } else {
+      throw Exception('Failed to load trading orders: ${response.statusCode}');
+    }
+  }
+
+  // Get user's trade history
+  Future<List<Map<String, dynamic>>> getUserTradeHistory() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/p2p-crypto/trade-history'),
+      headers: getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] ?? false) {
+        // Extract the 'data' list from the paginated response
+        Map<String, dynamic> paginatedData = Map<String, dynamic>.from(data);
+        List<dynamic> executions = paginatedData['data'] is List
+            ? paginatedData['data']
+            : [];
+        return executions.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception(data['message'] ?? 'Failed to load trade history');
+      }
+    } else {
+      throw Exception('Failed to load trade history: ${response.statusCode}');
+    }
+  }
+
+  // Get user's payment methods
+  Future<List<Map<String, dynamic>>> getUserPaymentMethods() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/p2p-crypto/payment-methods'),
+      headers: getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Failed to load payment methods');
+      }
+    } else {
+      throw Exception('Failed to load payment methods: ${response.statusCode}');
+    }
+  }
+
+  // Add a new payment method
+  Future<Map<String, dynamic>> addPaymentMethod({
+    required String paymentType,
+    required String name,
+    required Map<String, dynamic> paymentDetails,
+    required String accountName,
+    required String accountNumber,
+    String? bankName,
+    String? countryCode = 'US',
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/p2p-crypto/payment-methods'),
+      headers: getHeaders(),
+      body: jsonEncode({
+        'payment_type': paymentType,
+        'name': name,
+        'payment_details': paymentDetails,
+        'account_name': accountName,
+        'account_number': accountNumber,
+        'bank_name': bankName,
+        'country_code': countryCode,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        return Map<String, dynamic>.from(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Failed to add payment method');
+      }
+    } else {
+      throw Exception('Failed to add payment method: ${response.statusCode}');
+    }
+  }
+
+  // Get user verification status
+  Future<Map<String, dynamic>> getUserVerificationStatus() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/p2p-crypto/verification-status'),
+      headers: getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        return Map<String, dynamic>.from(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Failed to load verification status');
+      }
+    } else {
+      throw Exception('Failed to load verification status: ${response.statusCode}');
+    }
+  }
+
+  // Get user reputation
+  Future<Map<String, dynamic>> getUserReputation() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/p2p-crypto/reputation'),
+      headers: getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        return Map<String, dynamic>.from(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Failed to load reputation data');
+      }
+    } else {
+      throw Exception('Failed to load reputation data: ${response.statusCode}');
+    }
+  }
+
   // Helper method to convert backend order format to our app's listing format
   CryptoListing _convertOrderToCryptoListing(Map<String, dynamic> orderJson) {
     // This is a mock conversion - in a real implementation, this would map the actual fields

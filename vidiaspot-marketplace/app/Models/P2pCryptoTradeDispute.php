@@ -15,13 +15,19 @@ class P2pCryptoTradeDispute extends Model
         'dispute_type',
         'description',
         'status',
+        'resolution',
         'resolution_notes',
         'resolved_by',
         'resolved_at',
+        'evidence',
+        'resolver_id',
+        'refund_amount',
     ];
 
     protected $casts = [
         'resolved_at' => 'datetime',
+        'evidence' => 'array',
+        'refund_amount' => 'decimal:8',
     ];
 
     // Relations
@@ -37,6 +43,6 @@ class P2pCryptoTradeDispute extends Model
 
     public function resolver()
     {
-        return $this->belongsTo(User::class, 'resolved_by');
+        return $this->belongsTo(User::class, 'resolver_id');
     }
 }

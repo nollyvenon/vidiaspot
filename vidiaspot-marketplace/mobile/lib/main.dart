@@ -14,6 +14,10 @@ import 'screens/crypto_p2p/crypto_p2p_home_screen.dart';
 import 'screens/crypto_p2p/create_crypto_listing_screen.dart';
 import 'screens/crypto_p2p/initiate_crypto_trade_screen.dart';
 import 'screens/crypto_p2p/crypto_trade_details_screen.dart';
+// Crypto P2P Advanced screens
+import 'screens/crypto_p2p/advanced/trading_pairs_screen.dart';
+import 'screens/crypto_p2p/advanced/payment_methods_screen.dart';
+import 'screens/crypto_p2p/advanced/verification_status_screen.dart';
 // E-commerce screens
 import 'screens/ecommerce/ecommerce_home_screen.dart';
 // Food Vending screens
@@ -83,6 +87,9 @@ class VidiaSpotApp extends StatelessWidget {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return CryptoTradeDetailsScreen(trade: args['trade'] as CryptoTrade);
         },
+        '/trading-pairs': (context) => const TradingPairsScreen(),
+        '/payment-methods': (context) => const PaymentMethodsScreen(),
+        '/verification-status': (context) => const VerificationStatusScreen(),
         '/ecommerce': (context) => const EcommerceHomeScreen(),
         '/food-vending': (context) => const FoodVendingHomeScreen(),
         '/logistics': (context) => const LogisticsHomeScreen(),

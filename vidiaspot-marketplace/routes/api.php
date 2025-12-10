@@ -93,8 +93,28 @@ Route::prefix('p2p-crypto')->group(function () {
         Route::post('/orders/{orderId}/match', [P2pCryptoController::class, 'matchOrder']);
         Route::delete('/orders/{orderId}', [P2pCryptoController::class, 'cancelOrder']);
 
+        // User verification and trust features
+        Route::get('/verification-status', [P2pCryptoController::class, 'getUserVerificationStatus']);
+        Route::post('/verification', [P2pCryptoController::class, 'submitVerification']);
+        Route::post('/reputation/calculate', [P2pCryptoController::class, 'calculateReputation']);
+
+        // Risk management features
+        Route::post('/risk-assessment', [P2pCryptoController::class, 'getRiskAssessment']);
+        Route::get('/risk-report', [P2pCryptoController::class, 'getRiskReport']);
+        Route::post('/diversification-score', [P2pCryptoController::class, 'getDiversificationScore']);
+
         // Dispute management
         Route::post('/orders/{orderId}/dispute', [P2pCryptoController::class, 'createDispute']);
+        Route::get('/disputes', [P2pCryptoController::class, 'getUserDisputes']);
+        Route::get('/disputes/{disputeId}', [P2pCryptoController::class, 'getDispute']);
+        Route::post('/disputes/{disputeId}/evidence', [P2pCryptoController::class, 'addDisputeEvidence']);
+
+        // Admin dispute management
+        Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+            Route::get('/disputes/open', [P2pCryptoController::class, 'getOpenDisputes']);
+            Route::put('/disputes/{disputeId}/resolve', [P2pCryptoController::class, 'resolveDispute']);
+            Route::put('/orders/{orderId}/escrow', [P2pCryptoController::class, 'manageEscrow']);
+        });
 
         // Payment and escrow management
         Route::post('/orders/{orderId}/payment', [P2pCryptoController::class, 'processPayment']);
@@ -102,6 +122,21 @@ Route::prefix('p2p-crypto')->group(function () {
 
         // Get specific order
         Route::get('/orders/{orderId}', [P2pCryptoController::class, 'show']);
+
+        // Advanced trading features
+        Route::get('/trading-pairs', [P2pCryptoController::class, 'getTradingPairs']);
+        Route::get('/trading-pairs/{pairId}/orderbook', [P2pCryptoController::class, 'getOrderBook']);
+        Route::post('/trading-orders', [P2pCryptoController::class, 'createTradingOrder']);
+        Route::get('/trading-orders', [P2pCryptoController::class, 'getUserTradingOrders']);
+        Route::get('/trade-history', [P2pCryptoController::class, 'getUserTradeHistory']);
+
+        // Payment methods
+        Route::get('/payment-methods', [P2pCryptoController::class, 'getUserPaymentMethods']);
+        Route::post('/payment-methods', [P2pCryptoController::class, 'addPaymentMethod']);
+
+        // Verification and reputation
+        Route::get('/verification-status', [P2pCryptoController::class, 'getUserVerificationStatus']);
+        Route::get('/reputation', [P2pCryptoController::class, 'getUserReputation']);
     });
 });
 

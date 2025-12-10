@@ -33,6 +33,7 @@ class User extends Authenticatable
         'postal_code',
         'avatar',
         'is_verified',
+        'verification_level',
         'language_code',
         'subscription_id',
         'subscription_start_date',
@@ -43,6 +44,10 @@ class User extends Authenticatable
         'has_priority_support',
         'subscription_features',
         'reputation_score',
+        'trade_completion_rate',
+        'total_trade_count',
+        'last_trade_at',
+        'is_trusted_seller',
         'google2fa_secret',
         'google2fa_enabled',
         'backup_codes',
@@ -73,12 +78,18 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_verified' => 'boolean',
+            'is_trusted_seller' => 'boolean',
+            'verification_level' => 'string',
             'subscription_start_date' => 'datetime',
             'subscription_end_date' => 'datetime',
             'has_priority_support' => 'boolean',
             'ad_limit' => 'integer',
             'featured_ads_limit' => 'integer',
             'subscription_features' => 'array',
+            'reputation_score' => 'decimal:2',
+            'trade_completion_rate' => 'decimal:2',
+            'total_trade_count' => 'integer',
+            'last_trade_at' => 'datetime',
             'google2fa_enabled' => 'boolean',
             'backup_codes' => 'array',
         ];
@@ -289,5 +300,54 @@ class User extends Authenticatable
     {
         $authenticator = new Authenticator($this);
         return $authenticator->getQRCodeUrl();
+    }
+
+    /**
+     * Get the P2P crypto user verifications for this user.
+     */
+    public function p2pCryptoVerifications()
+    {
+        return $this->hasMany(P2pCryptoUserVerification::class);
+    }
+
+    /**
+     * Get the P2P crypto user reputation records where this user is the reviewer.
+     */
+    public function p2pCryptoReviewsGiven()
+    {
+        return $this->hasMany(P2pCryptoUserReputation::class, 'user_id');
+    }
+
+    /**
+     * Get the P2P crypto user reputation records where this user is the reviewee.
+     */
+    public function p2pCryptoReviewsReceived()
+    {
+        return $this->hasMany(P2pCryptoUserReputation::class, 'counterparty_id');
+    }
+
+    /**
+     * Get the P2P crypto payment methods for this user.
+     */
+    public function p2pCryptoPaymentMethods()
+    {
+        return $this->hasMany(P2pCryptoPaymentMethod::class);
+    }
+
+    /**
+     * Get the P2P crypto trading orders for this user.
+     */
+    public function p2pCryptoTradingOrders()
+    {
+        return $this->hasMany(P2pCryptoTradingOrder::class);
+    }
+
+    /**
+     * Get the P2P crypto orders for this user.
+     */
+    public function p2pCryptoOrders()
+    {
+        return $this->hasMany(P2pCryptoOrder::class, 'seller_id')
+            ->orWhere('buyer_id', $this->id);
     }
 }

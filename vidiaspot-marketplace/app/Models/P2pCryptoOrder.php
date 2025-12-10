@@ -18,6 +18,7 @@ class P2pCryptoOrder extends Model
         'price_per_unit',
         'total_amount',
         'payment_method',
+        'payment_method_id',
         'status',
         'matched_at',
         'completed_at',
@@ -71,5 +72,13 @@ class P2pCryptoOrder extends Model
     public function escrow()
     {
         return $this->hasOne(P2pCryptoEscrow::class);
+    }
+
+    /**
+     * Get the payment method used for this order.
+     */
+    public function paymentMethod()
+    {
+        return $this->belongsTo(P2pCryptoPaymentMethod::class, 'payment_method_id');
     }
 }
