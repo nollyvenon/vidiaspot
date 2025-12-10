@@ -1,22 +1,90 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useUserRoles } from '../utils/withAuth';
+import { useTenant } from '../context/TenantContext';
 
 const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const {
+    isBuyer,
+    isSeller,
+    isStoreOwner,
+    isDeliverySubscriber,
+    isCryptoUser,
+    isAdmin,
+    isSuperAdmin
+  } = useUserRoles();
+  const { currentTenant, tenants, switchTenant } = useTenant();
 
-  const navigation = [
-    { name: 'Dashboard', href: '/', current: location.pathname === '/' },
-    { name: 'Browse Ads', href: '/ads', current: location.pathname === '/ads' },
-    { name: 'My Ads', href: '/my-ads', current: location.pathname === '/my-ads' },
-    { name: 'Categories', href: '/categories', current: location.pathname === '/categories' },
-    { name: 'Messages', href: '/messages', current: location.pathname === '/messages' },
-    { name: 'Profile', href: '/profile', current: location.pathname === '/profile' },
-  ];
+  const getNavigation = () => {
+    let navigation = [];
 
-  const secondaryNavigation = [
-    { name: 'Post Ad', href: '/create-ad', current: location.pathname === '/create-ad' },
-  ];
+    // Common navigation items
+    navigation.push(
+      { name: 'Dashboard', href: '/', current: location.pathname === '/' }
+    );
+
+    // Navigation based on user roles
+    if (isSeller || isStoreOwner) {
+      navigation.push(
+        { name: 'My Listings', href: '/my-ads', current: location.pathname === '/my-ads' },
+        { name: 'Create Listing', href: '/create-ad', current: location.pathname === '/create-ad' }
+      );
+    }
+
+    if (isBuyer) {
+      navigation.push(
+        { name: 'Browse Listings', href: '/ads', current: location.pathname === '/ads' },
+        { name: 'Categories', href: '/categories', current: location.pathname === '/categories' }
+      );
+    }
+
+    if (isDeliverySubscriber) {
+      navigation.push(
+        { name: 'Delivery Dashboard', href: '/delivery', current: location.pathname === '/delivery' }
+      );
+    }
+
+    if (isSeller || isStoreOwner) {
+      navigation.push(
+        { name: 'Orders', href: '/orders', current: location.pathname === '/orders' },
+        { name: 'Inventory', href: '/inventory', current: location.pathname === '/inventory' }
+      );
+    }
+
+    if (isCryptoUser) {
+      navigation.push(
+        { name: 'Crypto Wallet', href: '/wallet', current: location.pathname === '/wallet' },
+        { name: 'Crypto Payments', href: '/crypto-payments', current: location.pathname === '/crypto-payments' }
+      );
+    }
+
+    if (isAdmin || isSuperAdmin) {
+      navigation.push(
+        { name: 'Admin Dashboard', href: '/admin', current: location.pathname === '/admin' },
+        { name: 'User Management', href: '/admin/users', current: location.pathname === '/admin/users' },
+        { name: 'Reports', href: '/reports', current: location.pathname === '/reports' }
+      );
+    }
+
+    navigation.push(
+      { name: 'Messages', href: '/messages', current: location.pathname === '/messages' },
+      { name: 'Profile', href: '/profile', current: location.pathname === '/profile' }
+    );
+
+    return navigation;
+  };
+
+  const navigation = getNavigation();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <>
@@ -42,6 +110,25 @@ const DashboardLayout = ({ children }) => {
                 <div className="flex-shrink-0 flex items-center px-4">
                   <span className="text-xl font-bold text-blue-600">VidiaSpot</span>
                 </div>
+
+                {/* Tenant switcher in mobile */}
+                {tenants && tenants.length > 1 && (
+                  <div className="px-2 mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Switch Tenant</label>
+                    <select
+                      value={currentTenant?.id || ''}
+                      onChange={(e) => switchTenant(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {tenants.map(tenant => (
+                        <option key={tenant.id} value={tenant.id}>
+                          {tenant.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <nav className="mt-5 px-2 space-y-1">
                   {navigation.map((item) => (
                     <Link
@@ -58,22 +145,15 @@ const DashboardLayout = ({ children }) => {
                     </Link>
                   ))}
                 </nav>
-                <nav className="mt-5 px-2 space-y-1">
-                  {secondaryNavigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className={`${
-                        item.current
-                          ? 'bg-blue-100 text-blue-600'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      } group flex items-center px-2 py-2 text-base font-medium rounded-md`}
-                      onClick={() => setSidebarOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </nav>
+
+                <div className="mt-6 px-2">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-2 py-2 text-base font-medium text-red-600 hover:bg-red-50 rounded-md"
+                  >
+                    Logout
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -86,6 +166,25 @@ const DashboardLayout = ({ children }) => {
               <div className="flex items-center flex-shrink-0 px-4">
                 <span className="text-xl font-bold text-blue-600">VidiaSpot</span>
               </div>
+
+              {/* Tenant switcher in desktop */}
+              {tenants && tenants.length > 1 && (
+                <div className="px-4 mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Switch Tenant</label>
+                  <select
+                    value={currentTenant?.id || ''}
+                    onChange={(e) => switchTenant(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {tenants.map(tenant => (
+                      <option key={tenant.id} value={tenant.id}>
+                        {tenant.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <nav className="mt-5 flex-1 px-2 bg-white space-y-1">
                 {navigation.map((item) => (
                   <Link
@@ -101,21 +200,18 @@ const DashboardLayout = ({ children }) => {
                   </Link>
                 ))}
               </nav>
-              <nav className="mt-5 px-2 space-y-1">
-                {secondaryNavigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`${
-                      item.current
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'text-green-600 hover:bg-green-50 hover:text-green-800'
-                    } group flex items-center px-2 py-2 text-sm font-medium rounded-md`}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </nav>
+
+              <div className="mt-auto px-2">
+                <div className="text-xs text-gray-500 mb-1">
+                  {currentTenant ? `Tenant: ${currentTenant.name}` : 'No tenant selected'}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         </div>
