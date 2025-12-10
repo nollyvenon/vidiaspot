@@ -926,3 +926,12 @@ Route::middleware(['auth:sanctum'])->prefix('media-compression')->group(function
     Route::get('/bandwidth-profiles', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getBandwidthProfiles']);
     Route::get('/compression-settings', [App\Http\Controllers\OptimizedMediaCompressionController::class, 'getCompressionSettings']);
 });
+
+// Feature Management routes
+Route::middleware(['auth:sanctum'])->prefix('features')->group(function () {
+    Route::get('/', [App\Http\Controllers\FeatureManagementController::class, 'getAllFeatures']);
+    Route::get('/categories', [App\Http\Controllers\FeatureManagementController::class, 'getFeatureCategories']);
+    Route::get('/category/{category}', [App\Http\Controllers\FeatureManagementController::class, 'getFeaturesByCategory']);
+    Route::get('/{featureKey}', [App\Http\Controllers\FeatureManagementController::class, 'checkFeature']);
+    Route::post('/check-multiple', [App\Http\Controllers\FeatureManagementController::class, 'checkMultipleFeatures']);
+});

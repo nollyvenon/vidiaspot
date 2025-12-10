@@ -5,4 +5,5 @@ return [
     App\Providers\DatabaseServiceProvider::class,
     App\Providers\RecommendationServiceProvider::class,
     App\Providers\AIServicesServiceProvider::class,
+    App\Providers\FeatureFlagServiceProvider::class,
 ];
