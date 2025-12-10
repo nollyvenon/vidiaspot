@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import axios from 'axios';
+import reportService from '../../services/reportService';
 
 const ReportsDashboard = () => {
   const [appType, setAppType] = useState('food-delivery'); // 'food-delivery' or 'classified'
@@ -16,149 +16,215 @@ const ReportsDashboard = () => {
     setError(null);
 
     try {
-      let endpoint = '';
+      let data;
 
       if (appType === 'food-delivery') {
         switch(reportType) {
           case 'daily-sales':
-            endpoint = '/api/reports/food-delivery/daily-sales';
+            data = await reportService.getDailySales();
             break;
           case 'menu-performance':
-            endpoint = '/api/reports/food-delivery/menu-performance';
+            data = await reportService.getMenuPerformance();
             break;
           case 'delivery-performance':
-            endpoint = '/api/reports/food-delivery/delivery-performance';
+            data = await reportService.getDeliveryPerformance();
             break;
           case 'customer-spending':
-            endpoint = '/api/reports/food-delivery/customer-spending';
+            data = await reportService.getCustomerSpending();
             break;
           case 'payment-method':
-            endpoint = '/api/reports/food-delivery/payment-method';
+            data = await reportService.getPaymentMethodRevenue();
             break;
           case 'kitchen-performance':
-            endpoint = '/api/reports/food-delivery/kitchen-performance';
+            data = await reportService.getKitchenPerformance();
             break;
           case 'driver-performance':
-            endpoint = '/api/reports/food-delivery/driver-performance';
+            data = await reportService.getDriverPerformance();
             break;
           case 'inventory-management':
-            endpoint = '/api/reports/food-delivery/inventory-management';
+            data = await reportService.getInventoryManagement();
             break;
           case 'location-analytics':
-            endpoint = '/api/reports/food-delivery/location-analytics';
+            data = await reportService.getLocationAnalytics();
             break;
           case 'equipment-utilization':
-            endpoint = '/api/reports/food-delivery/equipment-utilization';
+            data = await reportService.getEquipmentUtilization();
             break;
           case 'order-fulfillment':
-            endpoint = '/api/reports/food-delivery/order-fulfillment';
+            data = await reportService.getOrderFulfillment();
             break;
           case 'delivery-metrics':
-            endpoint = '/api/reports/food-delivery/delivery-metrics';
+            data = await reportService.getDeliveryMetrics();
             break;
           case 'customer-feedback':
-            endpoint = '/api/reports/food-delivery/customer-feedback';
+            data = await reportService.getCustomerFeedback();
             break;
           case 'user-engagement':
-            endpoint = '/api/reports/food-delivery/user-engagement';
+            data = await reportService.getUserEngagement();
             break;
           case 'loyalty-program':
-            endpoint = '/api/reports/food-delivery/loyalty-program';
+            data = await reportService.getLoyaltyProgram();
+            break;
+          case 'order-fulfillment':
+            data = await reportService.getOrderFulfillment();
             break;
           case 'cost-goods':
-            endpoint = '/api/reports/food-delivery/cost-goods';
+            data = await reportService.getCostOfGoods();
             break;
           case 'profit-margins':
-            endpoint = '/api/reports/food-delivery/profit-margins';
+            data = await reportService.getProfitMargins();
             break;
           case 'commission':
-            endpoint = '/api/reports/food-delivery/commission';
+            data = await reportService.getCommissionReports();
             break;
           case 'waste-loss':
-            endpoint = '/api/reports/food-delivery/waste-loss';
+            data = await reportService.getWasteLoss();
             break;
           case 'break-even':
-            endpoint = '/api/reports/food-delivery/break-even';
+            data = await reportService.getBreakEven();
             break;
           default:
-            endpoint = '/api/reports/food-delivery/daily-sales';
+            data = await reportService.getDailySales();
         }
       } else if (appType === 'classified') {
         switch(reportType) {
           case 'user-registration':
-            endpoint = '/api/reports/classified/user-registration';
+            data = await reportService.getUserRegistration();
             break;
           case 'listing-performance':
-            endpoint = '/api/reports/classified/listing-performance';
+            data = await reportService.getListingPerformance();
             break;
           case 'category-analysis':
-            endpoint = '/api/reports/classified/category-analysis';
+            data = await reportService.getCategoryAnalysis();
             break;
           case 'engagement-metrics':
-            endpoint = '/api/reports/classified/engagement-metrics';
+            data = await reportService.getEngagementMetrics();
             break;
           case 'user-retention':
-            endpoint = '/api/reports/classified/user-retention';
+            data = await reportService.getUserRetention();
             break;
           case 'subscription-analytics':
-            endpoint = '/api/reports/classified/subscription-analytics';
+            data = await reportService.getSubscriptionAnalytics();
             break;
           case 'premium-service':
-            endpoint = '/api/reports/classified/premium-service';
+            data = await reportService.getPremiumServiceUsage();
             break;
           case 'commission-category':
-            endpoint = '/api/reports/classified/commission-category';
+            data = await reportService.getCommissionByCategory();
             break;
           case 'payment-processing':
-            endpoint = '/api/reports/classified/payment-processing';
+            data = await reportService.getPaymentProcessing();
             break;
           case 'cost-acquisition':
-            endpoint = '/api/reports/classified/cost-acquisition';
+            data = await reportService.getCostPerAcquisition();
             break;
           case 'content-moderation':
-            endpoint = '/api/reports/classified/content-moderation';
+            data = await reportService.getContentModeration();
             break;
           case 'listing-quality':
-            endpoint = '/api/reports/classified/listing-quality';
+            data = await reportService.getListingQuality();
             break;
           case 'fraud-detection':
-            endpoint = '/api/reports/classified/fraud-detection';
+            data = await reportService.getFraudDetection();
             break;
           case 'search-analytics':
-            endpoint = '/api/reports/classified/search-analytics';
+            data = await reportService.getSearchAnalytics();
             break;
           case 'ugc':
-            endpoint = '/api/reports/classified/ugc';
+            data = await reportService.getUserGeneratedContent();
             break;
           case 'price-analytics':
-            endpoint = '/api/reports/classified/price-analytics';
+            data = await reportService.getPriceAnalytics();
             break;
           case 'demand-forecast':
-            endpoint = '/api/reports/classified/demand-forecast';
+            data = await reportService.getDemandForecast();
             break;
           case 'geographic-performance':
-            endpoint = '/api/reports/classified/geographic-performance';
+            data = await reportService.getGeographicPerformance();
             break;
           case 'seasonal-trends':
-            endpoint = '/api/reports/classified/seasonal-trends';
+            data = await reportService.getSeasonalTrends();
             break;
           case 'market-saturation':
-            endpoint = '/api/reports/classified/market-saturation';
+            data = await reportService.getMarketSaturation();
             break;
           default:
-            endpoint = '/api/reports/classified/user-registration';
+            data = await reportService.getUserRegistration();
+        }
+      } else if (appType === 'ecommerce') {
+        switch(reportType) {
+          case 'sales-dashboard':
+            data = []; // Placeholder for sales dashboard
+            break;
+          case 'product-performance':
+            data = []; // Placeholder for product performance
+            break;
+          case 'customer-lifetime-value':
+            data = []; // Placeholder for customer lifetime value
+            break;
+          case 'seasonal-sales-analysis':
+            data = []; // Placeholder for seasonal sales analysis
+            break;
+          case 'sales-channel-performance':
+            data = []; // Placeholder for sales channel performance
+            break;
+          case 'stock-level-reports':
+            data = []; // Placeholder for stock level reports
+            break;
+          case 'inventory-turnover':
+            data = []; // Placeholder for inventory turnover
+            break;
+          case 'supplier-performance':
+            data = []; // Placeholder for supplier performance
+            break;
+          case 'dead-stock-analysis':
+            data = []; // Placeholder for dead stock analysis
+            break;
+          case 'demand-forecasting':
+            data = []; // Placeholder for demand forecasting
+            break;
+          case 'conversion-funnel':
+            data = []; // Placeholder for conversion funnel
+            break;
+          case 'marketing-roi':
+            data = []; // Placeholder for marketing ROI
+            break;
+          case 'customer-segmentation':
+            data = []; // Placeholder for customer segmentation
+            break;
+          case 'email-marketing':
+            data = []; // Placeholder for email marketing
+            break;
+          case 'seo-performance':
+            data = []; // Placeholder for SEO performance
+            break;
+          case 'profit-margins':
+            data = await reportService.getProfitMargins();
+            break;
+          case 'shipping-analytics':
+            data = []; // Placeholder for shipping analytics
+            break;
+          case 'return-refund-analysis':
+            data = []; // Placeholder for return/refund analysis
+            break;
+          case 'tax-compliance':
+            data = []; // Placeholder for tax compliance
+            break;
+          case 'payment-processing':
+            data = []; // Placeholder for payment processing
+            break;
+          default:
+            data = []; // Default for e-commerce
         }
       }
 
-      const response = await axios.get(endpoint);
-
       // Apply International Accounting Principles formatting to financial data
-      let formattedData = response.data;
+      let formattedData = data;
 
       if (['cost-goods', 'profit-margins', 'commission', 'waste-loss', 'break-even',
            'subscription-analytics', 'premium-service', 'commission-category',
            'cost-acquisition'].includes(reportType)) {
-        formattedData = response.data.map(item => {
+        formattedData = data.map(item => {
           const formattedItem = { ...item };
 
           // Format currency values according to International Financial Reporting Standards (IFRS)
@@ -440,6 +506,30 @@ const ReportsDashboard = () => {
         case 'market-saturation': return 'Market Saturation';
         default: return 'Report';
       }
+    } else if (appType === 'ecommerce') {
+      switch(reportType) {
+        case 'sales-dashboard': return 'Sales Dashboard';
+        case 'product-performance': return 'Product Performance';
+        case 'customer-lifetime-value': return 'Customer Lifetime Value';
+        case 'seasonal-sales-analysis': return 'Seasonal Sales Analysis';
+        case 'sales-channel-performance': return 'Sales Channel Performance';
+        case 'stock-level-reports': return 'Stock Level Reports';
+        case 'inventory-turnover': return 'Inventory Turnover';
+        case 'supplier-performance': return 'Supplier Performance';
+        case 'dead-stock-analysis': return 'Dead Stock Analysis';
+        case 'demand-forecasting': return 'Demand Forecasting';
+        case 'conversion-funnel': return 'Conversion Funnel';
+        case 'marketing-roi': return 'Marketing ROI';
+        case 'customer-segmentation': return 'Customer Segmentation';
+        case 'email-marketing': return 'Email Marketing';
+        case 'seo-performance': return 'SEO Performance';
+        case 'profit-margins': return 'Profit Margins';
+        case 'shipping-analytics': return 'Shipping Analytics';
+        case 'return-refund-analysis': return 'Return & Refund Analysis';
+        case 'tax-compliance': return 'Tax Compliance';
+        case 'payment-processing': return 'Payment Processing';
+        default: return 'Report';
+      }
     }
     return 'Report';
   };
@@ -471,6 +561,16 @@ const ReportsDashboard = () => {
               }`}
             >
               Classified App
+            </button>
+            <button
+              onClick={() => setAppType('ecommerce')}
+              className={`px-4 py-2 rounded-md ${
+                appType === 'ecommerce'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              E-commerce & Shopify
             </button>
           </div>
         </div>
@@ -884,6 +984,212 @@ const ReportsDashboard = () => {
                 }`}
               >
                 Market Saturation
+              </button>
+            </div>
+          )}
+
+          {/* E-commerce & Shopify Report Types */}
+          {appType === 'ecommerce' && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              <button
+                onClick={() => setReportType('sales-dashboard')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'sales-dashboard'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Sales Dashboard
+              </button>
+              <button
+                onClick={() => setReportType('product-performance')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'product-performance'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Product Performance
+              </button>
+              <button
+                onClick={() => setReportType('customer-lifetime-value')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'customer-lifetime-value'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Customer Lifetime Value
+              </button>
+              <button
+                onClick={() => setReportType('seasonal-sales-analysis')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'seasonal-sales-analysis'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Seasonal Analysis
+              </button>
+              <button
+                onClick={() => setReportType('sales-channel-performance')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'sales-channel-performance'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Sales Channel Perf
+              </button>
+              <button
+                onClick={() => setReportType('stock-level-reports')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'stock-level-reports'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Stock Levels
+              </button>
+              <button
+                onClick={() => setReportType('inventory-turnover')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'inventory-turnover'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Inventory Turnover
+              </button>
+              <button
+                onClick={() => setReportType('supplier-performance')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'supplier-performance'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Supplier Performance
+              </button>
+              <button
+                onClick={() => setReportType('dead-stock-analysis')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'dead-stock-analysis'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Dead Stock Analysis
+              </button>
+              <button
+                onClick={() => setReportType('demand-forecasting')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'demand-forecasting'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Demand Forecasting
+              </button>
+              <button
+                onClick={() => setReportType('conversion-funnel')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'conversion-funnel'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Conversion Funnel
+              </button>
+              <button
+                onClick={() => setReportType('marketing-roi')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'marketing-roi'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Marketing ROI
+              </button>
+              <button
+                onClick={() => setReportType('customer-segmentation')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'customer-segmentation'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Customer Segmentation
+              </button>
+              <button
+                onClick={() => setReportType('email-marketing')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'email-marketing'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Email Marketing
+              </button>
+              <button
+                onClick={() => setReportType('seo-performance')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'seo-performance'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                SEO Performance
+              </button>
+              <button
+                onClick={() => setReportType('profit-margins')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'profit-margins'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Profit Margins
+              </button>
+              <button
+                onClick={() => setReportType('shipping-analytics')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'shipping-analytics'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Shipping Analytics
+              </button>
+              <button
+                onClick={() => setReportType('return-refund-analysis')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'return-refund-analysis'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Return/Refund Analysis
+              </button>
+              <button
+                onClick={() => setReportType('tax-compliance')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'tax-compliance'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Tax Compliance
+              </button>
+              <button
+                onClick={() => setReportType('payment-processing')}
+                className={`px-3 py-1 rounded-md text-sm ${
+                  reportType === 'payment-processing'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Payment Processing
               </button>
             </div>
           )}

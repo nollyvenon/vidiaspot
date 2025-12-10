@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { withAuth } from '../utils/withAuth';
+import shopifyService from '../services/shopifyService';
 
 const ShopifyIntegration = () => {
   const [shopifyStores, setShopifyStores] = useState([]);
@@ -8,50 +9,113 @@ const ShopifyIntegration = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('stores');
   const [newStore, setNewStore] = useState({ name: '', domain: '', apiKey: '', password: '' });
+  const [error, setError] = useState(null);
+  const [currentStoreId, setCurrentStoreId] = useState(null);
 
-  // Mock data for Shopify integration
+  // Fetch Shopify data
   useEffect(() => {
-    // In a real app, this would fetch from the API
-    setTimeout(() => {
-      const mockStores = [
-        { id: 1, name: 'Fashion Store', domain: 'fashion-store.myshopify.com', status: 'connected', products: 124, orders: 45 },
-        { id: 2, name: 'Electronics Store', domain: 'electronics-store.myshopify.com', status: 'connected', products: 89, orders: 23 },
-        { id: 3, name: 'Home Decor', domain: 'home-decor.myshopify.com', status: 'disconnected', products: 67, orders: 12 },
-      ];
-      
-      const mockProducts = [
-        { id: 1, title: 'Designer T-Shirt', price: 29.99, inventory: 45, status: 'active', store: 'Fashion Store' },
-        { id: 2, title: 'Wireless Headphones', price: 89.99, inventory: 12, status: 'active', store: 'Electronics Store' },
-        { id: 3, title: 'Ceramic Vase', price: 34.50, inventory: 8, status: 'low_stock', store: 'Home Decor' },
-        { id: 4, title: 'Running Shoes', price: 79.99, inventory: 0, status: 'out_of_stock', store: 'Fashion Store' },
-      ];
-      
-      const mockOrders = [
-        { id: 1, customer: 'John Doe', total: 124.97, status: 'fulfilled', date: '2023-06-15', store: 'Fashion Store' },
-        { id: 2, customer: 'Jane Smith', total: 89.99, status: 'processing', date: '2023-06-16', store: 'Electronics Store' },
-        { id: 3, customer: 'Bob Johnson', total: 34.50, status: 'pending', date: '2023-06-17', store: 'Home Decor' },
-        { id: 4, customer: 'Alice Brown', total: 159.98, status: 'cancelled', date: '2023-06-14', store: 'Fashion Store' },
-      ];
-      
-      setShopifyStores(mockStores);
-      setProducts(mockProducts);
-      setOrders(mockOrders);
-      setLoading(false);
-    }, 1000);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const stores = await shopifyService.getStores();
+        setShopifyStores(stores);
+      } catch (err) {
+        setError('Failed to fetch Shopify stores. Please try again later.');
+        console.error('Error fetching Shopify stores:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const handleAddStore = (e) => {
-    e.preventDefault();
-    // In a real app, this would make an API call to add the store
-    const store = {
-      id: shopifyStores.length + 1,
-      ...newStore,
-      status: 'pending_connection',
-      products: 0,
-      orders: 0
+  // Fetch products/orders when currentStoreId changes and activeTab is products or orders
+  useEffect(() => {
+    const fetchStoreData = async () => {
+      if (!currentStoreId) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        if (activeTab === 'products') {
+          const storeProducts = await shopifyService.getStoreProducts(currentStoreId);
+          setProducts(storeProducts);
+        } else if (activeTab === 'orders') {
+          const storeOrders = await shopifyService.getStoreOrders(currentStoreId);
+          setOrders(storeOrders);
+        }
+      } catch (err) {
+        setError(`Failed to fetch ${activeTab}. Please try again later.`);
+        console.error(`Error fetching ${activeTab}:`, err);
+      } finally {
+        setLoading(false);
+      }
     };
-    setShopifyStores([...shopifyStores, store]);
-    setNewStore({ name: '', domain: '', apiKey: '', password: '' });
+
+    fetchStoreData();
+  }, [activeTab, currentStoreId]);
+
+  const handleAddStore = async (e) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+      const storeData = {
+        name: newStore.name,
+        domain: newStore.domain,
+        apiKey: newStore.apiKey,
+        password: newStore.password,
+      };
+
+      const newStoreResult = await shopifyService.connectStore(storeData);
+      setShopifyStores([...shopifyStores, newStoreResult]);
+      setNewStore({ name: '', domain: '', apiKey: '', password: '' });
+      setError(null);
+    } catch (err) {
+      setError('Failed to connect Shopify store. Please check your credentials and try again.');
+      console.error('Error connecting Shopify store:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSyncStore = async (storeId) => {
+    try {
+      setLoading(true);
+      // Sync both products and orders for the store
+      await shopifyService.syncProducts(storeId);
+      await shopifyService.syncOrders(storeId);
+      // Refresh the store list to show updated product/order counts
+      const stores = await shopifyService.getStores();
+      setShopifyStores(stores);
+      setError(null);
+    } catch (err) {
+      setError('Failed to sync store. Please try again.');
+      console.error('Error syncing store:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDisconnectStore = async (storeId) => {
+    try {
+      setLoading(true);
+      await shopifyService.disconnectStore(storeId);
+      // Remove the store from the local state
+      setShopifyStores(shopifyStores.filter(store => store.id !== storeId));
+      setError(null);
+    } catch (err) {
+      setError('Failed to disconnect store. Please try again.');
+      console.error('Error disconnecting store:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStoreSelect = (storeId) => {
+    setCurrentStoreId(storeId);
   };
 
   const getStatusColor = (status) => {
@@ -81,20 +145,19 @@ const ShopifyIntegration = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Shopify Integration</h1>
         <p className="text-gray-600 mt-2">Connect and manage your Shopify stores</p>
       </div>
+
+      {error && (
+        <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
 
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
@@ -197,8 +260,9 @@ const ShopifyIntegration = () => {
                 <button
                   type="submit"
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
+                  disabled={loading}
                 >
-                  Connect Store
+                  {loading ? 'Connecting...' : 'Connect Store'}
                 </button>
               </div>
             </form>
@@ -253,8 +317,20 @@ const ShopifyIntegration = () => {
                         {store.orders}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button className="text-blue-600 hover:text-blue-900 mr-3">Sync</button>
-                        <button className="text-red-600 hover:text-red-900">Disconnect</button>
+                        <button
+                          onClick={() => handleSyncStore(store.id)}
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                          disabled={loading}
+                        >
+                          {loading ? 'Syncing...' : 'Sync'}
+                        </button>
+                        <button
+                          onClick={() => handleDisconnectStore(store.id)}
+                          className="text-red-600 hover:text-red-900"
+                          disabled={loading}
+                        >
+                          {loading ? 'Processing...' : 'Disconnect'}
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -266,135 +342,173 @@ const ShopifyIntegration = () => {
       )}
 
       {activeTab === 'products' && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Products</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Store
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Inventory
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {products.map(product => (
-                  <tr key={product.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{product.title}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {product.store}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${product.price}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {product.inventory}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getProductStatusColor(product.status)}`}>
-                        {product.status.replace('_', ' ').toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                      <button className="text-green-600 hover:text-green-900">Sync</button>
-                    </td>
-                  </tr>
+        <div>
+          {shopifyStores.length > 0 && (
+            <div className="mb-6">
+              <label htmlFor="storeSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Store</label>
+              <select
+                id="storeSelect"
+                value={currentStoreId || ''}
+                onChange={(e) => setCurrentStoreId(Number(e.target.value))}
+                className="w-full md:w-1/3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select a store to view products</option>
+                {shopifyStores.map(store => (
+                  <option key={store.id} value={store.id}>{store.name}</option>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </select>
+            </div>
+          )}
+          {currentStoreId && (
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900">Products</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Product
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Price
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Inventory
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {products.map(product => (
+                      <tr key={product.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{product.title}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          ${product.price}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {product.inventory}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getProductStatusColor(product.status)}`}>
+                            {product.status.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                          <button className="text-green-600 hover:text-green-900">Sync</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {!currentStoreId && (
+            <div className="bg-white rounded-lg shadow-md p-6 text-center">
+              <p className="text-gray-600">Please select a store to view its products.</p>
+            </div>
+          )}
         </div>
       )}
 
       {activeTab === 'orders' && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Orders</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order #
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Store
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {orders.map(order => (
-                  <tr key={order.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      #{order.id.toString().padStart(6, '0')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {order.customer}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.store}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${order.total}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        order.status === 'fulfilled' ? 'bg-green-100 text-green-800' :
-                        order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                        order.status === 'pending' ? 'bg-blue-100 text-blue-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {order.status.replace('_', ' ').toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.date}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                      <button className="text-green-600 hover:text-green-900">Fulfill</button>
-                    </td>
-                  </tr>
+        <div>
+          {shopifyStores.length > 0 && (
+            <div className="mb-6">
+              <label htmlFor="orderStoreSelect" className="block text-sm font-medium text-gray-700 mb-2">Select Store</label>
+              <select
+                id="orderStoreSelect"
+                value={currentStoreId || ''}
+                onChange={(e) => setCurrentStoreId(Number(e.target.value))}
+                className="w-full md:w-1/3 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select a store to view orders</option>
+                {shopifyStores.map(store => (
+                  <option key={store.id} value={store.id}>{store.name}</option>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </select>
+            </div>
+          )}
+          {currentStoreId && (
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900">Orders</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Order #
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Customer
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Total
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {orders.map(order => (
+                      <tr key={order.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          #{order.id.toString().padStart(6, '0')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {order.customer}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          ${order.total}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                            order.status === 'fulfilled' ? 'bg-green-100 text-green-800' :
+                            order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
+                            order.status === 'pending' ? 'bg-blue-100 text-blue-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {order.status.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {order.date}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
+                          <button className="text-green-600 hover:text-green-900">Fulfill</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {!currentStoreId && (
+            <div className="bg-white rounded-lg shadow-md p-6 text-center">
+              <p className="text-gray-600">Please select a store to view its orders.</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -451,13 +565,34 @@ const ShopifyIntegration = () => {
           
           <div className="mt-6 pt-6 border-t border-gray-200">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Manual Sync</h3>
-            <div className="flex space-x-4">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
-                Sync Products Now
-              </button>
-              <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md">
-                Sync Orders Now
-              </button>
+            <div className="flex flex-wrap gap-4">
+              {shopifyStores.length > 0 ? (
+                shopifyStores.map(store => (
+                  <div key={store.id} className="w-full md:w-auto">
+                    <p className="mb-2 font-medium">{store.name}</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSyncStore(store.id)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+                        disabled={loading}
+                      >
+                        {loading ? 'Syncing...' : 'Sync Products'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCurrentStoreId(store.id);
+                          setActiveTab('orders');
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+                      >
+                        View Orders
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-600">Connect a store to enable manual sync.</p>
+              )}
             </div>
           </div>
         </div>
