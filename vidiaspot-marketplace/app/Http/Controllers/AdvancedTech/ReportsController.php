@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\AdvancedTech;
 
 use Illuminate\Http\Request;
 use App\Services\CryptoP2PReportingService;
@@ -8,24 +8,30 @@ use App\Services\FoodReportingService;
 use App\Services\ClassifiedReportingService;
 use App\Services\EcommerceReportingService;
 use App\Services\CrossPlatformReportingService;
-use App\Models\BalanceSheetReport;
-use App\Models\IncomeStatementReport;
-use App\Models\CashFlowReport;
-use App\Models\DailyTradingReport;
-use App\Models\UserActivityReport;
-use App\Models\UserTradeHistoryReport;
-use App\Models\UserSegmentationReport;
-use App\Models\SecurityReport;
-use App\Models\MarketRiskReport;
-use App\Models\AmlKycReport;
-use App\Models\TaxReport;
-use App\Models\SystemPerformanceReport;
-use App\Models\CustomerServiceReport;
-use App\Models\GeneralLedgerReport;
-use App\Models\RevenueRecognitionReport;
-use App\Models\PredictiveAnalyticsReport;
-use App\Models\PerformanceMetricsReport;
-use App\Models\LiveDashboardReport;
+use App\Services\LogisticsReportingService;
+use App\Models\Reports\BalanceSheetReport;
+use App\Models\Reports\IncomeStatementReport;
+use App\Models\Reports\CashFlowReport;
+use App\Models\Reports\DailyTradingReport;
+use App\Models\Reports\UserActivityReport;
+use App\Models\Reports\UserTradeHistoryReport;
+use App\Models\Reports\UserSegmentationReport;
+use App\Models\Reports\SecurityReport;
+use App\Models\Reports\MarketRiskReport;
+use App\Models\Reports\AmlKycReport;
+use App\Models\Reports\TaxReport;
+use App\Models\Reports\SystemPerformanceReport;
+use App\Models\Reports\CustomerServiceReport;
+use App\Models\Reports\GeneralLedgerReport;
+use App\Models\Reports\RevenueRecognitionReport;
+use App\Models\Reports\PredictiveAnalyticsReport;
+use App\Models\Reports\PerformanceMetricsReport;
+use App\Models\Reports\LiveDashboardReport;
+use App\Models\Reports\ShipmentReport;
+use App\Models\Reports\DeliveryReport;
+use App\Models\Reports\WarehouseReport;
+use App\Models\Reports\CourierPerformanceReport;
+use App\Models\Reports\ReturnReport;
 
 class ReportsController extends Controller
 {
@@ -34,19 +40,22 @@ class ReportsController extends Controller
     protected $classifiedReportingService;
     protected $ecommerceReportingService;
     protected $crossPlatformReportingService;
+    protected $logisticsReportingService;
 
     public function __construct(
         CryptoP2PReportingService $cryptoP2PReportingService,
         FoodReportingService $foodReportingService,
         ClassifiedReportingService $classifiedReportingService,
         EcommerceReportingService $ecommerceReportingService,
-        CrossPlatformReportingService $crossPlatformReportingService
+        CrossPlatformReportingService $crossPlatformReportingService,
+        LogisticsReportingService $logisticsReportingService
     ) {
         $this->cryptoP2PReportingService = $cryptoP2PReportingService;
         $this->foodReportingService = $foodReportingService;
         $this->classifiedReportingService = $classifiedReportingService;
         $this->ecommerceReportingService = $ecommerceReportingService;
         $this->crossPlatformReportingService = $crossPlatformReportingService;
+        $this->logisticsReportingService = $logisticsReportingService;
 
         $this->middleware('auth');
     }
@@ -117,6 +126,21 @@ class ReportsController extends Controller
                 break;
             case 'performance-metrics':
                 $report = PerformanceMetricsReport::findOrFail($id);
+                break;
+            case 'shipment':
+                $report = ShipmentReport::findOrFail($id);
+                break;
+            case 'delivery':
+                $report = DeliveryReport::findOrFail($id);
+                break;
+            case 'warehouse':
+                $report = WarehouseReport::findOrFail($id);
+                break;
+            case 'courier-performance':
+                $report = CourierPerformanceReport::findOrFail($id);
+                break;
+            case 'return':
+                $report = ReturnReport::findOrFail($id);
                 break;
             default:
                 abort(404);
@@ -206,6 +230,26 @@ class ReportsController extends Controller
                 // For automated alerts, we use the AutomatedAlertReport model
                 $reports = \App\Models\AutomatedAlertReport::orderBy('created_at', 'desc')->paginate(15);
                 break;
+            case 'shipment':
+                $reportClass = ShipmentReport::class;
+                $reports = ShipmentReport::orderBy('created_at', 'desc')->paginate(15);
+                break;
+            case 'delivery':
+                $reportClass = DeliveryReport::class;
+                $reports = DeliveryReport::orderBy('created_at', 'desc')->paginate(15);
+                break;
+            case 'warehouse':
+                $reportClass = WarehouseReport::class;
+                $reports = WarehouseReport::orderBy('created_at', 'desc')->paginate(15);
+                break;
+            case 'courier-performance':
+                $reportClass = CourierPerformanceReport::class;
+                $reports = CourierPerformanceReport::orderBy('created_at', 'desc')->paginate(15);
+                break;
+            case 'return':
+                $reportClass = ReturnReport::class;
+                $reports = ReturnReport::orderBy('created_at', 'desc')->paginate(15);
+                break;
             default:
                 abort(404);
         }
@@ -220,7 +264,7 @@ class ReportsController extends Controller
     {
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
-        
+
         if (!$startDate || !$endDate) {
             // Default to last 30 days
             $endDate = now();
@@ -234,58 +278,79 @@ class ReportsController extends Controller
 
         switch ($type) {
             case 'balance-sheet':
-                $report = $this->reportingService->generateBalanceSheetReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateBalanceSheetReport($startDate, $endDate);
                 break;
             case 'income-statement':
-                $report = $this->reportingService->generateIncomeStatementReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateIncomeStatementReport($startDate, $endDate);
                 break;
             case 'cash-flow':
-                $report = $this->reportingService->generateCashFlowReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateCashFlowReport($startDate, $endDate);
                 break;
             case 'daily-trading':
                 // For daily trading, we use today's date
-                $report = $this->reportingService->generateDailyTradingReport(now());
+                $report = $this->cryptoP2PReportingService->generateDailyTradingReport(now());
                 break;
             case 'user-activity':
-                $report = $this->reportingService->generateUserActivityReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateUserActivityReport($startDate, $endDate);
                 break;
             case 'user-trade-history':
                 // For user trade history, we need a user ID
                 $userId = $request->get('user_id', auth()->id());
-                $report = $this->reportingService->generateUserTradeHistoryReport($userId, $startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateUserTradeHistoryReport($userId, $startDate, $endDate);
                 break;
             case 'user-segmentation':
-                $report = $this->reportingService->generateUserSegmentationReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateUserSegmentationReport($startDate, $endDate);
                 break;
             case 'security':
-                $report = $this->reportingService->generateSecurityReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateSecurityReport($startDate, $endDate);
                 break;
             case 'market-risk':
-                $report = $this->reportingService->generateMarketRiskReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateMarketRiskReport($startDate, $endDate);
                 break;
             case 'aml-kyc':
-                $report = $this->reportingService->generateAmlKycReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateAmlKycReport($startDate, $endDate);
                 break;
             case 'tax':
-                $report = $this->reportingService->generateTaxReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateTaxReport($startDate, $endDate);
                 break;
             case 'system-performance':
-                $report = $this->reportingService->generateSystemPerformanceReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateSystemPerformanceReport($startDate, $endDate);
                 break;
             case 'customer-service':
-                $report = $this->reportingService->generateCustomerServiceReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateCustomerServiceReport($startDate, $endDate);
                 break;
             case 'general-ledger':
-                $report = $this->reportingService->generateGeneralLedgerReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateGeneralLedgerReport($startDate, $endDate);
                 break;
             case 'revenue-recognition':
-                $report = $this->reportingService->generateRevenueRecognitionReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generateRevenueRecognitionReport($startDate, $endDate);
                 break;
             case 'predictive-analytics':
-                $report = $this->reportingService->generatePredictiveAnalyticsReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generatePredictiveAnalyticsReport($startDate, $endDate);
                 break;
             case 'performance-metrics':
-                $report = $this->reportingService->generatePerformanceMetricsReport($startDate, $endDate);
+                $report = $this->cryptoP2PReportingService->generatePerformanceMetricsReport($startDate, $endDate);
+                break;
+            case 'shipment':
+                $userId = $request->get('user_id', auth()->id());
+                $report = $this->logisticsReportingService->generateShipmentReport($userId, $startDate, $endDate);
+                break;
+            case 'delivery':
+                $userId = $request->get('user_id', auth()->id());
+                $report = $this->logisticsReportingService->generateDeliveryReport($userId, $startDate, $endDate);
+                break;
+            case 'warehouse':
+                $userId = $request->get('user_id', auth()->id());
+                $report = $this->logisticsReportingService->generateWarehouseReport($userId, $startDate, $endDate);
+                break;
+            case 'courier-performance':
+                $userId = $request->get('user_id', auth()->id());
+                $courierId = $request->get('courier_partner_id');
+                $report = $this->logisticsReportingService->generateCourierPerformanceReport($userId, $startDate, $endDate, $courierId);
+                break;
+            case 'return':
+                $userId = $request->get('user_id', auth()->id());
+                $report = $this->logisticsReportingService->generateReturnReport($userId, $startDate, $endDate);
                 break;
             default:
                 abort(404);
@@ -619,8 +684,107 @@ class ReportsController extends Controller
             'success' => true,
             'data' => $report
         ]);
-    
-        $report = $this->reportingService->getLiveDashboardReport();
-        return view('reports.live-dashboard', compact('report'));
+    }
+
+    /**
+     * Generate Logistics Shipment Report
+     */
+    public function generateLogisticsShipmentReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->logisticsReportingService->generateShipmentReport(
+            auth()->id(),
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Logistics Delivery Report
+     */
+    public function generateLogisticsDeliveryReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->logisticsReportingService->generateDeliveryReport(
+            auth()->id(),
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Logistics Warehouse Report
+     */
+    public function generateLogisticsWarehouseReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->logisticsReportingService->generateWarehouseReport(
+            auth()->id(),
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Logistics Courier Performance Report
+     */
+    public function generateLogisticsCourierPerformanceReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $courierPartnerId = $request->get('courier_partner_id');
+
+        $report = $this->logisticsReportingService->generateCourierPerformanceReport(
+            auth()->id(),
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate),
+            $courierPartnerId
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Logistics Return Report
+     */
+    public function generateLogisticsReturnReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->logisticsReportingService->generateReturnReport(
+            auth()->id(),
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
     }
 }

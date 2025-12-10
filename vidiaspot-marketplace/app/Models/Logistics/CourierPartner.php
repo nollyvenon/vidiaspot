@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Logistics;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class CourierPartner extends Model
+class CourierPartner extends BaseModel
 {
     protected $fillable = [
         'name',
@@ -112,7 +112,7 @@ class CourierPartner extends Model
      */
     public function deliveryOrders(): HasMany
     {
-        return $this->hasMany(DeliveryOrder::class);
+        return $this->hasMany(\App\Models\DeliveryOrder::class);
     }
 
     /**

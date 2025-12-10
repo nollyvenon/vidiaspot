@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\AdvancedTech;
 
 use App\Models\User;
 use App\Models\BlockchainVerification;

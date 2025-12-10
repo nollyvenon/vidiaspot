@@ -642,7 +642,7 @@ class TrustSafetyService
                 $vendor = \App\Models\FoodVendor::find($entityId);
                 return $vendor ? $vendor->user_id : null;
             case 'courier_partner':
-                $partner = \App\Models\CourierPartner::find($entityId);
+                $partner = \App\Models\Logistics\CourierPartner::find($entityId);
                 return $partner ? $partner->user_id : null;
             case 'location':
                 $location = \App\Models\Location::find($entityId);

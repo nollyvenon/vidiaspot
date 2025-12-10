@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Payments;
 
 use App\Http\Requests\StoreP2pCryptoOrderRequest;
 use App\Http\Requests\StoreP2pCryptoTradingOrderRequest;

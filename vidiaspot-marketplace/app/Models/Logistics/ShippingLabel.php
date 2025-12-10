@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Logistics;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ShippingLabel extends Model
+class ShippingLabel extends BaseModel
 {
     protected $fillable = [
         'user_id',
@@ -113,7 +113,7 @@ class ShippingLabel extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(\App\Models\User::class);
     }
 
     /**

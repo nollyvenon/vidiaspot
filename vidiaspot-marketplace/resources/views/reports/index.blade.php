@@ -420,7 +420,84 @@ r your crypto P2P marketplace</p>
                             </div>
                         </div>
                     </div>
-                    
+
+                    <!-- Logistics Reports -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h6 class="text-primary mb-3">Logistics Reports</h6>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card card-hover border shadow-none">
+                                <div class="card-body text-center">
+                                    <i class="mdi mdi-truck-delivery h2 text-success"></i>
+                                    <h6 class="mt-2">Shipment Analytics</h6>
+                                    <p class="text-muted font-13">Shipment volume & success rates</p>
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('reports.generate', ['type' => 'shipment']) }}" class="btn btn-outline-primary btn-sm">Generate</a>
+                                        <a href="{{ route('reports.list', ['type' => 'shipment']) }}" class="btn btn-outline-info btn-sm">View Reports</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card card-hover border shadow-none">
+                                <div class="card-body text-center">
+                                    <i class="mdi mdi-truck-fast h2 text-info"></i>
+                                    <h6 class="mt-2">Delivery Performance</h6>
+                                    <p class="text-muted font-13">On-time delivery & efficiency</p>
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('reports.generate', ['type' => 'delivery']) }}" class="btn btn-outline-primary btn-sm">Generate</a>
+                                        <a href="{{ route('reports.list', ['type' => 'delivery']) }}" class="btn btn-outline-info btn-sm">View Reports</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card card-hover border shadow-none">
+                                <div class="card-body text-center">
+                                    <i class="mdi mdi-warehouse h2 text-warning"></i>
+                                    <h6 class="mt-2">Warehouse Operations</h6>
+                                    <p class="text-muted font-13">Inventory & storage efficiency</p>
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('reports.generate', ['type' => 'warehouse']) }}" class="btn btn-outline-primary btn-sm">Generate</a>
+                                        <a href="{{ route('reports.list', ['type' => 'warehouse']) }}" class="btn btn-outline-info btn-sm">View Reports</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card card-hover border shadow-none">
+                                <div class="card-body text-center">
+                                    <i class="mdi mdi-timeline-clock h2 text-purple"></i>
+                                    <h6 class="mt-2">Courier Performance</h6>
+                                    <p class="text-muted font-13">Partner delivery metrics</p>
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('reports.generate', ['type' => 'courier-performance']) }}" class="btn btn-outline-primary btn-sm">Generate</a>
+                                        <a href="{{ route('reports.list', ['type' => 'courier-performance']) }}" class="btn btn-outline-info btn-sm">View Reports</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card card-hover border shadow-none">
+                                <div class="card-body text-center">
+                                    <i class="mdi mdi-undo-variant h2 text-danger"></i>
+                                    <h6 class="mt-2">Return Management</h6>
+                                    <p class="text-muted font-13">Return rates & resolution</p>
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('reports.generate', ['type' => 'return']) }}" class="btn btn-outline-primary btn-sm">Generate</a>
+                                        <a href="{{ route('reports.list', ['type' => 'return']) }}" class="btn btn-outline-info btn-sm">View Reports</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Advanced Analytics Reports -->
                     <div class="row mb-4">
                         <div class="col-md-12">

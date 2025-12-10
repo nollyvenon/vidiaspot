@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\General;
 
 use App\Services\QueueService;
 use App\Jobs\SendEmailJob;

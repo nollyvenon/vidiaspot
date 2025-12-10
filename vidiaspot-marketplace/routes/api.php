@@ -479,21 +479,21 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/advanced-listings/features/{adId}', [\App\Http\Controllers\AdvancedListingController::class, 'getAdvancedListingFeatures']);
 
     // Logistics integration routes
-    Route::get('/logistics/partners', [\App\Http\Controllers\LogisticsController::class, 'getLogisticsPartners']);
-    Route::post('/logistics/shipping-label', [\App\Http\Controllers\LogisticsController::class, 'generateShippingLabel']);
-    Route::post('/logistics/returns', [\App\Http\Controllers\LogisticsController::class, 'processReturnRequest']);
-    Route::get('/logistics/returns/dashboard', [\App\Http\Controllers\LogisticsController::class, 'getReturnManagementDashboard']);
-    Route::post('/logistics/protection', [\App\Http\Controllers\LogisticsController::class, 'generatePackageInsurance']);
-    Route::post('/logistics/warehouse-integration', [\App\Http\Controllers\LogisticsController::class, 'warehouseIntegration']);
-    Route::post('/logistics/sync-inventory', [\App\Http\Controllers\LogisticsController::class, 'synchronizeInventory']);
-    Route::get('/logistics/user-protections', [\App\Http\Controllers\LogisticsController::class, 'getUserProtections']);
-    Route::post('/logistics/protection/{id}/claim', [\App\Http\Controllers\LogisticsController::class, 'fileProtectionClaim']);
-    Route::get('/logistics/verification-status/{userId?}', [\App\Http\Controllers\LogisticsController::class, 'getUserVerificationStatus']);
-    Route::get('/logistics/trust-score/{userId?}', [\App\Http\Controllers\LogisticsController::class, 'getUserTrustScore']);
+    Route::get('/logistics/partners', [\App\Http\Controllers\Logistics\LogisticsController::class, 'getLogisticsPartners']);
+    Route::post('/logistics/shipping-label', [\App\Http\Controllers\Logistics\LogisticsController::class, 'generateShippingLabel']);
+    Route::post('/logistics/returns', [\App\Http\Controllers\Logistics\LogisticsController::class, 'processReturnRequest']);
+    Route::get('/logistics/returns/dashboard', [\App\Http\Controllers\Logistics\LogisticsController::class, 'getReturnManagementDashboard']);
+    Route::post('/logistics/protection', [\App\Http\Controllers\Logistics\LogisticsController::class, 'generatePackageInsurance']);
+    Route::post('/logistics/warehouse-integration', [\App\Http\Controllers\Logistics\LogisticsController::class, 'warehouseIntegration']);
+    Route::post('/logistics/sync-inventory', [\App\Http\Controllers\Logistics\LogisticsController::class, 'synchronizeInventory']);
+    Route::get('/logistics/user-protections', [\App\Http\Controllers\Logistics\LogisticsController::class, 'getUserProtections']);
+    Route::post('/logistics/protection/{id}/claim', [\App\Http\Controllers\Logistics\LogisticsController::class, 'fileProtectionClaim']);
+    Route::get('/logistics/verification-status/{userId?}', [\App\Http\Controllers\Logistics\LogisticsController::class, 'getUserVerificationStatus']);
+    Route::get('/logistics/trust-score/{userId?}', [\App\Http\Controllers\Logistics\LogisticsController::class, 'getUserTrustScore']);
 
     // Admin logistics management routes
-    Route::get('/admin/reports/moderation', [\App\Http\Controllers\LogisticsController::class, 'getReportsForModeration']);
-    Route::patch('/admin/reports/{id}/status', [\App\Http\Controllers\LogisticsController::class, 'updateReportStatus']);
+    Route::get('/admin/reports/moderation', [\App\Http\Controllers\Logistics\LogisticsController::class, 'getReportsForModeration']);
+    Route::patch('/admin/reports/{id}/status', [\App\Http\Controllers\Logistics\LogisticsController::class, 'updateReportStatus']);
 
     // Enhanced insurance features
     Route::post('/insurance/calculate-premium', [\App\Http\Controllers\VendorStoreController::class, 'calculateInsurancePremium']);

@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Logistics;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Warehouse extends Model
+class Warehouse extends BaseModel
 {
     protected $fillable = [
         'user_id', // Owner of the warehouse (for multi-vendor support)
@@ -200,7 +200,7 @@ class Warehouse extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(\App\Models\User::class);
     }
 
     /**

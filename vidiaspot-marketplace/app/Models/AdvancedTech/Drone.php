@@ -45,7 +45,7 @@ class Drone extends BaseModel
 
     public function assignedCourierPartner()
     {
-        return $this->belongsTo(CourierPartner::class);
+        return $this->belongsTo(\App\Models\Logistics\CourierPartner::class);
     }
 
     public function currentMission()

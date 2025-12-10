@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Logistics;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ReturnRequest extends Model
+class ReturnRequest extends BaseModel
 {
     protected $fillable = [
         'user_id',
@@ -113,7 +113,7 @@ class ReturnRequest extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(\App\Models\User::class);
     }
 
     /**
@@ -145,7 +145,7 @@ class ReturnRequest extends Model
      */
     public function vendor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'vendor_id');
+        return $this->belongsTo(\App\Models\User::class, 'vendor_id');
     }
 
     /**
@@ -153,7 +153,7 @@ class ReturnRequest extends Model
      */
     public function returnShippingLabel(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\ShippingLabel::class, 'return_shipping_label_id');
+        return $this->belongsTo(\App\Models\Logistics\ShippingLabel::class, 'return_shipping_label_id');
     }
 
     /**

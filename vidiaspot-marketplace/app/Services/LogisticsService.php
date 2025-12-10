@@ -2,12 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\ShippingLabel;
-use App\Models\CourierPartner;
-use App\Models\ReturnRequest;
+use App\Models\Logistics\ShippingLabel;
+use App\Models\Logistics\CourierPartner;
+use App\Models\Logistics\ReturnRequest;
 use App\Models\BuyerProtection;
 use App\Models\InventoryTracking;
-use App\Models\Warehouse;
+use App\Models\Logistics\Warehouse;
 use App\Models\Ad;
 use App\Models\User;
 use App\Models\TrustScore;

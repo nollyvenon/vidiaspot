@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Logistics;
 
 use App\Services\LogisticsService;
-use App\Models\ShippingLabel;
-use App\Models\CourierPartner;
-use App\Models\ReturnRequest;
+use App\Models\Logistics\ShippingLabel;
+use App\Models\Logistics\CourierPartner;
+use App\Models\Logistics\ReturnRequest;
 use App\Models\BuyerProtection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

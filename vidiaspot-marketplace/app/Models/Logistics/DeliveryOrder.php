@@ -157,7 +157,7 @@ class DeliveryOrder extends Model
      */
     public function courierPartner(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\CourierPartner::class, 'courier_partner_id');
+        return $this->belongsTo(\App\Models\Logistics\CourierPartner::class, 'courier_partner_id');
     }
 
     /**
