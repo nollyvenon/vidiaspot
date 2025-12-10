@@ -242,4 +242,28 @@ Route::middleware(['auth:sanctum'])->prefix('reports')->name('reports.')->group(
     Route::get('/list/{type}', [App\Http\Controllers\ReportsController::class, 'list'])->name('list');
     Route::get('/view/{type}/{id}', [App\Http\Controllers\ReportsController::class, 'show'])->name('show');
     Route::get('/live-dashboard', [App\Http\Controllers\ReportsController::class, 'liveDashboard'])->name('live-dashboard');
+
+    // Food Reporting Routes
+    Route::get('/generate/food-sales-revenue', [App\Http\Controllers\ReportsController::class, 'generateFoodSalesRevenueReport']);
+    Route::get('/generate/food-operational-efficiency', [App\Http\Controllers\ReportsController::class, 'generateFoodOperationalEfficiencyReport']);
+    Route::get('/generate/food-customer-experience', [App\Http\Controllers\ReportsController::class, 'generateFoodCustomerExperienceReport']);
+    Route::get('/generate/food-financial', [App\Http\Controllers\ReportsController::class, 'generateFoodFinancialReport']);
+
+    // Classified Reporting Routes
+    Route::get('/generate/classified-user-activity', [App\Http\Controllers\ReportsController::class, 'generateClassifiedUserActivityReport']);
+    Route::get('/generate/classified-revenue', [App\Http\Controllers\ReportsController::class, 'generateClassifiedRevenueReport']);
+    Route::get('/generate/classified-content-quality', [App\Http\Controllers\ReportsController::class, 'generateClassifiedContentQualityReport']);
+    Route::get('/generate/classified-market-intelligence', [App\Http\Controllers\ReportsController::class, 'generateClassifiedMarketIntelligenceReport']);
+
+    // E-commerce Reporting Routes
+    Route::get('/generate/ecommerce-sales-performance', [App\Http\Controllers\ReportsController::class, 'generateEcommerceSalesPerformanceReport']);
+    Route::get('/generate/ecommerce-inventory', [App\Http\Controllers\ReportsController::class, 'generateEcommerceInventoryReport']);
+    Route::get('/generate/ecommerce-marketing-customer', [App\Http\Controllers\ReportsController::class, 'generateEcommerceMarketingCustomerReport']);
+    Route::get('/generate/ecommerce-financial-operational', [App\Http\Controllers\ReportsController::class, 'generateEcommerceFinancialOperationalReport']);
+
+    // Cross-Platform Reporting Routes
+    Route::get('/generate/unified-financial-dashboard', [App\Http\Controllers\ReportsController::class, 'generateUnifiedFinancialDashboardReport']);
+    Route::get('/generate/cross-platform-customer-journey', [App\Http\Controllers\ReportsController::class, 'generateCrossPlatformCustomerJourneyReport']);
+    Route::get('/generate/cross-platform-operational-efficiency', [App\Http\Controllers\ReportsController::class, 'generateCrossPlatformOperationalEfficiencyReport']);
+    Route::get('/generate/cross-platform-risk-management', [App\Http\Controllers\ReportsController::class, 'generateCrossPlatformRiskManagementReport']);
 });

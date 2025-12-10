@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\CryptoP2PReportingService;
+use App\Services\FoodReportingService;
+use App\Services\ClassifiedReportingService;
+use App\Services\EcommerceReportingService;
+use App\Services\CrossPlatformReportingService;
 use App\Models\BalanceSheetReport;
 use App\Models\IncomeStatementReport;
 use App\Models\CashFlowReport;
@@ -25,11 +29,24 @@ use App\Models\LiveDashboardReport;
 
 class ReportsController extends Controller
 {
-    protected $reportingService;
+    protected $cryptoP2PReportingService;
+    protected $foodReportingService;
+    protected $classifiedReportingService;
+    protected $ecommerceReportingService;
+    protected $crossPlatformReportingService;
 
-    public function __construct(CryptoP2PReportingService $reportingService)
-    {
-        $this->reportingService = $reportingService;
+    public function __construct(
+        CryptoP2PReportingService $cryptoP2PReportingService,
+        FoodReportingService $foodReportingService,
+        ClassifiedReportingService $classifiedReportingService,
+        EcommerceReportingService $ecommerceReportingService,
+        CrossPlatformReportingService $crossPlatformReportingService
+    ) {
+        $this->cryptoP2PReportingService = $cryptoP2PReportingService;
+        $this->foodReportingService = $foodReportingService;
+        $this->classifiedReportingService = $classifiedReportingService;
+        $this->ecommerceReportingService = $ecommerceReportingService;
+        $this->crossPlatformReportingService = $crossPlatformReportingService;
         $this->middleware('auth');
     }
 
@@ -287,7 +304,319 @@ class ReportsController extends Controller
      */
     public function liveDashboard()
     {
-        $report = $this->reportingService->getLiveDashboardReport();
+        $report = $this->cryptoP2PReportingService->getLiveDashboardReport();
         return view('reports.live-dashboard', compact('report'));
+    }
+
+    /**
+     * Generate Food Sales & Revenue Report
+     */
+    public function generateFoodSalesRevenueReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $vendorId = $request->get('vendor_id');
+
+        $report = $this->foodReportingService->generateSalesRevenueReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate),
+            $vendorId
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Food Operational Efficiency Report
+     */
+    public function generateFoodOperationalEfficiencyReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $vendorId = $request->get('vendor_id');
+
+        $report = $this->foodReportingService->generateOperationalEfficiencyReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate),
+            $vendorId
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Food Customer Experience Report
+     */
+    public function generateFoodCustomerExperienceReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $vendorId = $request->get('vendor_id');
+
+        $report = $this->foodReportingService->generateCustomerExperienceReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate),
+            $vendorId
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Food Financial Report
+     */
+    public function generateFoodFinancialReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $vendorId = $request->get('vendor_id');
+
+        $report = $this->foodReportingService->generateFoodFinancialReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate),
+            $vendorId
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Classified User Activity Report
+     */
+    public function generateClassifiedUserActivityReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->classifiedReportingService->generateUserActivityReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Classified Revenue Report
+     */
+    public function generateClassifiedRevenueReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->classifiedReportingService->generateRevenueReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Classified Content Quality Report
+     */
+    public function generateClassifiedContentQualityReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->classifiedReportingService->generateContentQualityReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Classified Market Intelligence Report
+     */
+    public function generateClassifiedMarketIntelligenceReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->classifiedReportingService->generateMarketIntelligenceReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate E-commerce Sales Performance Report
+     */
+    public function generateEcommerceSalesPerformanceReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->ecommerceReportingService->generateSalesPerformanceReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate E-commerce Inventory Report
+     */
+    public function generateEcommerceInventoryReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->ecommerceReportingService->generateInventoryReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate E-commerce Marketing & Customer Report
+     */
+    public function generateEcommerceMarketingCustomerReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->ecommerceReportingService->generateMarketingCustomerReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate E-commerce Financial & Operational Report
+     */
+    public function generateEcommerceFinancialOperationalReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->ecommerceReportingService->generateFinancialOperationalReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Unified Financial Dashboard Report
+     */
+    public function generateUnifiedFinancialDashboardReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->crossPlatformReportingService->generateUnifiedFinancialDashboard(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Cross-Platform Customer Journey Report
+     */
+    public function generateCrossPlatformCustomerJourneyReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->crossPlatformReportingService->generateCustomerJourneyReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Cross-Platform Operational Efficiency Report
+     */
+    public function generateCrossPlatformOperationalEfficiencyReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->crossPlatformReportingService->generateOperationalEfficiencyReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Generate Cross-Platform Risk Management Report
+     */
+    public function generateCrossPlatformRiskManagementReport(Request $request)
+    {
+        $startDate = $request->get('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+
+        $report = $this->crossPlatformReportingService->generateRiskManagementReport(
+            \Carbon\Carbon::parse($startDate),
+            \Carbon\Carbon::parse($endDate)
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
     }
 }
