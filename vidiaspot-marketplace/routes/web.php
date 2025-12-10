@@ -234,3 +234,12 @@ Route::middleware(['auth'])->prefix('input-methods')->group(function () {
 Route::get('/accessibility', function () {
     return view('accessibility.settings');
 })->name('accessibility.page');
+
+// Reports routes
+Route::middleware(['auth:sanctum'])->prefix('reports')->name('reports.')->group(function () {
+    Route::get('/', [App\Http\Controllers\ReportsController::class, 'index'])->name('index');
+    Route::get('/generate/{type}', [App\Http\Controllers\ReportsController::class, 'generate'])->name('generate');
+    Route::get('/list/{type}', [App\Http\Controllers\ReportsController::class, 'list'])->name('list');
+    Route::get('/view/{type}/{id}', [App\Http\Controllers\ReportsController::class, 'show'])->name('show');
+    Route::get('/live-dashboard', [App\Http\Controllers\ReportsController::class, 'liveDashboard'])->name('live-dashboard');
+});
