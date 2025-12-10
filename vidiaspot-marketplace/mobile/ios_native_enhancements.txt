@@ -1,0 +1,12 @@
+// ios/Runner/Info.plist (adding permissions and capabilities)
+
+// Note: This would be merged with the existing Info.plist
+// Required permissions for the features
+<key>NSFaceIDUsageDescription</key>
+<string>This app uses Face ID to securely authenticate transactions and access your crypto wallet.</string>
+
+<key>NSCameraUsageDescription</key>
+<string>This app uses the camera to scan QR codes for crypto transactions.</string>
+
+<key>NSPhotoLibraryUsageDescription</key>
+<string>This app accesses your photo library to import wallet backup files.</string>

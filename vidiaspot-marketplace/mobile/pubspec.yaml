@@ -34,9 +34,9 @@ dependencies:
   flutter_staggered_grid_view: ^0.7.0
   shimmer: ^3.0.0
 
-  # Push notifications (will be implemented in native app)
-  # firebase_messaging: ^14.6.7
-  # firebase_core: ^2.15.1
+  # Push notifications
+  firebase_messaging: ^14.6.7
+  firebase_core: ^2.15.1
 
   # Location services
   geolocator: ^9.0.2
@@ -63,6 +63,28 @@ dependencies:
 
   # Internationalization
   intl: ^0.18.0
+
+  # Biometric authentication
+  local_auth: ^2.1.6
+
+  # QR code scanning
+  qr_code_scanner: ^1.0.1
+  qr_flutter: ^4.0.0
+
+  # Advanced charting for analytics
+  flutter_candlesticks: ^0.1.6
+  syncfusion_flutter_charts: ^23.1.36
+
+  # Cryptocurrency utilities
+  web3dart: ^2.6.1
+  bip39: ^1.0.6
+
+  # Background processing
+  workmanager: ^0.5.1
+
+  # Accessibility
+  flutter_screenutil: ^5.8.4
+  flutter_tts: ^3.6.0
 
 dev_dependencies:
   flutter_test:
