@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
         $this->call(StoreTemplatesTableSeeder::class);
         $this->call(InsuranceProvidersTableSeeder::class);
         $this->call(FeatureFlagsTableSeeder::class);
+        $this->call(ReportsSeeder::class);
 
         // Create an admin user
         $admin = User::factory()->create([

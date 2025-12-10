@@ -935,3 +935,97 @@ Route::middleware(['auth:sanctum'])->prefix('features')->group(function () {
     Route::get('/{featureKey}', [App\Http\Controllers\FeatureManagementController::class, 'checkFeature']);
     Route::post('/check-multiple', [App\Http\Controllers\FeatureManagementController::class, 'checkMultipleFeatures']);
 });
+
+// Crypto P2P Reports routes
+Route::middleware(['auth:sanctum'])->prefix('reports')->group(function () {
+    // Balance Sheet Reports
+    Route::post('/balance-sheet', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateBalanceSheet']);
+    Route::get('/balance-sheet', [App\Http\Controllers\CryptoP2PReportsController::class, 'getBalanceSheets']);
+    Route::get('/balance-sheet/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getBalanceSheet']);
+
+    // Income Statement Reports
+    Route::post('/income-statement', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateIncomeStatement']);
+    Route::get('/income-statement', [App\Http\Controllers\CryptoP2PReportsController::class, 'getIncomeStatements']);
+    Route::get('/income-statement/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getIncomeStatement']);
+
+    // Cash Flow Reports
+    Route::post('/cash-flow', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateCashFlowReport']);
+    Route::get('/cash-flow', [App\Http\Controllers\CryptoP2PReportsController::class, 'getCashFlowReports']);
+    Route::get('/cash-flow/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getCashFlowReport']);
+
+    // Daily Trading Reports
+    Route::post('/daily-trading', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateDailyTradingReport']);
+    Route::get('/daily-trading', [App\Http\Controllers\CryptoP2PReportsController::class, 'getDailyTradingReports']);
+    Route::get('/daily-trading/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getDailyTradingReport']);
+
+    // User Activity Reports
+    Route::post('/user-activity', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateUserActivityReport']);
+    Route::get('/user-activity', [App\Http\Controllers\CryptoP2PReportsController::class, 'getUserActivityReports']);
+
+    // User Trade History Reports
+    Route::post('/user-trade-history', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateUserTradeHistoryReport']);
+    Route::get('/user-trade-history', [App\Http\Controllers\CryptoP2PReportsController::class, 'getUserTradeHistoryReports']);
+    Route::get('/user-trade-history/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getUserTradeHistoryReport']);
+
+    // User Segmentation Reports
+    Route::post('/user-segmentation', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateUserSegmentationReport']);
+    Route::get('/user-segmentation', [App\Http\Controllers\CryptoP2PReportsController::class, 'getUserSegmentationReports']);
+    Route::get('/user-segmentation/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getUserSegmentationReport']);
+
+    // Security Reports
+    Route::post('/security', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateSecurityReport']);
+    Route::get('/security', [App\Http\Controllers\CryptoP2PReportsController::class, 'getSecurityReports']);
+    Route::get('/security/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getSecurityReport']);
+
+    // Market Risk Reports
+    Route::post('/market-risk', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateMarketRiskReport']);
+    Route::get('/market-risk', [App\Http\Controllers\CryptoP2PReportsController::class, 'getMarketRiskReports']);
+    Route::get('/market-risk/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getMarketRiskReport']);
+
+    // AML/KYC Reports
+    Route::post('/aml-kyc', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateAmlKycReport']);
+    Route::get('/aml-kyc', [App\Http\Controllers\CryptoP2PReportsController::class, 'getAmlKycReports']);
+    Route::get('/aml-kyc/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getAmlKycReport']);
+
+    // Tax Reports
+    Route::post('/tax', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateTaxReport']);
+    Route::get('/tax', [App\Http\Controllers\CryptoP2PReportsController::class, 'getTaxReports']);
+    Route::get('/tax/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getTaxReport']);
+
+    // System Performance Reports
+    Route::post('/system-performance', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateSystemPerformanceReport']);
+    Route::get('/system-performance', [App\Http\Controllers\CryptoP2PReportsController::class, 'getSystemPerformanceReports']);
+    Route::get('/system-performance/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getSystemPerformanceReport']);
+
+    // Customer Service Reports
+    Route::post('/customer-service', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateCustomerServiceReport']);
+    Route::get('/customer-service', [App\Http\Controllers\CryptoP2PReportsController::class, 'getCustomerServiceReports']);
+    Route::get('/customer-service/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getCustomerServiceReport']);
+
+    // General Ledger Reports
+    Route::post('/general-ledger', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateGeneralLedgerReport']);
+    Route::get('/general-ledger', [App\Http\Controllers\CryptoP2PReportsController::class, 'getGeneralLedgerReports']);
+    Route::get('/general-ledger/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getGeneralLedgerReport']);
+
+    // Revenue Recognition Reports
+    Route::post('/revenue-recognition', [App\Http\Controllers\CryptoP2PReportsController::class, 'generateRevenueRecognitionReport']);
+    Route::get('/revenue-recognition', [App\Http\Controllers\CryptoP2PReportsController::class, 'getRevenueRecognitionReports']);
+    Route::get('/revenue-recognition/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getRevenueRecognitionReport']);
+
+    // Predictive Analytics Reports
+    Route::post('/predictive-analytics', [App\Http\Controllers\CryptoP2PReportsController::class, 'generatePredictiveAnalyticsReport']);
+    Route::get('/predictive-analytics', [App\Http\Controllers\CryptoP2PReportsController::class, 'getPredictiveAnalyticsReports']);
+    Route::get('/predictive-analytics/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getPredictiveAnalyticsReport']);
+
+    // Performance Metrics Reports
+    Route::post('/performance-metrics', [App\Http\Controllers\CryptoP2PReportsController::class, 'generatePerformanceMetricsReport']);
+    Route::get('/performance-metrics', [App\Http\Controllers\CryptoP2PReportsController::class, 'getPerformanceMetricsReports']);
+    Route::get('/performance-metrics/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getPerformanceMetricsReport']);
+
+    // Live Dashboard Report
+    Route::get('/live-dashboard', [App\Http\Controllers\CryptoP2PReportsController::class, 'getLiveDashboardReport']);
+
+    // Automated Alert Reports
+    Route::get('/automated-alerts', [App\Http\Controllers\CryptoP2PReportsController::class, 'getAutomatedAlertReports']);
+    Route::get('/automated-alerts/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getAutomatedAlertReport']);
+});
