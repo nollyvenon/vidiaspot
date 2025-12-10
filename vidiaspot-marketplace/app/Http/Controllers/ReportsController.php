@@ -47,6 +47,7 @@ class ReportsController extends Controller
         $this->classifiedReportingService = $classifiedReportingService;
         $this->ecommerceReportingService = $ecommerceReportingService;
         $this->crossPlatformReportingService = $crossPlatformReportingService;
+
         $this->middleware('auth');
     }
 
@@ -618,5 +619,8 @@ class ReportsController extends Controller
             'success' => true,
             'data' => $report
         ]);
+    
+        $report = $this->reportingService->getLiveDashboardReport();
+        return view('reports.live-dashboard', compact('report'));
     }
 }
