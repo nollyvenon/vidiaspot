@@ -1,45 +1,10 @@
 import apiClient from './api';
 
 const foodVendorService = {
-  // Get all food vendors
-  getVendors: async (params = {}) => {
+  // Get vendor's menu
+  getVendorMenu: async (vendorId) => {
     try {
-      const response = await apiClient.get('/food-vendors', { params });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching food vendors:', error);
-      throw error;
-    }
-  },
-
-  // Get vendor by ID
-  getVendor: async (vendorId) => {
-    try {
-      const response = await apiClient.get(`/food-vendors/${vendorId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching vendor:', error);
-      throw error;
-    }
-  },
-
-  // Search vendors
-  searchVendors: async (query, params = {}) => {
-    try {
-      const response = await apiClient.get('/food-vendors/search', {
-        params: { ...params, q: query }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error searching vendors:', error);
-      throw error;
-    }
-  },
-
-  // Get vendor menu
-  getVendorMenu: async (vendorId, params = {}) => {
-    try {
-      const response = await apiClient.get(`/food-vendors/${vendorId}/menu`, { params });
+      const response = await apiClient.get(`/food-vendors/${vendorId}/menu`);
       return response.data;
     } catch (error) {
       console.error('Error fetching vendor menu:', error);
@@ -47,112 +12,156 @@ const foodVendorService = {
     }
   },
 
-  // Get menu by category
-  getVendorMenuByCategory: async (vendorId, category) => {
+  // Get vendor's menu items
+  getVendorMenuItems: async (vendorId) => {
     try {
-      const response = await apiClient.get(`/food-vendors/${vendorId}/menu/category/${category}`);
+      const response = await apiClient.get(`/food-vendors/${vendorId}/menu-items`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching vendor menu by category:', error);
+      console.error('Error fetching vendor menu items:', error);
       throw error;
     }
   },
 
-  // Get popular menu items
-  getPopularMenuItems: async (vendorId) => {
+  // Add a new menu item
+  addMenuItem: async (vendorId, menuItemData) => {
     try {
-      const response = await apiClient.get(`/food-vendors/${vendorId}/menu/popular`);
+      const response = await apiClient.post(`/food-vendors/${vendorId}/menu-items`, menuItemData);
       return response.data;
     } catch (error) {
-      console.error('Error fetching popular menu items:', error);
+      console.error('Error adding menu item:', error);
       throw error;
     }
   },
 
-  // Place order
-  placeOrder: async (orderData) => {
+  // Update a menu item
+  updateMenuItem: async (vendorId, menuItemId, menuItemData) => {
     try {
-      const response = await apiClient.post('/food-orders', orderData);
+      const response = await apiClient.put(`/food-vendors/${vendorId}/menu-items/${menuItemId}`, menuItemData);
       return response.data;
     } catch (error) {
-      console.error('Error placing order:', error);
+      console.error('Error updating menu item:', error);
       throw error;
     }
   },
 
-  // Get user's order history
-  getOrderHistory: async (params = {}) => {
+  // Delete a menu item
+  deleteMenuItem: async (vendorId, menuItemId) => {
     try {
-      const response = await apiClient.get('/food-orders', { params });
+      const response = await apiClient.delete(`/food-vendors/${vendorId}/menu-items/${menuItemId}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching order history:', error);
+      console.error('Error deleting menu item:', error);
       throw error;
     }
   },
 
-  // Get specific order
-  getOrder: async (orderNumber) => {
+  // Update menu item availability
+  updateMenuItemAvailability: async (vendorId, menuItemId, availability) => {
     try {
-      const response = await apiClient.get(`/food-orders/${orderNumber}`);
+      const response = await apiClient.put(`/food-vendors/${vendorId}/menu-items/${menuItemId}/availability`, { availability });
       return response.data;
     } catch (error) {
-      console.error('Error fetching order:', error);
+      console.error('Error updating menu item availability:', error);
       throw error;
     }
   },
 
-  // Update order status
-  updateOrderStatus: async (orderNumber, status) => {
+  // Update menu item inventory
+  updateMenuItemInventory: async (vendorId, menuItemId, inventory) => {
     try {
-      const response = await apiClient.put(`/food-orders/${orderNumber}/status`, { status });
+      const response = await apiClient.put(`/food-vendors/${vendorId}/menu-items/${menuItemId}/inventory`, { inventory });
       return response.data;
     } catch (error) {
-      console.error('Error updating order status:', error);
+      console.error('Error updating menu item inventory:', error);
       throw error;
     }
   },
 
-  // Get vendor stats
-  getVendorStats: async (vendorId) => {
+  // Get vendor's daily specials
+  getDailySpecials: async (vendorId) => {
     try {
-      const response = await apiClient.get(`/food-vendors/${vendorId}/stats`);
+      const response = await apiClient.get(`/food-vendors/${vendorId}/daily-specials`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching vendor stats:', error);
+      console.error('Error fetching daily specials:', error);
       throw error;
     }
   },
 
-  // Get vendors by cuisine
-  getVendorsByCuisine: async (cuisineType, params = {}) => {
+  // Add daily special
+  addDailySpecial: async (vendorId, specialData) => {
     try {
-      const response = await apiClient.get(`/food-vendors/cuisine/${cuisineType}`, { params });
+      const response = await apiClient.post(`/food-vendors/${vendorId}/daily-specials`, specialData);
       return response.data;
     } catch (error) {
-      console.error('Error fetching vendors by cuisine:', error);
+      console.error('Error adding daily special:', error);
       throw error;
     }
   },
 
-  // Get delivery zones
-  getDeliveryZones: async (vendorId) => {
+  // Get vendor's categories
+  getVendorCategories: async (vendorId) => {
     try {
-      const response = await apiClient.get(`/food-vendors/${vendorId}/delivery-zones`);
+      const response = await apiClient.get(`/food-vendors/${vendorId}/categories`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching delivery zones:', error);
+      console.error('Error fetching vendor categories:', error);
       throw error;
     }
   },
 
-  // Check delivery availability
-  checkDeliveryAvailability: async (vendorId, address) => {
+  // Add category
+  addCategory: async (vendorId, categoryData) => {
     try {
-      const response = await apiClient.post(`/food-vendors/${vendorId}/check-delivery`, { address });
+      const response = await apiClient.post(`/food-vendors/${vendorId}/categories`, categoryData);
       return response.data;
     } catch (error) {
-      console.error('Error checking delivery availability:', error);
+      console.error('Error adding category:', error);
+      throw error;
+    }
+  },
+
+  // Update category
+  updateCategory: async (vendorId, categoryId, categoryData) => {
+    try {
+      const response = await apiClient.put(`/food-vendors/${vendorId}/categories/${categoryId}`, categoryData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+  },
+
+  // Delete category
+  deleteCategory: async (vendorId, categoryId) => {
+    try {
+      const response = await apiClient.delete(`/food-vendors/${vendorId}/categories/${categoryId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      throw error;
+    }
+  },
+
+  // Get vendor's order history
+  getVendorOrderHistory: async (vendorId, params = {}) => {
+    try {
+      const response = await apiClient.get(`/food-vendors/${vendorId}/orders`, { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching vendor order history:', error);
+      throw error;
+    }
+  },
+
+  // Get vendor analytics
+  getVendorAnalytics: async (vendorId, params = {}) => {
+    try {
+      const response = await apiClient.get(`/food-vendors/${vendorId}/analytics`, { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching vendor analytics:', error);
       throw error;
     }
   }

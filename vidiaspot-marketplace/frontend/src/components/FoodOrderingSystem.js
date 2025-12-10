@@ -158,8 +158,8 @@ const FoodOrderingSystem = () => {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Food Ordering System</h1>
-        <p className="text-gray-600">Order from local food vendors and restaurants</p>
+        <h1 className="text-3xl font-bold text-gray-900">Food Delivery & Ordering System</h1>
+        <p className="text-gray-600">Order from restaurants, food vendors, and delivery hubs near you</p>
       </div>
 
       {error && (
@@ -180,7 +180,7 @@ const FoodOrderingSystem = () => {
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
-            Vendors
+            Restaurants
           </button>
           <button
             onClick={() => setActiveTab('menu')}
@@ -193,7 +193,7 @@ const FoodOrderingSystem = () => {
                   : 'border-transparent text-gray-300 cursor-not-allowed'
             }`}
           >
-            Menu
+            {selectedVendor?.name || 'Menu'}
           </button>
           <button
             onClick={() => setActiveTab('cart')}
@@ -205,6 +205,16 @@ const FoodOrderingSystem = () => {
           >
             Cart ({getTotalCartItems()})
           </button>
+          <button
+            onClick={() => setActiveTab('orders')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'orders'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            My Orders
+          </button>
         </nav>
       </div>
 
@@ -214,7 +224,7 @@ const FoodOrderingSystem = () => {
           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
             <input
               type="text"
-              placeholder="Search restaurants or cuisines..."
+              placeholder="Search restaurants, cuisines, or dishes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -233,6 +243,9 @@ const FoodOrderingSystem = () => {
               <option value="thai">Thai</option>
               <option value="pizza">Pizza</option>
               <option value="burgers">Burgers</option>
+              <option value="healthy">Healthy</option>
+              <option value="fast_food">Fast Food</option>
+              <option value="desserts">Desserts</option>
             </select>
           </div>
         </div>
@@ -452,6 +465,41 @@ const FoodOrderingSystem = () => {
                 {loading ? 'Placing Order...' : `Place Order - ${(getCartTotal() + (selectedVendor?.delivery_fee || 0) + (getCartTotal() * 0.08)).toFixed(2)}`}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Orders Tab */}
+      {activeTab === 'orders' && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">My Order History</h2>
+          <div className="space-y-6">
+            {cartItems.length === 0 ? (
+              <div className="text-center py-10">
+                <p className="text-gray-500 text-lg">You haven't placed any orders yet.</p>
+                <button
+                  onClick={() => setActiveTab('vendors')}
+                  className="mt-4 bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700"
+                >
+                  Browse Restaurants
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {cartItems.map((item, index) => (
+                  <div key={index} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-medium">{item.name || item.product?.name}</h3>
+                      <span className="font-bold">${(item.price || item.product?.price)?.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Qty: {item.quantity}</span>
+                      <span>Total: ${(item.price || item.product?.price) * item.quantity?.toFixed(2)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
