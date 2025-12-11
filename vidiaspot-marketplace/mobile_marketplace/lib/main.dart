@@ -22,6 +22,8 @@ import 'screens/crypto_p2p/advanced/verification_status_screen.dart';
 import 'screens/ecommerce/ecommerce_home_screen.dart';
 // Food Vending screens
 import 'screens/food_vending/food_vending_home_screen.dart';
+// Farm Products screens
+import 'screens/farm_products/farm_products_home_screen.dart';
 // Logistics screens
 import 'screens/logistics/logistics_home_screen.dart';
 // Marketplace modules screen
@@ -92,6 +94,7 @@ class VidiaSpotApp extends StatelessWidget {
         '/verification-status': (context) => const VerificationStatusScreen(),
         '/ecommerce': (context) => const EcommerceHomeScreen(),
         '/food-vending': (context) => const FoodVendingHomeScreen(),
+        '/farm-products': (context) => const FarmProductsHomeScreen(),
         '/logistics': (context) => const LogisticsHomeScreen(),
         '/marketplace-modules': (context) => const MarketplaceModulesScreen(),
         '/iot': (context) => const IoTHomeScreen(),

@@ -307,6 +307,161 @@
                 </div>
             </div>
         </section>
+
+        <!-- Farm Products Section -->
+        <section class="py-5 bg-success text-white">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h2 class="display-5 fw-bold mb-3">Fresh Products from Local Farms</h2>
+                        <p class="lead mb-4">Connect directly with local farmers and buy fresh, organic products straight from the source.</p>
+                        <div class="d-flex flex-wrap gap-3">
+                            <a href="{{ route('farm.buyer.landing') }}" class="btn btn-light btn-lg">
+                                <i class="fas fa-shopping-basket me-2"></i> Shop Farm Products
+                            </a>
+                            <a href="{{ route('farm.seller.landing') }}" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-tractor me-2"></i> Sell Farm Products
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <img src="https://images.unsplash.com/photo-1464226184884-fa280b7dd3bb?auto=format&fit=crop&w=500&h=400&q=80" alt="Farm Products" class="img-fluid rounded shadow-lg" style="border-radius: 10px !important;">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Farm Categories Section -->
+        <section class="py-5">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 text-center mb-5">
+                        <h2 class="fw-bold">Farm Products</h2>
+                        <p class="text-muted">Fresh products directly from local farms</p>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <a href="{{ route('farm.products.index') . '?category=fresh-vegetables' }}" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm text-center">
+                                <div class="card-body p-4">
+                                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-carrot fa-2x text-success"></i>
+                                    </div>
+                                    <h5 class="card-title">Fresh Vegetables</h5>
+                                    <p class="card-text text-muted">Harvested today, delivered to you</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ route('farm.products.index') . '?category=fresh-fruits' }}" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm text-center">
+                                <div class="card-body p-4">
+                                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-apple-alt fa-2x text-success"></i>
+                                    </div>
+                                    <h5 class="card-title">Fresh Fruits</h5>
+                                    <p class="card-text text-muted">Juicy fruits from local orchards</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ route('farm.products.index') . '?category=organic-products' }}" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm text-center">
+                                <div class="card-body p-4">
+                                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-leaf fa-2x text-success"></i>
+                                    </div>
+                                    <h5 class="card-title">Organic Products</h5>
+                                    <p class="card-text text-muted">Certified organic, chemical-free</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ route('farm.products.index') . '?category=dairy-products' }}" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm text-center">
+                                <div class="card-body p-4">
+                                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-glass-whiskey fa-2x text-success"></i>
+                                    </div>
+                                    <h5 class="card-title">Dairy Products</h5>
+                                    <p class="card-text text-muted">Fresh milk, cheese & yogurt</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How Farm Marketplace Works -->
+        <section class="py-5 bg-light">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 text-center mb-5">
+                        <h2 class="fw-bold">How Farm Marketplace Works</h2>
+                        <p class="text-muted">Connecting farmers and buyers directly</p>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-4 text-center">
+                        <div class="mb-3">
+                            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px;">
+                                <i class="fas fa-farm fa-2x"></i>
+                            </div>
+                        </div>
+                        <h5>Farmers List Products</h5>
+                        <p class="text-muted">Farmers list their products with details about harvest date, farming practices, and location</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="mb-3">
+                            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px;">
+                                <i class="fas fa-search fa-2x"></i>
+                            </div>
+                        </div>
+                        <h5>Buyers Connect</h5>
+                        <p class="text-muted">Buyers find fresh products directly from local farms in their area</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="mb-3">
+                            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px;">
+                                <i class="fas fa-truck fa-2x"></i>
+                            </div>
+                        </div>
+                        <h5>Direct Delivery</h5>
+                        <p class="text-muted">Products delivered directly from farm to consumer</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- App Download Section -->
+        <section class="py-5">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-6 mb-4 mb-md-0">
+                        <h3 class="fw-bold mb-3">Download Our Apps</h3>
+                        <p class="lead mb-4">Experience the best farm-to-table marketplace with our dedicated mobile apps</p>
+                        <div class="d-flex flex-wrap gap-3">
+                            <a href="#" class="btn btn-success btn-lg">
+                                <i class="fab fa-google-play me-2"></i> Google Play
+                            </a>
+                            <a href="#" class="btn btn-success btn-lg">
+                                <i class="fab fa-app-store-ios me-2"></i> App Store
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <img src="https://placehold.co/300x600/28a745/ffffff?text=VidiaSpot+Farm+App" alt="VidiaSpot Farm App" class="img-fluid" style="max-width: 200px;">
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 @endsection
 

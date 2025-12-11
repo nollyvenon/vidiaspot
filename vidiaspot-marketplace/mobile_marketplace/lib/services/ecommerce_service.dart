@@ -6,7 +6,7 @@ import '../models/ecommerce/product_model.dart';
 import '../models/ecommerce/order_model.dart';
 
 class EcommerceService {
-  final String baseUrl = 'http://10.0.2.2:8000/api'; // Updated to match backend API routes
+  final String baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000/api'); // Updated to match backend API routes
   String? _authToken;
 
   EcommerceService() {

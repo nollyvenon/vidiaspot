@@ -6,7 +6,7 @@ import '../models/nft/nft_model.dart';
 import '../models/nft/nft_collection_model.dart';
 
 class NftService {
-  final String baseUrl = 'http://10.0.2.2:8000'; // For Android emulator, adjust as needed
+  final String baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000'); // Using environment variable with fallback, adjust as needed
   String? _authToken;
 
   NftService() {

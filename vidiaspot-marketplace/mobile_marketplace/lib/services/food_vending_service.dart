@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/food_vending/restaurant_model.dart';
 
 class FoodVendingService {
-  final String baseUrl = 'http://10.0.2.2:8000/api'; // Updated to match backend API routes
+  final String baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000/api'); // Updated to match backend API routes
   String? _authToken;
 
   FoodVendingService() {

@@ -25,6 +25,44 @@ class Ad extends Model
         'negotiable',
         'view_count',
         'expires_at',
+        'direct_from_farm',
+        'farm_name',
+        'is_organic',
+        'harvest_date',
+        'farm_location',
+        'farm_latitude',
+        'farm_longitude',
+        'certification',
+        'harvest_season',
+        'farm_size',
+        // Additional farm-specific attributes
+        'freshness_days',
+        'quality_rating',
+        'seasonal_availability',
+        'certification_type',
+        'certification_body',
+        'farm_practices',
+        'delivery_options',
+        'minimum_order',
+        'packaging_type',
+        'shelf_life',
+        'storage_instructions',
+        'farm_certifications',
+        'pesticide_use',
+        'irrigation_method',
+        'soil_type',
+        'sustainability_score',
+        'carbon_footprint',
+        'farm_tour_available',
+        'farm_story',
+        'farmer_name',
+        'farmer_image',
+        'farmer_bio',
+        'harvest_method',
+        'post_harvest_handling',
+        'supply_capacity',
+        'shipping_availability',
+        'local_delivery_radius',
     ];
 
     protected $casts = [
@@ -34,6 +72,28 @@ class Ad extends Model
         'negotiable' => 'boolean',
         'view_count' => 'integer',
         'expires_at' => 'datetime',
+        'direct_from_farm' => 'boolean',
+        'is_organic' => 'boolean',
+        'harvest_date' => 'date',
+        'farm_latitude' => 'decimal:8',
+        'farm_longitude' => 'decimal:8',
+        'farm_size' => 'decimal:2',
+        // Additional farm-specific casts
+        'freshness_days' => 'integer',
+        'quality_rating' => 'decimal:2',
+        'seasonal_availability' => 'array',
+        'farm_practices' => 'array',
+        'delivery_options' => 'array',
+        'minimum_order' => 'decimal:2',
+        'shelf_life' => 'integer', // in days
+        'sustainability_score' => 'decimal:2', // 0-10 scale
+        'carbon_footprint' => 'decimal:2', // in kg CO2 equivalent
+        'farm_tour_available' => 'boolean',
+        'farmer_image' => 'string',
+        'farm_certifications' => 'array',
+        'pesticide_use' => 'boolean',
+        'supply_capacity' => 'integer', // units per day/week
+        'local_delivery_radius' => 'decimal:2', // in km
     ];
 
     // Relationship: Ad belongs to a user

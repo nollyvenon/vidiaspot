@@ -65,5 +65,11 @@ class DatabaseSeeder extends Seeder
         if ($sellerRole) {
             $seller->assignRole('seller');
         }
+
+        // Seed farm categories
+        $this->call(FarmCategorySeeder::class);
+
+        // Seed farm test data
+        $this->call(FarmTestDataSeeder::class);
     }
 }

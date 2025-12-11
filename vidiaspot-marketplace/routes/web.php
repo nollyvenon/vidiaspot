@@ -13,6 +13,29 @@ Route::get('/safety', [StaticPageController::class, 'safety']);
 Route::get('/how-it-works', [StaticPageController::class, 'howItWorks']);
 Route::get('/search', [SearchController::class, 'search']);
 
+// Farm-specific routes
+Route::get('/farm-marketplace', function() {
+    return view('landing.farm_marketplace');
+})->name('farm.marketplace');
+
+Route::get('/farm-buyer', function() {
+    return view('landing.farm_buyer_landing');
+})->name('farm.buyer.landing');
+
+Route::get('/farm-seller', function() {
+    return view('landing.farm_seller_landing');
+})->name('farm.seller.landing');
+
+// Farm products routes
+Route::get('/farm-products', [App\Http\Controllers\Web\FarmProductController::class, 'index'])->name('farm.products.index');
+Route::get('/farm-products/{id}', [App\Http\Controllers\Web\FarmProductController::class, 'show'])->where('id', '[0-9]+')->name('farm.products.show');
+Route::get('/farmers/{id}', [App\Http\Controllers\Web\FarmProductController::class, 'sellerProfile'])->name('farm.seller.profile');
+
+// Additional farm routes
+Route::get('/farm-categories', function() {
+    return view('landing.farm_categories');
+})->name('farm.categories');
+
 require __DIR__.'/auth.php';
 
 // User profile and preferences routes (protected)

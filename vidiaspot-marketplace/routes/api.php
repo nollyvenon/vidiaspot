@@ -19,6 +19,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 // Public routes
 Route::apiResource('categories', CategoryController::class);
 Route::apiResource('ads', AdController::class);
+Route::get('/farm-products', [AdController::class, 'farmProducts']);
 
 // Public content pages routes
 Route::get('/pages', [\App\Http\Controllers\Api\ContentPagesController::class, 'index']);
@@ -1029,3 +1030,16 @@ Route::middleware(['auth:sanctum'])->prefix('reports')->group(function () {
     Route::get('/automated-alerts', [App\Http\Controllers\CryptoP2PReportsController::class, 'getAutomatedAlertReports']);
     Route::get('/automated-alerts/{id}', [App\Http\Controllers\CryptoP2PReportsController::class, 'getAutomatedAlertReport']);
 });
+
+// Farm Product routes
+Route::middleware(['auth:sanctum'])->prefix('farm-products')->group(function () {
+    Route::apiResource('/', FarmProductController::class);
+    Route::get('/my-farm-products', [FarmProductController::class, 'myFarmProducts']);
+});
+
+// Public farm product routes
+Route::get('/farm-products', [FarmProductController::class, 'index']);
+Route::get('/farm-products/{id}', [FarmProductController::class, 'show']);
+
+// Include farm product routes
+require __DIR__.'/api/farm_products.php';

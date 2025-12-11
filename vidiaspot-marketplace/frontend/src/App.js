@@ -1,64 +1,58 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { TenantProvider } from './context/TenantContext';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import Home from './components/Home';
-import AdList from './components/AdList';
-import AdDetail from './components/AdDetail';
-import CreateAd from './components/CreateAd';
-import MyAds from './components/MyAds';
-import Login from './components/Login';
-import Register from './components/Register';
-import Profile from './components/Profile';
-import Messages from './components/Messages';
-import CategoryList from './components/CategoryList';
-import ReportsDashboard from './components/reports/ReportsDashboard';
-import FoodVendingManagement from './components/FoodVendingManagement';
-import LogisticsDeliveryManagement from './components/LogisticsDeliveryManagement';
-import ShopifyIntegration from './components/ShopifyIntegration';
-import AdminPanel from './components/AdminPanel';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
+import { GoogleMap, LoadScript } from 'react-google-maps-api';
+import './App.css';
+import FarmDashboard from './components/FarmDashboard/FarmDashboard';
+import ProductManagement from './components/ProductManagement/ProductManagement';
+import OrderManagement from './components/OrderManagement/OrderManagement';
+import FarmProfile from './components/FarmProfile/FarmProfile';
+import AnalyticsDashboard from './components/AnalyticsDashboard/AnalyticsDashboard';
+import LocationManagement from './components/LocationManagement/LocationManagement';
+
+// Simple reducer for state management
+const initialState = {
+  farmData: null,
+  products: [],
+  orders: [],
+  currentUser: null,
+};
+
+function appReducer(state = initialState, action) {
+  switch (action.type) {
+    case 'SET_FARM_DATA':
+      return { ...state, farmData: action.payload };
+    case 'SET_PRODUCTS':
+      return { ...state, products: action.payload };
+    case 'SET_ORDERS':
+      return { ...state, orders: action.payload };
+    case 'SET_CURRENT_USER':
+      return { ...state, currentUser: action.payload };
+    default:
+      return state;
+  }
+}
+
+const store = createStore(appReducer);
 
 function App() {
   return (
-    <AuthProvider>
-      <TenantProvider>
-        <Router>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow py-6">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/ads" element={<AdList />} />
-                  <Route path="/ads/:id" element={<AdDetail />} />
-                  <Route path="/create-ad" element={<CreateAd />} />
-                  <Route path="/my-ads" element={<MyAds />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/messages" element={<Messages />} />
-                  <Route path="/categories" element={<CategoryList />} />
-                  <Route path="/reports" element={<ReportsDashboard />} />
-                  <Route path="/vending" element={<FoodVendingManagement />} />
-                  <Route path="/delivery" element={<LogisticsDeliveryManagement />} />
-                  <Route path="/shopify" element={<ShopifyIntegration />} />
-                  <Route path="/admin" element={<AdminPanel />} />
-                  <Route path="/admin/users" element={<AdminPanel />} />
-                  <Route path="/inventory" element={<FoodVendingManagement />} />
-                  <Route path="/orders" element={<LogisticsDeliveryManagement />} />
-                  <Route path="/wallet" element={<CryptoPayments />} />
-                  <Route path="/crypto-payments" element={<CryptoPayments />} />
-                  <Route path="/subscription" element={<SubscriptionManagement />} />
-                </Routes>
-              </div>
-            </main>
-            <Footer />
-          </div>
-        </Router>
-      </TenantProvider>
-    </AuthProvider>
+    <Provider store={store}>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<FarmDashboard />} />
+            <Route path="/farm/dashboard" element={<FarmDashboard />} />
+            <Route path="/farm/products" element={<ProductManagement />} />
+            <Route path="/farm/orders" element={<OrderManagement />} />
+            <Route path="/farm/profile" element={<FarmProfile />} />
+            <Route path="/farm/analytics" element={<AnalyticsDashboard />} />
+            <Route path="/farm/location" element={<LocationManagement />} />
+          </Routes>
+        </div>
+      </Router>
+    </Provider>
   );
 }
 

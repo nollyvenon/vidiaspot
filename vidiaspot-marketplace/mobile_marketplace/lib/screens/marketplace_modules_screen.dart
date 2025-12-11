@@ -32,6 +32,13 @@ class _MarketplaceModulesScreenState extends State<MarketplaceModulesScreen> {
       'route': '/food-vending',
     },
     {
+      'title': 'Farm Products',
+      'description': 'Buy fresh products directly from local farmers',
+      'icon': Icons.local_florist,
+      'color': Colors.lightGreen,
+      'route': '/farm-products', // This will be the route to the farm products section
+    },
+    {
       'title': 'Logistics & Supply Chain',
       'description': 'Track shipments and manage logistics',
       'icon': Icons.local_shipping,

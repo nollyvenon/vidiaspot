@@ -1,0 +1,38 @@
+name: vidiaspot_food_buyer
+description: Food delivery app for customers.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.17.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  provider: ^6.0.5
+
+  # HTTP client
+  http: ^0.13.5
+
+  # Local storage
+  shared_preferences: ^2.0.15
+
+  # Charts
+  syncfusion_flutter_charts: ^23.1.36
+
+  # Firebase
+  firebase_core: ^2.15.1
+
+  # Icons
+  cupertino_icons: ^1.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true

@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/advanced_functionality/social_sentiment_model.dart';
 
 class AdvancedAnalysisService {
-  final String baseUrl = 'http://10.0.2.2:8000/api';
+  final String baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000/api');
   String? _authToken;
 
   AdvancedAnalysisService() {

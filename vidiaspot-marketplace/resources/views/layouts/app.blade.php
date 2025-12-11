@@ -156,6 +156,19 @@
                             <li><a class="dropdown-item" href="/categories">View All Categories</a></li>
                         </ul>
                     </li>
+                    <!-- Farm Products Section -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="farmProductsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-leaf text-success me-1"></i> Farm Products
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ route('farm.products.index') }}">Browse Farm Products</a></li>
+                            <li><a class="dropdown-item" href="{{ route('farm.buyer.landing') }}">Buy from Farmers</a></li>
+                            <li><a class="dropdown-item" href="{{ route('farm.seller.landing') }}">Sell Farm Products</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ route('farm.marketplace') }}">Farm Marketplace</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('trending') ? 'active' : '' }}" href="/trending">Trending</a>
                     </li>
