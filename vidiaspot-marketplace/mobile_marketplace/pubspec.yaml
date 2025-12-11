@@ -1,0 +1,106 @@
+name: vidiaspot_marketplace
+description: A marketplace app for buying and selling items locally with advanced features.
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.17.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Core dependencies
+  cupertino_icons: ^1.0.2
+  http: ^0.13.5
+  shared_preferences: ^2.1.0
+  image_picker: ^0.8.7+5
+  cached_network_image: ^3.2.3
+
+  flutter_localizations:
+    sdk: flutter
+
+  # Offline storage
+  hive: ^2.2.3
+  path_provider: ^2.0.15
+
+  # Network and caching
+  dio: ^5.3.2
+  connectivity_plus: ^4.0.2
+
+  # UI components
+  flutter_staggered_grid_view: ^0.7.0
+  shimmer: ^3.0.0
+
+  # Push notifications
+  firebase_messaging: ^14.6.7
+  firebase_core: ^2.15.1
+
+  # Location services
+  geolocator: ^9.0.2
+  geocoding: ^2.1.1
+
+  # Image processing
+  flutter_image_compress: ^2.0.2
+
+  # State management
+  provider: ^6.0.5
+
+  # Video/Audio calling
+  agora_uikit: ^1.3.3
+  jitsi_meet_jack: ^0.0.6
+
+  # Voice messaging
+  flutter_tts: ^3.6.0
+  speech_to_text: ^6.1.1
+
+  # Video player for voice messages
+  video_player: ^2.7.2
+  cached_video_player: ^2.0.4
+  audioplayers: ^5.0.0
+
+  # Internationalization
+  intl: ^0.18.0
+
+  # Biometric authentication
+  local_auth: ^2.1.6
+
+  # QR code scanning
+  qr_code_scanner: ^1.0.1
+  qr_flutter: ^4.0.0
+
+  # Advanced charting for analytics
+  flutter_candlesticks: ^0.1.6
+  syncfusion_flutter_charts: ^23.1.36
+
+  # Cryptocurrency utilities
+  web3dart: ^2.6.1
+  bip39: ^1.0.6
+
+  # Background processing
+  workmanager: ^0.5.1
+
+  # Accessibility
+  flutter_screenutil: ^5.8.4
+  flutter_tts: ^3.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+  # hive_generator: ^2.0.0
+  # build_runner: ^2.3.3
+
+flutter:
+  uses-material-design: true
+
+  # Assets
+  assets:
+    - assets/images/
+    - assets/fonts/
+
+  # Fonts
+  # Roboto is available by default in Flutter

@@ -1,0 +1,55 @@
+name: vidiaspot_delivery_driver
+description: Mobile application for delivery drivers with feature switching capabilities.
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.17.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  provider: ^6.0.5
+
+  # Location and navigation
+  geolocator: ^9.0.2
+  google_maps_flutter: ^2.5.0
+  flutter_polyline_points: ^1.0.0
+
+  # Image handling
+  image_picker: ^1.0.4
+
+  # Firebase
+  firebase_core: ^2.24.2
+
+  # HTTP client
+  http: ^0.14.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+  # hive_generator: ^2.0.0
+  # build_runner: ^2.3.3
+
+flutter:
+  uses-material-design: true
+
+  # Assets
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/fonts/
+
+  # Fonts
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700
