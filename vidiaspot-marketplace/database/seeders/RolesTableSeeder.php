@@ -23,8 +23,20 @@ class RolesTableSeeder extends Seeder
             ],
             [
                 'name' => 'seller',
-                'display_name' => 'Seller',
+                'display_name' => 'General Seller',
                 'description' => 'Business user with ability to create ads and manage business profile',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'food_seller',
+                'display_name' => 'Food Seller',
+                'description' => 'Restaurant/food service provider with ability to create menu items',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'farm_seller',
+                'display_name' => 'Farm Seller',
+                'description' => 'Farm product seller with ability to list farm products with special attributes',
                 'is_active' => true,
             ],
             [

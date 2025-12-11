@@ -1043,3 +1043,35 @@ Route::get('/farm-products/{id}', [FarmProductController::class, 'show']);
 
 // Include farm product routes
 require __DIR__.'/api/farm_products.php';
+
+// Farm Product Specific routes (more detailed farm functionality)
+Route::middleware(['auth:sanctum'])->prefix('farm-products-specific')->group(function () {
+    Route::apiResource('/', FarmProductSpecificController::class);
+    Route::get('/my-farm-products', [FarmProductSpecificController::class, 'myFarmProducts']);
+    Route::get('/by-location', [FarmProductSpecificController::class, 'getByLocation']);
+});
+
+// Additional farm product routes
+Route::middleware(['auth:sanctum'])->prefix('farm-products')->group(function () {
+    Route::get('/my-farm-products', [FarmProductController::class, 'myFarmProducts']);
+    Route::get('/by-location', [FarmProductController::class, 'getByLocation']);
+});
+
+// Farm Analytics routes
+Route::middleware(['auth:sanctum'])->prefix('farm-analytics')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Api\FarmAnalyticsController::class, 'getFarmAnalytics']);
+    Route::get('/seasonal-performance', [App\Http\Controllers\Api\FarmAnalyticsController::class, 'getSeasonalPerformance']);
+    Route::get('/farmer-performance/{user_id}', [App\Http\Controllers\Api\FarmAnalyticsController::class, 'getFarmerPerformance']);
+    Route::get('/sustainability-report', [App\Http\Controllers\Api\FarmAnalyticsController::class, 'getSustainabilityReport']);
+    Route::get('/location-report', [App\Http\Controllers\Api\FarmAnalyticsController::class, 'getLocationReport']);
+    Route::get('/freshness-quality', [App\Http\Controllers\Api\FarmAnalyticsController::class, 'getFreshnessQualityMetrics']);
+    Route::get('/demand-forecast', [App\Http\Controllers\Api\FarmAnalyticsController::class, 'getDemandForecast']);
+});
+
+// Public farm analytics (for farm buyers)
+Route::prefix('public/farm-analytics')->group(function () {
+    Route::get('/market-insights', [App\Http\Controllers\Api\FarmAnalyticsController::class, 'getFarmAnalytics']);
+    Route::get('/seasonal-trends', [App\Http\Controllers\Api\FarmAnalyticsController::class, 'getSeasonalPerformance']);
+    Route::get('/sustainability-insights', [App\Http\Controllers\Api\FarmAnalyticsController::class, 'getSustainabilityReport']);
+    Route::get('/location-insights', [App\Http\Controllers\Api\FarmAnalyticsController::class, 'getLocationReport']);
+});

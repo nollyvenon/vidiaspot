@@ -31,6 +31,83 @@ Route::get('/farm-products', [App\Http\Controllers\Web\FarmProductController::cl
 Route::get('/farm-products/{id}', [App\Http\Controllers\Web\FarmProductController::class, 'show'])->where('id', '[0-9]+')->name('farm.products.show');
 Route::get('/farmers/{id}', [App\Http\Controllers\Web\FarmProductController::class, 'sellerProfile'])->name('farm.seller.profile');
 
+// Static pages routes
+Route::get('/contact-us', function() {
+    $page = App\Models\StaticPage::where('page_key', 'contact_us')->where('status', 'active')->first();
+    return view('static_pages.contact', [
+        'pageContent' => $page ? $page->content : '',
+        'pageTitle' => $page ? $page->title : 'Contact Us',
+        'metaDescription' => 'Contact VidiaSpot Marketplace for assistance with your buying and selling needs.',
+        'metaKeywords' => 'contact vidiaspot, marketplace contact, customer service, support'
+    ]);
+})->name('contact.page');
+
+Route::get('/safety-tips', function() {
+    $page = App\Models\StaticPage::where('page_key', 'safety_tips')->where('status', 'active')->first();
+    return view('static_pages.safety_tips', [
+        'pageContent' => $page ? $page->content : '',
+        'pageTitle' => $page ? $page->title : 'Safety Tips',
+        'metaDescription' => 'Learn about safety tips for buying and selling on VidiaSpot Marketplace.',
+        'metaKeywords' => 'safety tips, marketplace safety, buying safety, selling safety, secure transactions'
+    ]);
+})->name('safety.tips.page');
+
+Route::get('/privacy-policy', function() {
+    $page = App\Models\StaticPage::where('page_key', 'privacy_policy')->where('status', 'active')->first();
+    return view('static_pages.privacy_policy', [
+        'pageContent' => $page ? $page->content : '',
+        'pageTitle' => $page ? $page->title : 'Privacy Policy',
+        'metaDescription' => 'Read our privacy policy to understand how we collect, use, and protect your personal information.',
+        'metaKeywords' => 'privacy policy, data protection, personal information, privacy rights'
+    ]);
+})->name('privacy.policy.page');
+
+Route::get('/terms-and-conditions', function() {
+    $page = App\Models\StaticPage::where('page_key', 'terms_conditions')->where('status', 'active')->first();
+    return view('static_pages.terms_conditions', [
+        'pageContent' => $page ? $page->content : '',
+        'pageTitle' => $page ? $page->title : 'Terms and Conditions',
+        'metaDescription' => 'Read our terms and conditions for using VidiaSpot Marketplace services.',
+        'metaKeywords' => 'terms, conditions, marketplace terms, usage policy, legal terms'
+    ]);
+})->name('terms.conditions.page');
+
+Route::get('/faq', function() {
+    $page = App\Models\StaticPage::where('page_key', 'faq')->where('status', 'active')->first();
+    return view('static_pages.faq', [
+        'pageContent' => $page ? $page->content : '',
+        'pageTitle' => $page ? $page->title : 'Frequently Asked Questions',
+        'metaDescription' => 'Find answers to frequently asked questions about using VidiaSpot Marketplace.',
+        'metaKeywords' => 'faq, frequently asked questions, help, support questions, marketplace help'
+    ]);
+})->name('faq.page');
+
+Route::get('/about', function() {
+    $page = App\Models\StaticPage::where('page_key', 'about')->where('status', 'active')->first();
+    return view('static_pages.about', [
+        'pageContent' => $page ? $page->content : '',
+        'pageTitle' => $page ? $page->title : 'About Us',
+        'metaDescription' => 'Learn about VidiaSpot Marketplace and our mission to connect buyers and sellers.',
+        'metaKeywords' => 'about vidiaspot, marketplace, company info, mission, values'
+    ]);
+})->name('about.page');
+
+// Include blog routes
+require __DIR__.'/web/blog.php';
+
+// Farm-specific routes
+Route::get('/farm-marketplace', function() {
+    return view('landing.farm_marketplace');
+})->name('farm.marketplace');
+
+Route::get('/farm-buyer', function() {
+    return view('landing.farm_buyer_landing');
+})->name('farm.buyer.landing');
+
+Route::get('/farm-seller', function() {
+    return view('landing.farm_seller_landing');
+})->name('farm.seller.landing');
+
 // Additional farm routes
 Route::get('/farm-categories', function() {
     return view('landing.farm_categories');

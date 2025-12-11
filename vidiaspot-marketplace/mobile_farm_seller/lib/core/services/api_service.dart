@@ -3,7 +3,16 @@ import 'dart:convert';
 import '../../models/farmer_product.dart';
 
 class ApiService {
-  static const String _baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000/api');
+  static String get baseUrl {
+    // Use environment variables with fallbacks
+    String apiHost = const String.fromEnvironment('API_HOST', defaultValue: '10.0.2.2');
+    String apiPort = const String.fromEnvironment('API_PORT', defaultValue: '8000');
+    String apiBase = const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://$apiHost:$apiPort/api');
+    return apiBase;
+  }
+
+  // Internal getter for the base URL
+  static const String _baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://${String.fromEnvironment('API_HOST', defaultValue: '10.0.2.2')}:${String.fromEnvironment('API_PORT', defaultValue: '8000')}/api');
 
   // Get farm seller's farm data
   Future<Map<String, dynamic>?> getFarmData(String token) async {

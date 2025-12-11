@@ -4,7 +4,7 @@ namespace App\Http\Controllers\General;
 
 use Illuminate\Http\Request;
 use App\Models\Ad;
-use App\Models\Category;
+use App\Models\ECommerce\Category;
 use App\Services\TrendingSearchService;
 use App\Services\RecommendationService;
 use App\Services\NotificationPreferenceService;
@@ -16,6 +16,7 @@ use App\Services\AICustomerServiceAvatar;
 use App\Services\PredictiveMaintenanceService;
 use App\Services\SmartContractService;
 use App\Services\CryptoP2PService;
+use App\Services\LandingPage\DynamicLandingService;
 use Illuminate\Support\Facades\Auth;
 
 class LandingController extends Controller
@@ -31,6 +32,7 @@ class LandingController extends Controller
     protected $predictiveMaintenanceService;
     protected $smartContractService;
     protected $cryptoP2PService;
+    protected $dynamicLandingService;
 
     public function __construct(
         TrendingSearchService $trendingSearchService,
@@ -43,7 +45,8 @@ class LandingController extends Controller
         AICustomerServiceAvatar $aiCustomerServiceAvatar,
         PredictiveMaintenanceService $predictiveMaintenanceService,
         SmartContractService $smartContractService,
-        CryptoP2PService $cryptoP2PService
+        CryptoP2PService $cryptoP2PService,
+        DynamicLandingService $dynamicLandingService
     ) {
         $this->trendingSearchService = $trendingSearchService;
         $this->recommendationService = $recommendationService;
@@ -56,6 +59,7 @@ class LandingController extends Controller
         $this->predictiveMaintenanceService = $predictiveMaintenanceService;
         $this->smartContractService = $smartContractService;
         $this->cryptoP2PService = $cryptoP2PService;
+        $this->dynamicLandingService = $dynamicLandingService;
     }
 
     public function index()
@@ -73,25 +77,17 @@ class LandingController extends Controller
             $personalizedAds = collect();
         }
 
+        // Get dynamic landing page content using the service
+        $landingContent = $this->dynamicLandingService->getLandingPageContent($user?->id);
+
         // Get featured ads (limited for performance)
-        $featuredAds = Ad::where('is_featured', true)
-            ->where('status', 'active')
-            ->with(['user', 'category', 'images'])
-            ->limit(4)
-            ->get();
+        $featuredAds = $landingContent['featured_ads'];
 
         // Get latest ads
-        $latestAds = Ad::where('status', 'active')
-            ->with(['user', 'category', 'images'])
-            ->orderBy('created_at', 'desc')
-            ->limit(12)
-            ->get();
+        $latestAds = $landingContent['latest_ads'];
 
         // Get popular categories
-        $popularCategories = Category::where('status', 'active')
-            ->inRandomOrder()
-            ->limit(6)
-            ->get();
+        $popularCategories = $landingContent['popular_categories'];
 
         // Get trending searches from database
         $trendingSearches = $this->trendingSearchService->getTrendingSearches(12, 7);
@@ -147,7 +143,10 @@ class LandingController extends Controller
         }
 
         // Get how it works steps for display
-        $howItWorksSteps = \App\Models\HowItWorksStep::active()->ordered()->get();
+        $howItWorksSteps = $this->getHowItWorksSteps();
+
+        // Get app features for dynamic display in features section
+        $appFeatures = $landingContent['app_features'];
 
         // Get innovative features data
         $innovativeFeatures = [
@@ -187,6 +186,12 @@ class LandingController extends Controller
             ],
         ];
 
+        // Get how it works steps for display
+        $howItWorksSteps = $this->getHowItWorksSteps();
+
+        // Get app features for dynamic display in features section
+        $appFeatures = $landingContent['app_features'];
+
         return view('landing.index', compact(
             'featuredAds',
             'latestAds',
@@ -195,8 +200,14 @@ class LandingController extends Controller
             'howItWorksSteps',
             'personalizedAds',
             'moodState',
-            'innovativeFeatures'
+            'innovativeFeatures',
+            'appFeatures'  // Pass app features for dynamic display
         ));
+    }
+
+    private function getHowItWorksSteps()
+    {
+        return \App\Models\HowItWorksStep::active()->ordered()->get();
     }
 
     public function innovativeFeatures()

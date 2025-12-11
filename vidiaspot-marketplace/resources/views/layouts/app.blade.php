@@ -245,6 +245,24 @@
                     </ul>
                 </div>
                 <div class="col-md-3">
+                    <h5>Mobile Apps</h5>
+                    <div class="d-flex flex-column">
+                        <a href="#" class="text-decoration-none mb-2">
+                            <i class="fab fa-google-play me-2 text-success"></i> Google Play
+                        </a>
+                        <a href="#" class="text-decoration-none">
+                            <i class="fab fa-app-store-ios me-2 text-success"></i> App Store
+                        </a>
+                    </div>
+                    <div class="mt-3">
+                        <h6>Download our apps:</h6>
+                        <div class="d-flex gap-2 mt-2">
+                            <a href="{{ route('farm.buyer.landing') }}" class="badge bg-success text-decoration-none">Farm Buyer</a>
+                            <a href="{{ route('farm.seller.landing') }}" class="badge bg-primary text-decoration-none">Farm Seller</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
                     <h5>Contact Info</h5>
                     <ul class="list-unstyled">
                         <li><i class="fas fa-map-marker-alt me-2"></i> Lagos, Nigeria</li>
@@ -254,6 +272,29 @@
                 </div>
             </div>
             <hr>
+            <!-- Blog Section in Footer -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5>Latest from Our Farm Blog</h5>
+                            <div class="d-flex gap-3">
+                                @php
+                                    $latestBlogPosts = App\Models\Blog::where('status', 'published')->orderBy('published_at', 'desc')->limit(3)->get();
+                                @endphp
+                                @forelse($latestBlogPosts as $post)
+                                    <a href="{{ route('blog.show', $post->slug) }}" class="text-decoration-none small">
+                                        <i class="fas fa-leaf text-success me-1"></i>{{ $post->title }}
+                                    </a>
+                                @empty
+                                    <span class="text-muted small">No blog posts available yet</span>
+                                @endforelse
+                            </div>
+                        </div>
+                        <a href="{{ route('blog.index') }}" class="btn btn-sm btn-outline-success">View All</a>
+                    </div>
+                </div>
+            </div>
             <div class="text-center">
                 <p>&copy; 2025 Vidiaspot Marketplace. All rights reserved.</p>
             </div>

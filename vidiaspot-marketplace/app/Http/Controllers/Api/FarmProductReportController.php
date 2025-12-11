@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Models\Ad;
+use App\Models\ECommerce\Category;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class FarmProductReportsController extends Controller
+class FarmProductReportController extends Controller
 {
     /**
      * Get farm product performance summary
@@ -59,95 +60,100 @@ class FarmProductReportsController extends Controller
     }
 
     /**
-     * Get farm analytics with detailed insights
+     * Get farmer productivity report
      */
-    public function getDetailedAnalytics(Request $request): JsonResponse
+    public function getFarmerProductivityReport(Request $request): JsonResponse
     {
         $request->validate([
+            'user_id' => 'required|exists:users,id',
             'start_date' => 'date|nullable',
             'end_date' => 'date|nullable',
-            'user_id' => 'nullable|exists:users,id',
-            'category_id' => 'nullable|exists:categories,id',
         ]);
 
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->subDays(30);
         $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now();
 
-        // Overall analytics
-        $overallStats = Ad::where('direct_from_farm', true)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->select([
-                DB::raw('COUNT(*) as total_products'),
-                DB::raw('AVG(price) as average_price'),
-                DB::raw('SUM(view_count) as total_views'),
-                DB::raw('COUNT(CASE WHEN is_organic = 1 THEN 1 END) as organic_products'),
-                DB::raw('AVG(quality_rating) as average_quality_rating'),
-                DB::raw('AVG(sustainability_score) as average_sustainability_score'),
-            ])
-            ->first();
+        $user = User::findOrFail($request->user_id);
 
-        // Category performance
-        $categoryPerformance = Ad::where('direct_from_farm', true)
+        $farmProducts = Ad::where('user_id', $request->user_id)
+            ->where('direct_from_farm', true)
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->join('categories', 'ads.category_id', '=', 'categories.id')
-            ->select([
-                'categories.name as category_name',
-                DB::raw('COUNT(*) as product_count'),
-                DB::raw('AVG(price) as average_price'),
-                DB::raw('SUM(view_count) as total_views'),
-                DB::raw('AVG(quality_rating) as average_rating'),
-            ])
-            ->groupBy('category_id', 'categories.name')
-            ->orderByDesc('product_count')
+            ->with('category')
             ->get();
 
-        // Seasonal performance
-        $seasonalPerformance = Ad::where('direct_from_farm', true)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->select([
-                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month_year"),
-                DB::raw('COUNT(*) as product_count'),
-                DB::raw('AVG(price) as average_price'),
-                DB::raw('SUM(view_count) as total_views'),
-                DB::raw('AVG(quality_rating) as average_rating'),
-            ])
-            ->groupBy(DB::raw("DATE_FORMAT(created_at, '%Y-%m')"))
-            ->orderBy('month_year')
-            ->get();
-
-        // Organic vs Conventional performance
-        $organicVsConventional = Ad::where('direct_from_farm', true)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->select([
-                'is_organic',
-                DB::raw('COUNT(*) as product_count'),
-                DB::raw('AVG(price) as average_price'),
-                DB::raw('SUM(view_count) as total_views'),
-                DB::raw('AVG(quality_rating) as average_rating'),
-            ])
-            ->groupBy('is_organic')
-            ->get();
+        $productivityData = [
+            'farmer_info' => [
+                'name' => $user->name,
+                'farm_name' => $farmProducts->first()?->farm_name ?? $user->name . "'s Farm",
+                'total_products_listed' => $farmProducts->count(),
+                'total_product_views' => $farmProducts->sum('view_count'),
+                'average_price' => $farmProducts->avg('price'),
+                'organic_ratio' => $farmProducts->count() > 0
+                    ? round(($farmProducts->where('is_organic', true)->count() / $farmProducts->count()) * 100, 2)
+                    : 0,
+            ],
+            'products_by_category' => $farmProducts->groupBy('category.name')->map(function($products, $category) {
+                return [
+                    'category' => $category,
+                    'count' => $products->count(),
+                    'total_revenue_potential' => $products->sum('price'),
+                    'average_rating' => $products->avg('quality_rating'),
+                ];
+            })->values(),
+            'monthly_breakdown' => $this->getMonthlyBreakdown($request->user_id, $startDate, $endDate),
+            'sustainability_metrics' => [
+                'average_sustainability_score' => $farmProducts->avg('sustainability_score'),
+                'carbon_footprint_total' => $farmProducts->sum('carbon_footprint'),
+                'organic_certification_rate' => $farmProducts->where('is_organic', true)->count() / max(1, $farmProducts->count()) * 100,
+            ],
+        ];
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'overall_stats' => $overallStats,
-                'category_performance' => $categoryPerformance,
-                'seasonal_performance' => $seasonalPerformance,
-                'organic_vs_conventional' => $organicVsConventional,
-            ],
+            'data' => $productivityData,
         ]);
     }
 
     /**
-     * Get seasonal report for farm products
+     * Get monthly breakdown helper method
+     */
+    private function getMonthlyBreakdown($userId, $startDate, $endDate)
+    {
+        $monthlyData = Ad::where('user_id', $userId)
+            ->where('direct_from_farm', true)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select([
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('YEAR(created_at) as year'),
+                DB::raw('COUNT(*) as products_count'),
+                DB::raw('SUM(view_count) as total_views'),
+                DB::raw('AVG(price) as average_price'),
+                DB::raw('AVG(quality_rating) as average_rating'),
+            ])
+            ->groupBy(DB::raw('YEAR(created_at)'), DB::raw('MONTH(created_at)'))
+            ->orderBy(DB::raw('year DESC'), DB::raw('month DESC'))
+            ->get();
+
+        return $monthlyData->map(function($data) {
+            $monthName = Carbon::createFromDate($data->year, $data->month, 1)->format('F Y');
+            return [
+                'month' => $monthName,
+                'products_count' => $data->products_count,
+                'total_views' => $data->total_views,
+                'average_price' => $data->average_price,
+                'average_rating' => $data->average_rating,
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Get seasonal performance report
      */
     public function getSeasonalReport(Request $request): JsonResponse
     {
         $request->validate([
             'start_date' => 'date|nullable',
             'end_date' => 'date|nullable',
-            'category_id' => 'nullable|exists:categories,id',
         ]);
 
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->subYear();
@@ -155,22 +161,18 @@ class FarmProductReportsController extends Controller
 
         $seasonalData = Ad::where('direct_from_farm', true)
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->when($request->category_id, function ($query) use ($request) {
-                $query->where('category_id', $request->category_id);
-            })
             ->select([
                 DB::raw("
                     CASE 
-                        WHEN MONTH(created_at) IN (10, 11, 12, 1, 2) THEN 'dry_season'
-                        WHEN MONTH(created_at) IN (3, 4, 5, 6, 7, 8, 9) THEN 'wet_season'
-                        ELSE 'other'
+                        WHEN MONTH(created_at) IN (10, 11, 12, 1, 2) THEN 'Dry Season'
+                        WHEN MONTH(created_at) IN (3, 4, 5, 6, 7, 8, 9) THEN 'Wet Season'
+                        ELSE 'Other'
                     END as season
                 "),
                 DB::raw('COUNT(*) as product_count'),
                 DB::raw('AVG(price) as average_price'),
                 DB::raw('SUM(view_count) as total_views'),
                 DB::raw('AVG(quality_rating) as average_quality'),
-                DB::raw('AVG(sustainability_score) as average_sustainability'),
             ])
             ->groupBy('season')
             ->get();
@@ -210,66 +212,15 @@ class FarmProductReportsController extends Controller
             DB::raw('COUNT(*) as total_farm_products'),
             DB::raw('COUNT(CASE WHEN pesticide_use = 0 THEN 1 END) as non_pesticide_products_count'),
             DB::raw('AVG(freshness_days) as average_freshness'),
-            DB::raw('AVG(shelf_life) as average_shelf_life'),
-            DB::raw('COUNT(CASE WHEN farm_tour_available = 1 THEN 1 END) as farm_tour_available_count'),
-            DB::raw('COUNT(CASE WHEN farm_practices IS NOT NULL THEN 1 END) as sustainable_practices_count'),
         ])->first();
 
-        $sustainabilityData->organic_percentage = $sustainabilityData->total_farm_products > 0
+        $sustainabilityData->organic_percentage = $sustainabilityData->total_farm_products > 0 
             ? round(($sustainabilityData->organic_products_count / $sustainabilityData->total_farm_products) * 100, 2)
-            : 0;
-
-        $sustainabilityData->farm_tour_availability_rate = $sustainabilityData->total_farm_products > 0
-            ? round(($sustainabilityData->farm_tour_available_count / $sustainabilityData->total_farm_products) * 100, 2)
             : 0;
 
         return response()->json([
             'success' => true,
             'data' => $sustainabilityData,
-        ]);
-    }
-
-    /**
-     * Get farmer productivity report
-     */
-    public function getFarmerProductivityReport(Request $request): JsonResponse
-    {
-        $request->validate([
-            'start_date' => 'date|nullable',
-            'end_date' => 'date|nullable',
-            'farmer_id' => 'nullable|exists:users,id',
-        ]);
-
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->subDays(30);
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now();
-
-        $query = Ad::with(['user', 'category'])
-            ->where('direct_from_farm', true)
-            ->whereBetween('created_at', [$startDate, $endDate]);
-
-        if ($request->farmer_id) {
-            $query->where('user_id', $request->farmer_id);
-            $farmers = $query->get();
-        } else {
-            $farmers = $query->get()->groupBy('user_id')->map(function ($products, $userId) {
-                $user = $products->first()->user;
-                return [
-                    'user_id' => $userId,
-                    'user_name' => $user->name,
-                    'farm_name' => $products->first()->farm_name ?? $user->name . "'s Farm",
-                    'total_products' => $products->count(),
-                    'total_revenue_potential' => $products->sum('price'),
-                    'total_views' => $products->sum('view_count'),
-                    'average_rating' => $products->avg('quality_rating'),
-                    'organic_percentage' => $products->where('is_organic', true)->count() / max(1, $products->count()) * 100,
-                    'average_sustainability_score' => $products->avg('sustainability_score'),
-                ];
-            })->sortByDesc('total_products')->values();
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => $farmers,
         ]);
     }
 
@@ -281,7 +232,199 @@ class FarmProductReportsController extends Controller
         $request->validate([
             'start_date' => 'date|nullable',
             'end_date' => 'date|nullable',
-            'category_ids' => 'array',
+            'category_ids' => 'array|nullable',
+            'category_ids.*' => 'exists:categories,id',
+        ]);
+
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->subDays(30);
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now();
+
+        $query = Ad::where('direct_from_farm', true)
+            ->whereBetween('created_at', [$startDate, $endDate]);
+
+        if ($request->category_ids) {
+            $query->whereIn('category_id', $request->category_ids);
+        }
+
+        $comparisonData = $query->join('categories', 'ads.category_id', '=', 'categories.id')
+            ->select([
+                'categories.name as category_name',
+                DB::raw('COUNT(*) as product_count'),
+                DB::raw('AVG(price) as average_price'),
+                DB::raw('SUM(view_count) as total_views'),
+                DB::raw('AVG(quality_rating) as average_rating'),
+                DB::raw('AVG(sustainability_score) as average_sustainability_score'),
+                DB::raw('COUNT(CASE WHEN is_organic = 1 THEN 1 END) as organic_products'),
+                DB::raw('AVG(freshness_days) as average_freshness'),
+            ])
+            ->groupBy('category_id', 'categories.name')
+            ->orderBy('product_count', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $comparisonData,
+        ]);
+    }
+
+    /**
+     * Get location-based farm report
+     */
+    public function getLocationReport(Request $request): JsonResponse
+    {
+        $request->validate([
+            'start_date' => 'date|nullable',
+            'end_date' => 'date|nullable',
+        ]);
+
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->subDays(30);
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now();
+
+        $locationData = Ad::where('direct_from_farm', true)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select([
+                'location',
+                'farm_location',
+                DB::raw('COUNT(*) as product_count'),
+                DB::raw('AVG(price) as average_price'),
+                DB::raw('SUM(view_count) as total_views'),
+                DB::raw('AVG(quality_rating) as average_quality'),
+            ])
+            ->groupBy('location', 'farm_location')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $locationData,
+        ]);
+    }
+
+    /**
+     * Get top performing farm products
+     */
+    public function getTopPerformingProducts(Request $request): JsonResponse
+    {
+        $request->validate([
+            'start_date' => 'date|nullable',
+            'end_date' => 'date|nullable',
+            'limit' => 'integer|min:1|max:100|nullable',
+        ]);
+
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->subDays(30);
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now();
+        $limit = $request->limit ?? 10;
+
+        $topProducts = Ad::where('direct_from_farm', true)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'active')
+            ->select([
+                'id',
+                'title',
+                'price',
+                'location',
+                'view_count',
+                'user_id',
+                'category_id',
+                'quality_rating',
+                'is_organic',
+                DB::raw('(view_count * price) as popularity_score'),
+            ])
+            ->orderByDesc('popularity_score')
+            ->limit($limit)
+            ->with(['user:id,name', 'category:id,name'])
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $topProducts,
+        ]);
+    }
+
+    /**
+     * Get farm productivity trends
+     */
+    public function getProductivityTrends(Request $request): JsonResponse
+    {
+        $request->validate([
+            'start_date' => 'date|nullable',
+            'end_date' => 'date|nullable',
+        ]);
+
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->subDays(90);
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now();
+
+        // Get daily data for the past month
+        $dailyStats = Ad::where('direct_from_farm', true)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select([
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('COUNT(*) as products_added'),
+                DB::raw('AVG(price) as average_price'),
+                DB::raw('SUM(view_count) as total_views'),
+                DB::raw('AVG(quality_rating) as average_quality'),
+            ])
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy('date')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'daily_stats' => $dailyStats,
+                'summary' => [
+                    'total_products_added' => $dailyStats->sum('products_added'),
+                    'average_daily_additions' => $dailyStats->avg('products_added'),
+                    'total_views' => $dailyStats->sum('total_views'),
+                    'average_price' => $dailyStats->avg('average_price'),
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Helper method to get monthly breakdown data
+     */
+    private function getMonthlyBreakdown($userId, $startDate, $endDate)
+    {
+        $monthlyData = Ad::where('user_id', $userId)
+            ->where('direct_from_farm', true)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select([
+                DB::raw('YEAR(created_at) as year'),
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('COUNT(*) as products_count'),
+                DB::raw('SUM(view_count) as total_views'),
+                DB::raw('AVG(price) as average_price'),
+                DB::raw('AVG(quality_rating) as average_rating'),
+            ])
+            ->groupBy(DB::raw('YEAR(created_at)'), DB::raw('MONTH(created_at)'))
+            ->orderBy('year')
+            ->orderBy('month')
+            ->get();
+
+        $formattedData = [];
+        foreach ($monthlyData as $data) {
+            $formattedData[] = [
+                'period' => Carbon::createFromDate($data->year, $data->month, 1)->format('F Y'),
+                'products_count' => $data->products_count,
+                'total_views' => $data->total_views,
+                'average_price' => $data->average_price,
+                'average_rating' => $data->average_rating,
+            ];
+        }
+
+        return $formattedData;
+    }
+
+    /**
+     * Get product comparison report
+     */
+    public function getProductComparison(Request $request): JsonResponse
+    {
+        $request->validate([
+            'start_date' => 'date|nullable',
+            'end_date' => 'date|nullable',
+            'category_ids' => 'array|nullable',
             'category_ids.*' => 'exists:categories,id',
         ]);
 
@@ -335,7 +478,7 @@ class FarmProductReportsController extends Controller
             ->whereBetween('created_at', [$startDate, $endDate]);
 
         if ($request->region) {
-            $query->where('location', 'like', '%' . $request->region . '%');
+            $query->where('farm_location', 'like', '%' . $request->region . '%');
         }
 
         $locationData = $query->select([
@@ -349,6 +492,7 @@ class FarmProductReportsController extends Controller
         ])
         ->groupBy('location', 'farm_location')
         ->orderBy('product_count', 'desc')
+        ->limit(10)
         ->get();
 
         return response()->json([
@@ -371,44 +515,61 @@ class FarmProductReportsController extends Controller
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->subMonths(6);
         $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now();
 
-        // Get historical data
-        $historicalData = Ad::where('direct_from_farm', true)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->when($request->category_id, function ($query) use ($request) {
-                $query->where('category_id', $request->category_id);
-            })
-            ->select([
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('COUNT(*) as product_count'),
-                DB::raw('AVG(price) as average_price'),
-                DB::raw('SUM(view_count) as total_views'),
-            ])
-            ->groupBy(DB::raw('DATE(created_at)'))
-            ->orderBy('date')
-            ->get();
+        $query = Ad::where('direct_from_farm', true)
+            ->whereBetween('created_at', [$startDate, $endDate]);
 
-        // Calculate trends for forecasting
-        $avgGrowth = 0;
-        $previousViews = null;
-        foreach ($historicalData as $index => $dataPoint) {
-            if ($index > 0 && $previousViews !== null && $previousViews > 0) {
-                $growth = (($dataPoint->total_views - $previousViews) / $previousViews) * 100;
-                $avgGrowth += $growth;
-            }
-            $previousViews = $dataPoint->total_views;
+        if ($request->category_id) {
+            $query->where('category_id', $request->category_id);
         }
 
-        // If we have data points, calculate average growth rate
-        $avgGrowth = $historicalData->count() > 1 ? $avgGrowth / ($historicalData->count() - 1) : 0;
+        // Get historical data
+        $historicalData = $query->select([
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('COUNT(*) as product_count'),
+            DB::raw('AVG(price) as average_price'),
+            DB::raw('SUM(view_count) as total_views'),
+        ])
+        ->groupBy(DB::raw('DATE(created_at)'))
+        ->orderBy('date')
+        ->get();
 
-        // Calculate forecast for next 3 months
+        // Simple forecasting algorithm based on historical trends
+        $totalViews = $historicalData->sum('total_views');
+        $totalDays = $historicalData->count();
+        $avgDailyViews = $totalDays > 0 ? $totalViews / $totalDays : 0;
+
+        // Calculate trend direction (simplified)
+        $trendDirection = 'stable';
+        if ($totalDays >= 2) {
+            $recentViews = $historicalData->slice(-7)->sum('total_views'); // Last 7 days
+            $previousViews = $historicalData->slice(-14, 7)->sum('total_views'); // Previous 7 days
+            $weeklyGrowth = $previousViews > 0 ? (($recentViews - $previousViews) / $previousViews) * 100 : 0;
+
+            if ($weeklyGrowth > 5) {
+                $trendDirection = 'increasing';
+            } elseif ($weeklyGrowth < -5) {
+                $trendDirection = 'decreasing';
+            }
+        }
+
+        // Forecast next 7 days
         $forecast = [];
-        for ($i = 1; $i <= 3; $i++) {
-            $forecastDate = Carbon::now()->addMonth($i);
+        for ($i = 1; $i <= 7; $i++) {
+            $futureDate = Carbon::now()->addDays($i)->format('Y-m-d');
+
+            // Adjust forecast based on trend
+            $adjustment = 1.0;
+            if ($trendDirection === 'increasing') {
+                $adjustment = 1.05; // 5% growth
+            } elseif ($trendDirection === 'decreasing') {
+                $adjustment = 0.95; // 5% decline
+            }
+
             $forecast[] = [
-                'month' => $forecastDate->format('F Y'),
-                'predicted_demand' => round($previousViews * (1 + ($avgGrowth / 100))),
-                'confidence_level' => 'moderate', // Would be calculated in a real implementation
+                'date' => $futureDate,
+                'predicted_views' => round($avgDailyViews * $adjustment),
+                'confidence_level' => 'medium',
+                'growth_trend' => $trendDirection,
             ];
         }
 
@@ -417,7 +578,8 @@ class FarmProductReportsController extends Controller
             'data' => [
                 'historical_data' => $historicalData,
                 'forecast' => $forecast,
-                'average_growth_rate' => round($avgGrowth, 2),
+                'average_daily_views' => round($avgDailyViews, 2),
+                'trend_direction' => $trendDirection,
             ],
         ]);
     }
@@ -436,7 +598,7 @@ class FarmProductReportsController extends Controller
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->subYears(2);
         $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now();
 
-        // Group by month to analyze seasonal patterns
+        // Group by month and season to analyze seasonal patterns
         $seasonalAnalysis = Ad::where('direct_from_farm', true)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->when($request->category_id, function ($query) use ($request) {
@@ -448,28 +610,30 @@ class FarmProductReportsController extends Controller
                 DB::raw('COUNT(*) as product_count'),
                 DB::raw('AVG(price) as average_price'),
                 DB::raw('SUM(view_count) as total_views'),
-                DB::raw('AVG(quality_rating) as average_quality'),
+                DB::raw('AVG(quality_rating) as average_rating'),
             ])
-            ->groupBy('month_number', 'month_name')
+            ->groupBy(DB::raw('MONTH(created_at)'), DB::raw('MONTHNAME(created_at)'))
             ->orderBy('month_number')
             ->get();
 
-        // Calculate seasonal averages
+        // Calculate seasonal averages (based on Nigerian seasons)
         $seasonalAverages = [
-            'dry_season' => [
-                'months' => ['October', 'November', 'December', 'January', 'February'],
+            'rainy_season' => [  // April - October
+                'months' => [4, 5, 6, 7, 8, 9, 10],
+                'month_names' => ['April', 'May', 'June', 'July', 'August', 'September', 'October'],
                 'avg_products' => 0,
                 'avg_views' => 0,
             ],
-            'wet_season' => [
-                'months' => ['March', 'April', 'May', 'June', 'July', 'August', 'September'],
+            'dry_season' => [   // November - March
+                'months' => [11, 12, 1, 2, 3],
+                'month_names' => ['November', 'December', 'January', 'February', 'March'],
                 'avg_products' => 0,
                 'avg_views' => 0,
             ],
         ];
 
         foreach ($seasonalAverages as &$season) {
-            $seasonData = $seasonalAnalysis->whereIn('month_name', $season['months']);
+            $seasonData = $seasonalAnalysis->whereIn('month_number', $season['months']);
             if ($seasonData->count() > 0) {
                 $season['avg_products'] = $seasonData->avg('product_count');
                 $season['avg_views'] = $seasonData->avg('total_views');
@@ -513,8 +677,9 @@ class FarmProductReportsController extends Controller
             DB::raw('COUNT(*) as product_count'),
             DB::raw('AVG(quality_rating) as average_quality'),
             DB::raw('AVG(sustainability_score) as average_sustainability'),
+            'certification',
         ])
-        ->groupBy('certification_type', 'certification_body')
+        ->groupBy('certification_type', 'certification_body', 'certification')
         ->get();
 
         // Total organic products
@@ -523,13 +688,21 @@ class FarmProductReportsController extends Controller
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
 
+        // Certified organic products (with certification info)
+        $certifiedProducts = Ad::where('direct_from_farm', true)
+            ->where('is_organic', true)
+            ->whereNotNull('certification')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
+
         return response()->json([
             'success' => true,
             'data' => [
                 'certification_breakdown' => $complianceData,
                 'total_organic_products' => $totalOrganicProducts,
-                'certification_compliance_rate' => $totalOrganicProducts > 0 
-                    ? round(($complianceData->sum('product_count') / $totalOrganicProducts) * 100, 2)
+                'certified_organic_products' => $certifiedProducts,
+                'certification_compliance_rate' => $totalOrganicProducts > 0
+                    ? round(($certifiedProducts / $totalOrganicProducts) * 100, 2)
                     : 0,
             ],
         ]);

@@ -5,28 +5,68 @@
 @section('meta_keywords', 'marketplace, buy, sell, classified ads, used items, cars, jobs')
 
 @section('content')
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="container text-center">
-            <h1 class="display-4 fw-bold mb-3">Buy and Sell Near You</h1>
-            <p class="lead mb-4">Find great deals or sell items to people in your community</p>
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <form action="/search" method="GET" class="d-flex">
-                        <input type="text" name="q" class="form-control form-control-lg" placeholder="What are you looking for?" aria-label="Search">
-                        <button class="btn btn-warning btn-lg" type="submit"><i class="fas fa-search"></i></button>
-                    </form>
+    <!-- Hero Section - Dynamic Content -->
+    @php
+        $heroBanner = App\Models\Configuration::getValue('hero_banner', [
+            'enabled' => true,
+            'type' => 'slider',
+            'slides' => [
+                [
+                    'title' => 'Buy and Sell Near You',
+                    'subtitle' => 'VidiaSpot Marketplace',
+                    'description' => 'Find great deals or sell items to people in your community',
+                    'cta_text' => 'Shop Now',
+                    'cta_url' => '/ads',
+                    'image_url' => 'https://images.unsplash.com/photo-1504805572947-34fad45aed93?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+                    'background_color' => '#388e3c',
+                    'text_color' => '#ffffff',
+                ]
+            ]
+        ]);
+    @endphp
+
+    @if($heroBanner['enabled'])
+        <section class="hero-section" style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('{{ $heroBanner['slides'][0]['image_url'] ?? "https://images.unsplash.com/photo-1504805572947-34fad45aed93?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" }}') center/cover; height: 500px; display: flex; align-items: center; color: white;">
+            <div class="container text-center">
+                <h1 class="display-4 fw-bold mb-3">{{ $heroBanner['slides'][0]['title'] ?? 'VidiaSpot Marketplace' }}</h1>
+                <h2 class="display-6 mb-3">{{ $heroBanner['slides'][0]['subtitle'] ?? 'Buy and Sell Near You' }}</h2>
+                <p class="lead mb-4">{{ $heroBanner['slides'][0]['description'] ?? 'Find great deals and sell items to people in your community' }}</p>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <form action="{{ route('farm.products.index') }}" method="GET" class="d-flex">
+                            <input type="text" name="search" class="form-control form-control-lg" placeholder="Search farm products..." aria-label="Search farm products">
+                            <button class="btn btn-warning btn-lg" type="submit"><i class="fas fa-search"></i></button>
+                        </form>
+                    </div>
+                </div>
+                @if(isset($heroBanner['slides'][0]['cta_text']) && isset($heroBanner['slides'][0]['cta_url']))
+                    <div class="mt-4">
+                        <a href="{{ $heroBanner['slides'][0]['cta_url'] ?? '/ads' }}" class="btn btn-light btn-lg fw-bold text-success">
+                            {{ $heroBanner['slides'][0]['cta_text'] ?? 'Shop Now' }}
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </section>
+    @else
+        <section class="py-5 bg-light">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <h1 class="display-4 fw-bold text-success">VidiaSpot Marketplace</h1>
+                        <p class="lead">Buy and sell items near you</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    @endif
 
     <!-- Search Section -->
-    <section class="search-section">
+    <section class="search-section bg-light py-4">
         <div class="container">
             <div class="row g-3">
                 <div class="col-md-3 col-sm-6">
-                    <select class="form-select" id="locationSelect">
+                    <select class="form-select" id="locationSelect" name="location">
                         <option selected>All Locations</option>
                         <option value="lagos">Lagos</option>
                         <option value="abuja">Abuja</option>
@@ -35,7 +75,7 @@
                     </select>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <select class="form-select" id="categorySelect">
+                    <select class="form-select" id="categorySelect" name="category">
                         <option selected>All Categories</option>
                         <option value="vehicles">Vehicles</option>
                         <option value="electronics">Electronics</option>
@@ -44,10 +84,16 @@
                     </select>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <input type="number" class="form-control" placeholder="Min Price">
+                    <input type="number" class="form-control" name="min_price" placeholder="Min Price">
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <input type="number" class="form-control" placeholder="Max Price">
+                    <input type="number" class="form-control" name="max_price" placeholder="Max Price">
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12 text-center">
+                    <button id="applyFiltersBtn" class="btn btn-success">Apply Filters</button>
+                    <a href="/ads" class="btn btn-outline-success">All Ads</a>
                 </div>
             </div>
         </div>
@@ -437,6 +483,94 @@
                         <p class="text-muted">Products delivered directly from farm to consumer</p>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- App Features Section - Dynamically loaded based on admin configuration -->
+        <section class="py-5 bg-light">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 text-center mb-5">
+                        <h2 class="fw-bold">Our Marketplace Features</h2>
+                        <p class="text-muted">Various services available depending on your location and preferences</p>
+                    </div>
+                </div>
+
+                @if(isset($appFeatures) && count($appFeatures) > 0)
+                <div class="row g-4">
+                    @foreach($appFeatures as $feature)
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <a href="{{ $feature['route'] ?? '#' }}" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm text-center">
+                                <div class="card-body p-4">
+                                    <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                                        <i class="{{ $feature['icon'] }} text-success fa-2x"></i>
+                                    </div>
+                                    <h5 class="card-title">{{ $feature['title'] }}</h5>
+                                    <p class="card-text text-muted">{{ $feature['description'] }}</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    @endforeach
+                </div>
+                @else
+                <div class="row g-4">
+                    <!-- Default features if configuration is not available -->
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <a href="/ads" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm text-center">
+                                <div class="card-body p-4">
+                                    <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-store text-success fa-2x"></i>
+                                    </div>
+                                    <h5 class="card-title">General Marketplace</h5>
+                                    <p class="card-text text-muted">Buy and sell all kinds of items</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <a href="/farm-marketplace" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm text-center">
+                                <div class="card-body p-4">
+                                    <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-leaf text-success fa-2x"></i>
+                                    </div>
+                                    <h5 class="card-title">Farm Products</h5>
+                                    <p class="card-text text-muted">Fresh products directly from farms</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <a href="/food-vending" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm text-center">
+                                <div class="card-body p-4">
+                                    <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-utensils text-success fa-2x"></i>
+                                    </div>
+                                    <h5 class="card-title">Food Vending</h5>
+                                    <p class="card-text text-muted">Order from nearby restaurants</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <a href="/shop-maker" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm text-center">
+                                <div class="card-body p-4">
+                                    <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-shopping-bag text-success fa-2x"></i>
+                                    </div>
+                                    <h5 class="card-title">Shop Maker</h5>
+                                    <p class="card-text text-muted">Create your own online store</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                @endif
             </div>
         </section>
 

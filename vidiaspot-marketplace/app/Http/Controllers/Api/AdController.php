@@ -82,7 +82,7 @@ class AdController extends Controller
         $orderDirection = $request->order_direction ?? 'desc';
 
         // Proximity search for farm products
-        if ($request->has(['lat', 'lng', 'radius']) && $request->farm_products_only) {
+        if ($request->has(['lat', 'lng', 'radius']) && $request->boolean('farm_products_only', false)) {
             $lat = $request->lat;
             $lng = $request->lng;
             $radius = $request->radius ?? 50; // Default to 50km
@@ -123,13 +123,13 @@ class AdController extends Controller
             'success' => true,
             'data' => \App\Http\Resources\AdResource::collection($ads),
             'filters_applied' => [
-                'farm_products_only' => $request->farm_products_only,
+                'farm_products_only' => $request->boolean('farm_products_only', false),
                 'is_organic' => $request->is_organic,
                 'harvest_season' => $request->harvest_season,
                 'farm_location' => $request->farm_location,
                 'freshness_days' => $request->freshness_days,
                 'sustainability_score' => $request->sustainability_score,
-                'proximity_search' => $request->has(['lat', 'lng', 'radius']) && $request->farm_products_only,
+                'proximity_search' => $request->has(['lat', 'lng', 'radius']) && $request->boolean('farm_products_only', false),
             ]
         ]);
     }

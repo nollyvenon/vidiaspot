@@ -33,6 +33,12 @@ Route::middleware(['auth:sanctum'])->prefix('farm-product-reports')->group(funct
     Route::get('/location-report', [FarmProductReportsController::class, 'locationReport']);
     Route::get('/top-products', [FarmProductReportsController::class, 'topPerformingProducts']);
     Route::get('/trends', [FarmProductReportsController::class, 'productivityTrends']);
+    // Additional farm reports
+    Route::get('/product-comparison', [FarmProductReportsController::class, 'getProductComparison']);
+    Route::get('/location-analysis', [FarmProductReportsController::class, 'getLocationReport']);
+    Route::get('/demand-forecast', [FarmProductReportsController::class, 'getDemandForecast']);
+    Route::get('/seasonal-demand', [FarmProductReportsController::class, 'getSeasonalDemandAnalysis']);
+    Route::get('/organic-compliance', [FarmProductReportsController::class, 'getOrganicCertificationCompliance']);
 });
 
 // Additional farm-specific routes

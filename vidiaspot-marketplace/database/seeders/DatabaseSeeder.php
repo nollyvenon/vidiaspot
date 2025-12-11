@@ -71,5 +71,8 @@ class DatabaseSeeder extends Seeder
 
         // Seed farm test data
         $this->call(FarmTestDataSeeder::class);
+
+        // Seed user roles
+        $this->call(RolesTableSeeder::class);
     }
 }

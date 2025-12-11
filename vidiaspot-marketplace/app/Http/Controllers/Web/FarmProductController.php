@@ -106,12 +106,6 @@ class FarmProductController extends Controller
         return view('web.farm_products.index', compact('farmProducts', 'farmCategories'));
     }
 
-    /**
-     * Show a specific farm product
-     *
-     * @param int $id
-     * @return \Illuminate\View\View
-     */
     public function show($id): View
     {
         $farmProduct = Ad::with(['user', 'category', 'images'])->where('direct_from_farm', true)->findOrFail($id);
@@ -119,89 +113,7 @@ class FarmProductController extends Controller
         // Increment view count
         $farmProduct->increment('view_count');
 
-        return view('web.farm_products.show', compact('farmProduct'));
-    }
-
-    /**
-     * Show farm seller profile
-     *
-     * @param int $id
-     * @return \Illuminate\View\View
-     */
-    public function index(Request $request): View
-    {
-        // Get farm products with filters
-        $query = Ad::with(['user', 'category', 'images'])
-            ->where('direct_from_farm', true)
-            ->where('status', 'active');
-
-        // Apply filters
-        if ($request->category) {
-            $category = Category::where('slug', $request->category)->first();
-            if ($category) {
-                $query->where('category_id', $category->id);
-            }
-        }
-
-        if ($request->search) {
-            $query->where(function($q) use ($request) {
-                $q->where('title', 'LIKE', '%' . $request->search . '%')
-                  ->orWhere('description', 'LIKE', '%' . $request->search . '%');
-            });
-        }
-
-        if ($request->organic) {
-            $query->where('is_organic', true);
-        }
-
-        if ($request->season) {
-            $query->where('harvest_season', $request->season);
-        }
-
-        // Proximity search
-        if ($request->lat && $request->lng) {
-            $lat = $request->lat;
-            $lng = $request->lng;
-            $radius = $request->radius ?? 50; // Default to 50km
-
-            $query->selectRaw("
-                *,
-                (6371 * acos(
-                    cos(radians(?)) *
-                    cos(radians(farm_latitude)) *
-                    cos(radians(farm_longitude) - radians(?)) +
-                    sin(radians(?)) *
-                    sin(radians(farm_latitude))
-                )) AS distance", [$lat, $lng, $lat])
-            ->whereRaw("
-                (6371 * acos(
-                    cos(radians(?)) *
-                    cos(radians(farm_latitude)) *
-                    cos(radians(farm_longitude) - radians(?)) +
-                    sin(radians(?)) *
-                    sin(radians(farm_latitude))
-                )) <= ?", [$lat, $lng, $lat, $radius])
-            ->orderByRaw("
-                (6371 * acos(
-                    cos(radians(?)) *
-                    cos(radians(farm_latitude)) *
-                    cos(radians(farm_longitude) - radians(?)) +
-                    sin(radians(?)) *
-                    sin(radians(farm_latitude))
-                )) ASC", [$lat, $lng, $lat]);
-        } else {
-            $query->orderBy('created_at', 'desc');
-        }
-
-        $farmProducts = $query->paginate(20);
-        $farmProducts->appends($request->query());
-
-        // Get all farm categories
-        $farmCategories = Category::whereHas('ads', function($q) {
-            $q->where('direct_from_farm', true);
-        })->get();
-
-        return view('web.farm_products.index', compact('farmProducts', 'farmCategories'));
+        return view('web.pages.farm_product_show', compact('farmProduct'));
     }
 
     public function sellerProfile($id): View
